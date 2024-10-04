@@ -1,0 +1,4 @@
+export const DEFAULT_TEMPLATE_WIDTH = 1920
+export const DEFAULT_TEMPLATE_HEIGHT = 1080
+
+export const DEFAULT_DECIMAL_DIGITS = 3

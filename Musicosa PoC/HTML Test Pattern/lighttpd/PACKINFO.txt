@@ -1,0 +1,69 @@
+==================================================
+-- lighttpd for Windows binary package (64-bit) --
+          Copyright (C) 2018 dtech(.hu)
+==================================================
+
+// -- PACKAGE: lighttpd-1.4.49-1-win64-ssl -- //
+
+===================
+PACKAGE INFORMATION
+===================
+
+Package Name:             lighttpd (ssl)
+Package Type:             Binary (64-bit)
+Package Version:          1.4.49-1
+Revision:                 d0d5d426
+Release Date:             2018-04-03
+
+Status:                   Stable Release
+Language:                 English
+Compilation Platform:     Cygwin 2.9.0 (64-bit), GCC version: 6.4.0
+
+Source authors:           Jan Kneschke
+                          Elan Ruusamäe
+                          Marcus Rückert
+                          mOo
+                          Robert Jakabosky
+                          Stefan Bühler
+                          Glenn Strauss
+
+License:                  Revised BSD License
+
+Operating System:         Microsoft Windows Vista / Server 2008 / 7 / Server 2008 R2 /
+                          8 / 8.1 / Server 2012 / 10 / Server 2016
+
+Supported features:       IPv6, ZLib, BZip2, Crypt, SSL, PCRE, MySQL, PostgreSQL,
+                          DBI, LDAP, FAM, LUA, XML, SQLite, GDBM, UUID, GeoIP
+
+Additions:                NSSM v2.24 (Non-Sucking Service Manager)
+                          Copyright (C) 2013-2014 Author Iain Patterson
+                          lighttpd NT-Service Installation/Removal ToolKit v1.1.1
+                          Copyright (C) 2014-2017 dtech(.hu)
+
+Online documentation:     http://redmine.lighttpd.net/projects/lighttpd/wiki/
+
+-----------------
+Important changes
+-----------------
+
+2018-04-03 - Release 1 / Tag: 1.4.49-1
+
+- Update some libraries.
+
+2017-12-07 - Release 1 / Tag: 1.4.48-1
+
+- Add support: DBI, PostgreSQL.
+- Re-enable webdav-locks support (disabled in 1.4.45).
+
+2017-10-10 - Release 1 / Tag: 1.4.45-1
+
+- Rename package to original name: 'lighttpd', and remove UPPERCASE/lowercase
+binary names (legacy WLMP's modification).
+- Remove '-?' help option from the patch (legacy option).
+- Remove 'IPv6' flag from name (supported, but totally unnecerssary).
+- Set all patched section in the source code as __CYGWIN__ fixes only.
+- Remove OpenSSL binary, config and GenCert.cmd from the package.
+- Replace old SRVANY and INSTSRV to NSSM service executable.
+- Update service utilities in new environment and move to root directory.
+- Remove webdav-locks support (libuuid compile-time issue).
+- Add GeoIP support.

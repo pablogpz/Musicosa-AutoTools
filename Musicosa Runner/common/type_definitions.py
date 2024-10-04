@@ -1,0 +1,2 @@
+class StageException(Exception):
+    pass

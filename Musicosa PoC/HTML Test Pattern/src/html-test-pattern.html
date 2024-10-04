@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0">
+    <title>HTML Test Pattern for Programmatic Image Generation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            width: 1920px;
+            height: 1080px;
+            background-color: white;
+        }
+
+        main {
+            display: flex;
+            flex-direction: column;
+            flex-wrap: wrap;
+            place-content: center center;
+            align-content: space-around;
+            width: 100%;
+            height: 100%;
+        }
+
+        #text-pattern-3xl {
+            font-size: 4rem;
+        }
+
+        #text-pattern-2xl {
+            font-size: 3rem;
+        }
+
+        #text-pattern-xl {
+            font-size: 2.5rem;
+        }
+
+        #text-pattern-lg {
+            font-size: 2rem;
+        }
+
+        #text-pattern-md {
+            font-size: 1.75rem;
+        }
+
+        #text-pattern-sm {
+            font-size: 1.5rem;
+        }
+
+        #text-pattern-xs {
+            font-size: 1rem;
+        }
+
+        #complex-img-pattern {
+            width: max-content;
+            height: max-content;
+        }
+
+        .avatar-container {
+            position: relative;
+            display: inline-block;
+            width: calc(528px * 0.5);
+            font-size: calc(528px * 0.5 * 0.1); /* PARAM */
+        }
+
+        .avatar {
+            width: 100%;
+            height: auto;
+        }
+
+        .caja-puntuacion {
+            position: absolute;
+            top: 25%; /* PARAM */
+            left: 73.5%; /* PARAM */
+            transform: translate(-50%, -50%);
+            margin: 0;
+            font-size: 1em;
+            color: black; /* PARAM (OPCIONAL)*/
+        }
+    </style>
+</head>
+<body>
+<main>
+    <div>
+        <p id="text-pattern-3xl">Lorem ipsum dolor sit amet</p>
+        <p id="text-pattern-2xl">Lorem ipsum dolor sit amet</p>
+        <p id="text-pattern-xl">Lorem ipsum dolor sit amet</p>
+        <p id="text-pattern-lg">Lorem ipsum dolor sit amet</p>
+        <p id="text-pattern-md">Lorem ipsum dolor sit amet</p>
+        <p id="text-pattern-sm">Lorem ipsum dolor sit amet</p>
+        <p id="text-pattern-xs">Lorem ipsum dolor sit amet</p>
+    </div>
+    <div style="display: flex; flex-direction: column; place-items: center">
+        <img id="complex-img-pattern" src="assets/WV-51%20Complex%20Test%20Pattern.jpg"/>
+        <div>
+            <div class="avatar-container">
+                <img class="avatar" src="assets/avatar.png"/>
+                <p class="caja-puntuacion">3.33</p>
+            </div>
+            <div class="avatar-container">
+                <img class="avatar" src="assets/avatar.png"/>
+                <p class="caja-puntuacion">3.33</p>
+            </div>
+            <div class="avatar-container">
+                <img class="avatar" src="assets/avatar.png"/>
+                <p class="caja-puntuacion">3.33</p>
+            </div>
+            <div class="avatar-container">
+                <img class="avatar" src="assets/avatar.png"/>
+                <p class="caja-puntuacion">3.33</p>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>
