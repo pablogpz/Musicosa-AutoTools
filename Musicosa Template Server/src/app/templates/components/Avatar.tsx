@@ -31,7 +31,7 @@ export default function Avatar({ avatar, avatarScale = 1, formattedScore }: Avat
     }
 
     return (
-        <div className='relative inline-block' style={avatarContainerStyleProps}>
+        <div className="relative inline-block" style={avatarContainerStyleProps}>
             <img className="h-full w-auto" src={`/avatars/${resolvedImageFilename}`} alt="avatar image"/>
             <p className='absolute translate-x-[-50%] translate-y-[-50%] m-0 text-[1em]' style={scoreBoxStyleProps}>
                 {formattedScore}

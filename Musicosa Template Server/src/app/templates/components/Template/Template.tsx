@@ -28,29 +28,30 @@ export function Template(
     const authorScore = scores.find(score => score.contestant === author.id)!.formattedScore
 
     return (
-        <div className="flex flex-col flex-wrap place-content-center content-around w-full h-full bg-black">
-            <div className="flex flex-row">
-                <div className="flex flex-col justify-around mr-16">
-                    <div>
-                        <p className="text-4xl p-2 bg-white rounded w-fit">
-                            {title} {specialTopic && `(${specialTopic})`}
-                        </p>
-                        <p className="text-3xl text-white mt-5">{rankingPlace}º</p>
-                    </div>
-                    <div className="flex flex-row bg-gray-500 rounded">
+        <div className="grid grid-cols-[31.5%_68.5%] grid-rows-[71.5%_28.5%] w-full h-full bg-black p-7 overflow-clip">
+            <div className="row-start-1 row-end-2 col-start-1 col-end-2 h-full">
+                <div className="flex flex-col h-full justify-evenly">
+                    <p className="text-4xl p-2 bg-white rounded">
+                        [{rankingPlace}º] {title} {specialTopic && `(${specialTopic})`}
+                    </p>
+                    <div className="flex flex-row justify-center">
                         <Avatar avatar={authorAvatar} avatarScale={avatarScale} formattedScore={authorScore}/>
-                        <p className="text-3xl text-white self-center pr-10">Nota media {formattedAvgScore}</p>
+                        <p className="text-3xl text-white self-center">Media {formattedAvgScore}</p>
                     </div>
                 </div>
+            </div>
+            <div className="row-start-1 row-end-2 col-start-2 col-end-3 place-self-center">
                 <VideoPlaceholder widthPx={videoBoxWidthPx} heightPx={videoBoxHeightPx}/>
             </div>
-            <div className="mt-10 flex content-center justify-between">
-                {contestants.map((contestant, i) =>
-                    <Avatar
-                        key={i}
-                        avatar={avatars.find(avatar => contestant.avatar === avatar.id) ?? defaultResolvedAvatar}
-                        avatarScale={avatarScale}
-                        formattedScore={scores.find(score => score.contestant === contestant.id)!.formattedScore}/>)}
+            <div className="row-start-2 row-end-3 col-start-1 col-end-3">
+                <div className="flex content-center justify-between">
+                    {contestants.map((contestant, i) =>
+                        <Avatar
+                            key={i}
+                            avatar={avatars.find(avatar => contestant.avatar === avatar.id) ?? defaultResolvedAvatar}
+                            avatarScale={avatarScale}
+                            formattedScore={scores.find(score => score.contestant === contestant.id)!.formattedScore}/>)}
+                </div>
             </div>
         </div>
     )

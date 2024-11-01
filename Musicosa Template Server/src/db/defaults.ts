@@ -5,7 +5,7 @@ export const defaultAvatarId = 0
 export const defaultAvatar: Avatar = {
     id: defaultAvatarId,
     imageFilename: 'unknown.png',
-    imageHeight: 520.0,
+    imageHeight: 584.0,
     scoreBoxPositionTop: 25.0,
     scoreBoxPositionLeft: 73.5,
     scoreBoxFontScale: 0.1,
