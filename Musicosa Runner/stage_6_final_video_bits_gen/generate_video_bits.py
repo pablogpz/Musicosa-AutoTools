@@ -8,9 +8,9 @@ from ffmpeg.filters import concat
 
 from common.constants import VIDEO_DURATION_OVERRIDE_FULL_DURATION_VALUE, TEMPLATE_IMG_FORMAT, VIDEO_FORMAT
 from common.settings import get_setting_by_key
+from common.slugify import slugify
 from common.time_utils import parse_time, time_to_seconds
 from common.type_definitions import StageException
-from common.slugify import slugify
 from stage_6_final_video_bits_gen.constants import VIDEO_FPS
 from stage_6_final_video_bits_gen.type_definitions import EntryVideoOptions
 from stage_6_final_video_bits_gen.video_helpers import get_video_duration_seconds
@@ -27,82 +27,97 @@ def generate_all_video_bits(
     entries_missing_sources: list[str] = []
     failed_video_bits: list[str] = []
 
+    for vid_opts in entry_video_options:
+
+        video_bit_path = f"{video_bits_folder}/{vid_opts.sequence_number}.{VIDEO_FORMAT}"
+        if not overwrite and path.isfile(video_bit_path):
+            print(f"[SKIPPING GENERATION] {vid_opts.entry_title}")
+            continue
+
+        source_template = f"{artifacts_folder}/{slugify(vid_opts.entry_title)}.{TEMPLATE_IMG_FORMAT}"
+        if not path.isfile(source_template):
+            print(f"[MISSING SOURCE - Template] {vid_opts.entry_title}")
+            entries_missing_sources.append(vid_opts.entry_title)
+            continue
+
+        source_videoclip = f"{artifacts_folder}/{slugify(vid_opts.entry_title)}.{VIDEO_FORMAT}"
+        if not path.isfile(source_videoclip):
+            print(f"[MISSING SOURCE - Videoclip] {vid_opts.entry_title}")
+            entries_missing_sources.append(vid_opts.entry_title)
+            continue
+
+        print(f"[GENERATING] {vid_opts.entry_title}")
+
+        try:
+            generated = generate_video_bit(source_videoclip, vid_opts, source_template, video_bit_path, quiet_ffmpeg)
+            generated_video_bits_files.append(generated)
+        except FFMpegError:
+            failed_video_bits.append(vid_opts.entry_title)
+
+    return generated_video_bits_files or None, entries_missing_sources or None, failed_video_bits or None
+
+
+def generate_video_bit(videoclip_path: str, vid_opts: EntryVideoOptions, template_path: str, video_bit_path: str,
+                       quiet_ffmpeg: bool = None) -> str:
     default_duration = get_setting_by_key("validation.entry_video_duration_seconds").value
     override_top_n = get_setting_by_key("generation.videoclips_override_top_n_duration").value
     override_duration_value = get_setting_by_key("generation.videoclips_override_duration_up_to_x_seconds").value
 
-    for entry in entry_video_options:
+    videoclip_duration = get_video_duration_seconds(videoclip_path)
 
-        video_bit_path = f"{video_bits_folder}/{entry.sequence_number}.{VIDEO_FORMAT}"
-        if not overwrite and path.isfile(video_bit_path):
-            print(f"[SKIPPING GENERATION] {entry.entry_title}")
-            continue
+    # Top video bits duration override and check if the timestamps are within the videoclip duration
 
-        source_template = f"{artifacts_folder}/{slugify(entry.entry_title)}.{TEMPLATE_IMG_FORMAT}"
-        if not path.isfile(source_template):
-            print(f"[MISSING SOURCE - Template] {entry.entry_title}")
-            entries_missing_sources.append(entry.entry_title)
-            continue
-
-        source_videoclip = f"{artifacts_folder}/{slugify(entry.entry_title)}.{VIDEO_FORMAT}"
-        if not path.isfile(source_videoclip):
-            print(f"[MISSING SOURCE - Videoclip] {entry.entry_title}")
-            entries_missing_sources.append(entry.entry_title)
-            continue
-
-        print(f"[GENERATING] {entry.entry_title}")
-
-        # Top video bits duration override and check if the timestamps are within the videoclip duration
-
-        videoclip_duration = get_video_duration_seconds(source_videoclip)
-
-        if entry.sequence_number <= override_top_n:
-            if override_duration_value == VIDEO_DURATION_OVERRIDE_FULL_DURATION_VALUE:
-                ffmpeg_time_code_args = {}
-            elif videoclip_duration < override_duration_value:
-                print("  [WARNING] Top videoclip duration is less than the override duration value. "
-                      "End video will be rendered to its original duration")
-                ffmpeg_time_code_args = {}
-            else:
-                ffmpeg_time_code_args = {"ss": 0, "t": override_duration_value}
+    if vid_opts.sequence_number <= override_top_n:
+        if override_duration_value == VIDEO_DURATION_OVERRIDE_FULL_DURATION_VALUE:
+            ffmpeg_time_code_args = {}
+        elif videoclip_duration < override_duration_value:
+            print("  [WARNING] Top videoclip duration is less than the override duration value. "
+                  "End video will be rendered to its original duration")
+            ffmpeg_time_code_args = {}
         else:
-            timestamp_start_seconds = time_to_seconds(parse_time(entry.timestamp.start))
-            timestamp_end_seconds = time_to_seconds(parse_time(entry.timestamp.end))
+            ffmpeg_time_code_args = {"ss": 0, "t": override_duration_value}
+    else:
+        timestamp_start_seconds = time_to_seconds(parse_time(vid_opts.timestamp.start))
+        timestamp_end_seconds = time_to_seconds(parse_time(vid_opts.timestamp.end))
 
-            ffmpeg_time_code_args = {"ss": entry.timestamp.start, "to": entry.timestamp.end}
+        ffmpeg_time_code_args = {"ss": vid_opts.timestamp.start, "to": vid_opts.timestamp.end}
 
-            if timestamp_start_seconds < videoclip_duration < timestamp_end_seconds:
-                print("  [WARNING] End timestamp exceeds videoclip duration. "
-                      "End video will be trimmed till the end of the videoclip")
+        if timestamp_start_seconds < videoclip_duration < timestamp_end_seconds:
+            print("  [WARNING] End timestamp exceeds videoclip duration. "
+                  "End video will be trimmed till the end of the videoclip")
 
-            if videoclip_duration <= timestamp_start_seconds:
-                print("  [WARNING] Start timestamp exceeds videoclip duration. Defaulting to start position")
-                ffmpeg_time_code_args = {"ss": 0, "t": default_duration}
+        if videoclip_duration <= timestamp_start_seconds:
+            print("  [WARNING] Start timestamp exceeds videoclip duration. Defaulting to start position")
+            ffmpeg_time_code_args = {"ss": 0, "t": default_duration}
 
-        # Generate video bit
+    # Generate video bit
 
-        try:
-            videoclip_stream = ffmpeg.input(filename=source_videoclip, **ffmpeg_time_code_args)
-            videoclip_audio_stream = videoclip_stream.acopy()
+    try:
+        videoclip_stream = ffmpeg.input(filename=videoclip_path, **ffmpeg_time_code_args)
+        videoclip_audio_stream = videoclip_stream.acopy()
 
-            template_stream = ffmpeg.input(filename=source_template)
+        template_stream = ffmpeg.input(filename=template_path)
 
-            output_video_bit_stream = (template_stream.overlay(videoclip_stream.scale(w=entry.width, h=entry.height),
-                                                               x=entry.position_left,
-                                                               y=entry.position_top))
+        scaled_videoclip_stream = (videoclip_stream
+                                   .scale(w=vid_opts.width, h=vid_opts.height,
+                                          force_original_aspect_ratio="decrease")
+                                   .pad(width=vid_opts.width, height=vid_opts.height, x="(ow-iw)/2", y="(oh-ih)/2",
+                                        color="Black")
+                                   .setsar(sar=1))
 
-            (ffmpeg
-             .output(output_video_bit_stream, videoclip_audio_stream,
-                     filename=video_bit_path,
-                     r=VIDEO_FPS)
-             .run(overwrite_output=True, quiet=quiet_ffmpeg))
+        output_video_bit_stream = (template_stream
+                                   .overlay(scaled_videoclip_stream, x=vid_opts.position_left, y=vid_opts.position_top))
 
-            generated_video_bits_files.append(video_bit_path)
-        except FFMpegError as err:
-            print(f"[GENERATION FAILED] {entry.entry_title}: {err}")
-            failed_video_bits.append(entry.entry_title)
+        (ffmpeg
+         .output(output_video_bit_stream, videoclip_audio_stream,
+                 filename=video_bit_path,
+                 r=VIDEO_FPS)
+         .run(overwrite_output=True, quiet=quiet_ffmpeg))
+    except FFMpegError as err:
+        print(f"[GENERATION FAILED] {vid_opts.entry_title}: {err}")
+        raise
 
-    return generated_video_bits_files or None, entries_missing_sources or None, failed_video_bits or None
+    return video_bit_path
 
 
 def generate_final_video(video_bits_files: list[str],
