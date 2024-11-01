@@ -29,7 +29,7 @@ def download_all_videoclips(entries: list[Entry], artifacts_folder: str, quiet_f
 
     ytdl_options = {
         **ytdl_base_options,
-        "format": "bestvideo*+bestaudio/best",
+        "format_sort": ["res:1080"], # Prefer sources up to 1080p resolution
         "outtmpl": "",  # IMPORTANT: Leave here for the workaround to work
     }
 
