@@ -2,6 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import { eq } from 'drizzle-orm'
 
+import formatAvgScore from '@/formatters/formatAvgScore'
 import formatScore from '@/formatters/formatScore'
 
 import db from '@/db/database'
@@ -56,12 +57,12 @@ function resolveAvatar(avatar: Avatar): ResolvedAvatar {
     } satisfies ResolvedAvatar
 }
 
-function resolveScoring(scoring: Scoring, decimalDigits: number): ResolvedScoring {
+function resolveScoring(scoring: Scoring): ResolvedScoring {
     const { score } = scoring
 
     return {
         ...scoring,
-        formattedScore: formatScore(score, decimalDigits)
+        formattedScore: formatScore(score)
     } satisfies ResolvedScoring
 }
 
@@ -112,13 +113,13 @@ export const resolveTemplateProps = async (templateUUID: string): Promise<Resolv
         title: entry.title,
         specialTopic: entry.specialTopic,
         rankingPlace: entryStats.rankingPlace,
-        formattedAvgScore: formatScore(entryStats.avgScore!, decimalDigits),
+        formattedAvgScore: formatAvgScore(entryStats.avgScore!, decimalDigits),
         avatarScale: template.avatarScale,
         videoBoxWidthPx: template.videoBoxWidthPx,
         videoBoxHeightPx: template.videoBoxHeightPx,
         author: allContestants.find(contestant => contestant.id === entry.author) ?? defaultAuthor,
         contestants: allContestants.filter(contestant => contestant.id !== entry.author),
         avatars: avatars.map(resolveAvatar),
-        scores: scoringEntries.map(scoring => resolveScoring(scoring, decimalDigits))
+        scores: scoringEntries.map(scoring => resolveScoring(scoring))
     }
 }

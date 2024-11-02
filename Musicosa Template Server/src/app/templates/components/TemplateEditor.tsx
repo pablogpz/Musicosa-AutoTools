@@ -2,6 +2,7 @@
 
 import React, { ChangeEvent, ChangeEventHandler, HTMLInputTypeAttribute, useState } from 'react'
 
+import formatAvgScore from '@/formatters/formatAvgScore'
 import formatScore from '@/formatters/formatScore'
 
 import {
@@ -13,7 +14,6 @@ import {
     defaultScoring,
     defaultTemplate
 } from '@/db/defaults'
-
 import { defaultResolvedAvatar } from '@/app/templates/common/withTemplateProps/defaults'
 import BaseTemplateContainer from '@/app/templates/components/TemplateContainer/BaseTemplateContainer'
 import { Template, TemplateProps } from '@/app/templates/components/Template'
@@ -77,14 +77,14 @@ export default function TemplateEditor(
         title,
         specialTopic,
         rankingPlace,
-        formattedAvgScore: formatScore(avgScore, decimalDigits),
+        formattedAvgScore: formatAvgScore(avgScore, decimalDigits),
         avatarScale,
         videoBoxWidthPx,
         videoBoxHeightPx,
         author: defaultAuthor,
         contestants: Array.from({ length: contestantCount - 1 }, () => defaultContestant),
         avatars: [defaultResolvedAvatar],
-        scores: [{ contestant: defaultContestantId, formattedScore: formatScore(score, decimalDigits) }]
+        scores: [{ contestant: defaultContestantId, formattedScore: formatScore(score) }]
     }
 
     const templateParamInputs = [
