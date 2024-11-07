@@ -4,7 +4,8 @@ from os.path import basename
 from common.constants import VIDEO_TIMESTAMP_SEPARATOR
 from common.time_utils import validate_time_str, time_str_zfill
 from common.type_definitions import StageException
-from stage_1_sub_validation.constants import CSV_SEPARATOR, CSV_FIELDS_COUNT
+from stage_1_sub_validation.constants import CSV_SEPARATOR, CSV_FIELDS_COUNT, ALLOWED_DECIMAL_SEPARATOR_CHARS, \
+    NORMALIZED_DECIMAL_SEPARATOR_CHAR
 from stage_1_sub_validation.type_definitions import ContestantSubmissionEntry, ContestantSubmission
 
 
@@ -16,8 +17,12 @@ def parse_contestant_form_entry_csv(entry_line: str) -> ContestantSubmissionEntr
 
     title = line[0].strip()
 
+    score_normalized = line[1].strip()
+    for separator in ALLOWED_DECIMAL_SEPARATOR_CHARS:
+        if separator in score_normalized:
+            score_normalized = score_normalized.replace(separator, NORMALIZED_DECIMAL_SEPARATOR_CHAR)
     try:
-        score = float(line[1].strip().replace(",", "."))
+        score = float(score_normalized)
     except ValueError as err:
         raise StageException(f"[{title}] Error parsing score value '{line[1]}'") from err
 
@@ -51,7 +56,6 @@ def parse_contestant_form_entry_csv(entry_line: str) -> ContestantSubmissionEntr
         special_topic = special_topic.upper()
     else:
         special_topic = None
-
 
     return ContestantSubmissionEntry(title=title, score=score, is_author=is_author, video_timestamp=video_timestamp,
                                      video_url=video_url, special_topic=special_topic)
