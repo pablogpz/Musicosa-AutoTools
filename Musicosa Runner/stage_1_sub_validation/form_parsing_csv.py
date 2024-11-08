@@ -69,7 +69,7 @@ def parse_contestant_form_csv(form_file: str) -> ContestantSubmission:
         for csv_line in file:
             try:
                 entries.append(parse_contestant_form_entry_csv(csv_line))
-            except ValueError as err:
+            except StageException as err:
                 raise StageException(f"[{contestant_name}] {err}") from err
 
     return ContestantSubmission(name=contestant_name, entries=entries)
