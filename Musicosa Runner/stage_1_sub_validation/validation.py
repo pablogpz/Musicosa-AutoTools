@@ -57,10 +57,10 @@ def validate_video_timestamp(video_timestamp: str) -> str | None:
 
     # The duration is as set in the settings
 
-    video_duration = get_setting_by_key("validation.entry_video_duration_seconds").value
+    allowed_video_duration = get_setting_by_key("validation.entry_video_duration_seconds").value
 
-    if seconds_between(start_time, end_time) != video_duration:
-        return f"Invalid video duration ({video_timestamp}) (Should be {video_duration} seconds)"
+    if (duration := seconds_between(start_time, end_time)) != allowed_video_duration:
+        return f"Invalid video duration ({duration}s [{video_timestamp}]) (Should be {allowed_video_duration} seconds)"
 
     return None
 
