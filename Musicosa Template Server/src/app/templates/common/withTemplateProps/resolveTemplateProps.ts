@@ -2,8 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import { eq } from 'drizzle-orm'
 
-import formatAvgScore from '@/formatters/formatAvgScore'
-import formatScore from '@/formatters/formatScore'
+import formatNumberToDecimalPrecision from '@/formatters/formatNumberToDecimalPrecision'
 
 import db from '@/db/database'
 import {
@@ -62,7 +61,7 @@ function resolveScoring(scoring: Scoring): ResolvedScoring {
 
     return {
         ...scoring,
-        formattedScore: formatScore(score)
+        formattedScore: score.toString()
     } satisfies ResolvedScoring
 }
 
@@ -113,7 +112,7 @@ export const resolveTemplateProps = async (templateUUID: string): Promise<Resolv
         title: entry.title,
         specialTopic: entry.specialTopic,
         rankingPlace: entryStats.rankingPlace,
-        formattedAvgScore: formatAvgScore(entryStats.avgScore!, decimalDigits),
+        formattedAvgScore: formatNumberToDecimalPrecision(entryStats.avgScore!, decimalDigits),
         avatarScale: template.avatarScale,
         videoBoxWidthPx: template.videoBoxWidthPx,
         videoBoxHeightPx: template.videoBoxHeightPx,

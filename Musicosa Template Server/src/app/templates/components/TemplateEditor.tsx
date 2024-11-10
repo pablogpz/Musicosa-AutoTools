@@ -2,8 +2,7 @@
 
 import React, { ChangeEvent, ChangeEventHandler, HTMLInputTypeAttribute, useState } from 'react'
 
-import formatAvgScore from '@/formatters/formatAvgScore'
-import formatScore from '@/formatters/formatScore'
+import formatNumberToDecimalPrecision from '@/formatters/formatNumberToDecimalPrecision'
 
 import {
     defaultAuthor,
@@ -71,14 +70,14 @@ export default function TemplateEditor({ templateWidth, templateHeight, decimalD
         title,
         specialTopic,
         rankingPlace,
-        formattedAvgScore: formatAvgScore(avgScore, decimalDigits),
+        formattedAvgScore: formatNumberToDecimalPrecision(avgScore, decimalDigits),
         avatarScale,
         videoBoxWidthPx,
         videoBoxHeightPx,
         author: defaultAuthor,
         contestants: Array.from({ length: contestantCount - 1 }, () => defaultContestant),
         avatars: [defaultResolvedAvatar],
-        scores: [{ contestant: defaultContestantId, formattedScore: formatScore(score) }]
+        scores: [{ contestant: defaultContestantId, formattedScore: score.toString() }]
     }
 
     const templateParamInputs = [
