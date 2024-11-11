@@ -6,9 +6,10 @@ export interface AvatarProps {
     avatar: ResolvedAvatar,
     avatarScale?: number
     formattedScore: string,
+    scoreColor?: string
 }
 
-export default function Avatar({ avatar, avatarScale = 1, formattedScore }: AvatarProps) {
+export default function Avatar({ avatar, avatarScale = 1, formattedScore, scoreColor }: AvatarProps) {
 
     const {
         resolvedImageFilename,
@@ -27,7 +28,7 @@ export default function Avatar({ avatar, avatarScale = 1, formattedScore }: Avat
     const scoreBoxStyleProps = {
         top: `${scoreBoxPositionTop}%`,
         left: `${scoreBoxPositionLeft}%`,
-        color: scoreBoxFontColor ?? defaultAvatar.scoreBoxFontColor!
+        color: scoreColor ?? scoreBoxFontColor ?? defaultAvatar.scoreBoxFontColor!
     }
 
     return (
