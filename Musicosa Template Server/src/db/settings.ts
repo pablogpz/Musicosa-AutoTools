@@ -1,6 +1,12 @@
 export enum SettingsGroups {
+    validation = 'validation',
     templates = 'templates',
     ranking = 'ranking'
+}
+
+export enum ValidationSettingsNames {
+    scoreMinValue = 'score_min_value',
+    scoreMaxValue = 'score_max_value',
 }
 
 export enum TemplatesSettingsNames {
@@ -13,5 +19,6 @@ export enum RankingSettingsNames {
 }
 
 export type SettingsKey =
-    `${SettingsGroups.templates}.${TemplatesSettingsNames}`
+    `${SettingsGroups.validation}.${ValidationSettingsNames}`
+    |`${SettingsGroups.templates}.${TemplatesSettingsNames}`
     | `${SettingsGroups.ranking}.${RankingSettingsNames}`
