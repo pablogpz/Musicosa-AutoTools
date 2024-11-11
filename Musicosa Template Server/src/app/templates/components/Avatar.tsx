@@ -1,5 +1,6 @@
-import { defaultAvatar } from '@/db/defaults'
+import { Caveat } from 'next/font/google'
 
+import { defaultAvatar } from '@/db/defaults'
 import { ResolvedAvatar } from '@/app/templates/common/withTemplateProps'
 
 export interface AvatarProps {
@@ -8,6 +9,13 @@ export interface AvatarProps {
     formattedScore: string,
     scoreColor?: string
 }
+
+const caveat = Caveat({
+    subsets: ['latin'],
+    display: 'swap',
+    weight: '600',
+    variable: '--font-caveat'
+})
 
 export default function Avatar({ avatar, avatarScale = 1, formattedScore, scoreColor }: AvatarProps) {
 
@@ -28,7 +36,8 @@ export default function Avatar({ avatar, avatarScale = 1, formattedScore, scoreC
     const scoreBoxStyleProps = {
         top: `${scoreBoxPositionTop}%`,
         left: `${scoreBoxPositionLeft}%`,
-        color: scoreColor ?? scoreBoxFontColor ?? defaultAvatar.scoreBoxFontColor!
+        color: scoreColor ?? scoreBoxFontColor ?? defaultAvatar.scoreBoxFontColor!,
+        ...caveat.style
     }
 
     return (
