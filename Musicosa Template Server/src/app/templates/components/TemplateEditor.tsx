@@ -77,7 +77,7 @@ export default function TemplateEditor({ templateWidth, templateHeight, decimalD
         author: defaultAuthor,
         contestants: Array.from({ length: contestantCount - 1 }, () => defaultContestant),
         avatars: [defaultResolvedAvatar],
-        scores: [{ contestant: defaultContestantId, formattedScore: score.toString() }]
+        scores: [{ contestant: defaultContestantId, score, formattedScore: score.toString() }]
     }
 
     const templateParamInputs = [

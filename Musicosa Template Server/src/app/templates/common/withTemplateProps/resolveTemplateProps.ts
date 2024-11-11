@@ -24,11 +24,11 @@ import avatarsRepository from '@/db/repository/avatars'
 import settingsRepository from '@/db/repository/settings'
 import { DEFAULT_DECIMAL_DIGITS } from '@/app/defaults'
 
-export type ResolvedEntryStats = Omit<EntryStats, 'avgScore'> & { formattedAvgScore: string }
+export type ResolvedEntryStats = EntryStats & { formattedAvgScore: string }
 
 export type ResolvedAvatar = Omit<Avatar, 'imageFilename'> & { resolvedImageFilename: string }
 
-export type ResolvedScoring = Omit<Scoring, 'score'> & { formattedScore: string }
+export type ResolvedScoring = Scoring & { formattedScore: string }
 
 export type ResolvedTemplateProps =
     Pick<Template, 'avatarScale' | 'videoBoxWidthPx' | 'videoBoxHeightPx'> &
@@ -38,7 +38,7 @@ export type ResolvedTemplateProps =
         author: Contestant
         contestants: Contestant[]
         avatars: ResolvedAvatar[]
-        scores: Pick<ResolvedScoring, 'contestant' | 'formattedScore'>[]
+        scores: Pick<ResolvedScoring, 'contestant' | 'score' | 'formattedScore'>[]
     }
 
 function resolveAvatar(avatar: Avatar): ResolvedAvatar {
