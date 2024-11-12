@@ -34,16 +34,16 @@ export default function Avatar({ avatar, avatarScale = 1, formattedScore, scoreC
     }
 
     const scoreBoxStyleProps = {
+        ...caveat.style,
         top: `${scoreBoxPositionTop}%`,
         left: `${scoreBoxPositionLeft}%`,
         color: scoreColor ?? scoreBoxFontColor ?? defaultAvatar.scoreBoxFontColor!,
-        ...caveat.style
     }
 
     return (
         <div className="relative inline-block" style={avatarContainerStyleProps}>
             <img className="h-full w-auto" src={`/avatars/${resolvedImageFilename}`} alt="avatar image"/>
-            <p className='absolute translate-x-[-50%] translate-y-[-50%] m-0 text-[1em]' style={scoreBoxStyleProps}>
+            <p className='absolute translate-x-[-50%] translate-y-[-50%] text-[1em]' style={scoreBoxStyleProps}>
                 {formattedScore}
             </p>
         </div>

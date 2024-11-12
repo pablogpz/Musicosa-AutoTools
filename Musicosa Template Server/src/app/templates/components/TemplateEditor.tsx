@@ -34,13 +34,13 @@ function inputFactory(
 
     return (
         <div key={id} className="flex flex-col-reverse h-fit">
-            <input id={`${id}`}
+            <input id={id}
                    className="w-44 px-2 py-1 text-md font-light outline-none rounded border-b-2 border-solid border-black
                             placeholder:text-zinc-400 placeholder:italic placeholder:font-normal
                             focus:border-purple-500 focus:bg-purple-50 peer"
-                   type={`${inputType}`} value={value} placeholder={`${placeholder}`}
+                   type={inputType} value={value} placeholder={`${placeholder}`}
                    onChange={onChange}/>
-            <label htmlFor={`${id}`} className="mr-3 pl-1 text-sm font-bold select-none peer-focus:text-purple-500">
+            <label htmlFor={id} className="mr-3 pl-1 text-sm font-bold select-none peer-focus:text-purple-500">
                 {title}
             </label>
         </div>
