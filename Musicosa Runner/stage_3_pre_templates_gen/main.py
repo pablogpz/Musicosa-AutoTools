@@ -25,38 +25,38 @@ if __name__ == "__main__":
 
     # Data persistence
 
-    # try:
-    #     if result.avatar_pairings:
-    #         with db.atomic():
-    #             for pairing in result.avatar_pairings:
-    #                 if isinstance(pairing.avatar, Avatar.Insert):
-    #                     paired_avatar_entity = Avatar.ORM.create(**(vars(pairing.avatar)))
-    #                 else:
-    #                     paired_avatar_entity = pairing.avatar.to_orm()
-    #
-    #                 (Contestant.ORM
-    #                  .update(avatar=paired_avatar_entity)
-    #                  .where(Contestant.ORM.id == pairing.contestant.id)
-    #                  .execute())
-    #
-    #     if result.templates_settings:
-    #         with db.atomic():
-    #             Setting.ORM.replace_many(bulk_pack(result.templates_settings)).execute()
-    #
-    #     if result.templates:
-    #         with db.atomic():
-    #             Template.ORM.insert_many(bulk_pack(result.templates)).execute()
-    #
-    #     if result.generation_settings:
-    #         with db.atomic():
-    #             Setting.ORM.replace_many(bulk_pack(result.generation_settings)).execute()
-    #
-    #     if result.video_options:
-    #         with db.atomic():
-    #             VideoOptions.ORM.insert_many(bulk_pack(result.video_options)).execute()
-    # except Exception as err:
-    #     print(f"[Stage 3 | Data persistence] {err}")
-    #     exit(1)
+    try:
+        if result.avatar_pairings:
+            with db.atomic():
+                for pairing in result.avatar_pairings:
+                    if isinstance(pairing.avatar, Avatar.Insert):
+                        paired_avatar_entity = Avatar.ORM.create(**(vars(pairing.avatar)))
+                    else:
+                        paired_avatar_entity = pairing.avatar.to_orm()
+
+                    (Contestant.ORM
+                     .update(avatar=paired_avatar_entity)
+                     .where(Contestant.ORM.id == pairing.contestant.id)
+                     .execute())
+
+        if result.templates_settings:
+            with db.atomic():
+                Setting.ORM.replace_many(bulk_pack(result.templates_settings)).execute()
+
+        if result.templates:
+            with db.atomic():
+                Template.ORM.insert_many(bulk_pack(result.templates)).execute()
+
+        if result.generation_settings:
+            with db.atomic():
+                Setting.ORM.replace_many(bulk_pack(result.generation_settings)).execute()
+
+        if result.video_options:
+            with db.atomic():
+                VideoOptions.ORM.insert_many(bulk_pack(result.video_options)).execute()
+    except Exception as err:
+        print(f"[Stage 3 | Data persistence] {err}")
+        exit(1)
 
     # Execution feedback
 
