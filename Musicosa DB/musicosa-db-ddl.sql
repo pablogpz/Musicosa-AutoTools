@@ -48,6 +48,15 @@ VALUES ('generation', 'videoclips_override_top_n_duration', '10', 'integer');
 INSERT INTO settings (group_key, setting, value, type)
 VALUES ('generation', 'videoclips_override_duration_up_to_x_seconds', '-1', 'integer');
 
+CREATE TABLE special_entry_topics
+(
+    designation TEXT NOT NULL
+        CONSTRAINT special_entry_topics_pk PRIMARY KEY
+);
+
+INSERT INTO special_entry_topics (designation)
+VALUES ('INFANCIA');
+
 CREATE TABLE avatars
 (
     id                      INTEGER NOT NULL
@@ -88,15 +97,6 @@ CREATE TABLE entries
     CONSTRAINT is_of_special_topic_fk FOREIGN KEY (special_topic) REFERENCES special_entry_topics (designation)
         ON UPDATE CASCADE ON DELETE SET NULL
 );
-
-CREATE TABLE special_entry_topics
-(
-    designation TEXT NOT NULL
-        CONSTRAINT special_entry_topics_pk PRIMARY KEY
-);
-
-INSERT INTO special_entry_topics (designation)
-VALUES ('INFANCIA');
 
 CREATE TABLE templates
 (

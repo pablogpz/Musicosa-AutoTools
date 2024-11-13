@@ -467,7 +467,7 @@ if __name__ == '__main__':
         print(f"  # Submission forms loaded: {len(submissions)}")
         print(f"  Valid titles file: '{config.stage_1.valid_titles_file}'")
         print("")
-        print("Submission validation results:")
+        print("Validation errors:")
         if result.validation_errors:
             for validation_error in result.validation_errors:
                 print(f"  {validation_error}")

@@ -50,7 +50,6 @@ if __name__ == "__main__":
     if result.validation_errors:
         for validation_error in result.validation_errors:
             print(validation_error)
-        exit(1)
 
     # Data persistence
 
