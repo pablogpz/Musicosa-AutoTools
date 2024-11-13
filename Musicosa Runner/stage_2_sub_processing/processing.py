@@ -63,8 +63,7 @@ def process_musicosa(musicosa: Musicosa) -> tuple[list[ContestantStats], list[En
             ranking_sequence -= 1
 
         if len(draw_group) > 1:
-            sorted_draw_group = sorted(draw_group,
-                                       key=lambda stat: contestants_stats[stat.contestant.contestant_name].avg_score)
+            sorted_draw_group = sorted(draw_group, key=lambda stat: contestants_stats[stat.entry.author_name].avg_score)
             for entry in sorted_draw_group:
                 entry.ranking_place = current_ranking_place - len(draw_group) + 1
                 entry.ranking_sequence = ranking_sequence

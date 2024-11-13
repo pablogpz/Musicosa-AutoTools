@@ -25,11 +25,12 @@ def get_submission_entry_valid_titles(forms_folder: str, valid_titles_file: str)
 
 
 def load_valid_titles_from_file(file_path: str) -> list[str]:
-    with open(file_path, "r") as file:
+    with open(file_path, "r", encoding="UTF-8") as file:
         try:
             return [line.strip() for line in file.read().splitlines()]
         except IOError:
             raise
+
 
 def get_special_entry_topics_from_db() -> list[SpecialEntryTopic] | None:
     return [topic.to_domain() for topic in SpecialEntryTopic.ORM.select()] or None

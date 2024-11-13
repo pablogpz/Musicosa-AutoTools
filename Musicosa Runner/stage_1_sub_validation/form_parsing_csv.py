@@ -65,7 +65,7 @@ def parse_contestant_form_csv(form_file: str) -> ContestantSubmission:
     contestant_name = basename(form_file).rsplit('.', 1)[0]
     entries: list[ContestantSubmissionEntry] = []
 
-    with open(form_file, "r") as file:
+    with open(form_file, "r", encoding="UTF-8") as file:
         for csv_line in file:
             try:
                 entries.append(parse_contestant_form_entry_csv(csv_line))

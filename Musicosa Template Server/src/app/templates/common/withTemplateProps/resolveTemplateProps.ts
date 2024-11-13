@@ -45,7 +45,7 @@ function resolveAvatar(avatar: Avatar): ResolvedAvatar {
     const { imageFilename } = avatar
     let imageWithFallback
 
-    if (fs.existsSync(path.join(process.cwd(), 'public', imageFilename)))
+    if (fs.existsSync(path.join(process.cwd(), 'public/avatars/', imageFilename)))
         imageWithFallback = imageFilename
     else
         imageWithFallback = defaultAvatar.imageFilename
