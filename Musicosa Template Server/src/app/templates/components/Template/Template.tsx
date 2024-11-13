@@ -16,6 +16,7 @@ export function Template(
         specialTopic,
         formattedAvgScore,
         avatarScale,
+        authorAvatarScale,
         videoBoxWidthPx,
         videoBoxHeightPx,
         author,
@@ -35,7 +36,7 @@ export function Template(
                         [{rankingPlace}º] {title} {specialTopic && `(${specialTopic})`}
                     </p>
                     <div className="flex flex-row justify-center">
-                        <Avatar avatar={authorAvatar} avatarScale={avatarScale} formattedScore={authorScore}/>
+                        <Avatar avatar={authorAvatar} avatarScale={authorAvatarScale} formattedScore={authorScore}/>
                         <p className="text-3xl text-white self-center">Media {formattedAvgScore}</p>
                     </div>
                 </div>

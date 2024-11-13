@@ -63,6 +63,7 @@ export default function TemplateEditor({ templateWidth, templateHeight, decimalD
     const [rankingPlace, setRankingPlace] = useState<number>(defaultEntryStats.rankingPlace!)
     const [avgScore, setAvgScore] = useState<number>(defaultEntryStats.avgScore!)
     const [avatarScale, setAvatarScale] = useState<number>(defaultTemplate.avatarScale)
+    const [authorAvatarScale, setAuthorAvatarScale] = useState<number>(defaultTemplate.authorAvatarScale)
     const [videoBoxWidthPx, setVideoBoxWidthPx] = useState<number>(defaultTemplate.videoBoxWidthPx)
     const [videoBoxHeightPx, setVideoBoxHeightPx] = useState<number>(defaultTemplate.videoBoxHeightPx)
 
@@ -72,6 +73,7 @@ export default function TemplateEditor({ templateWidth, templateHeight, decimalD
         rankingPlace,
         formattedAvgScore: formatNumberToDecimalPrecision(avgScore, decimalDigits),
         avatarScale,
+        authorAvatarScale,
         videoBoxWidthPx,
         videoBoxHeightPx,
         author: defaultAuthor,
@@ -95,6 +97,8 @@ export default function TemplateEditor({ templateWidth, templateHeight, decimalD
             onChangeFactory(v => setScore(parseFloat(v)))),
         inputFactory('avatar-scale', 'Avatar scale', avatarScale, 'number', 'Avatar scale factor ...',
             onChangeFactory(v => setAvatarScale(parseFloat(v)))),
+        inputFactory('author-avatar-scale', 'Author avatar scale', authorAvatarScale, 'number', 'Author avatar scale factor ...',
+            onChangeFactory(v => setAuthorAvatarScale(parseFloat(v)))),
         inputFactory('video-box-width', 'Video width', videoBoxWidthPx, 'number', 'Video box width (px) ...',
             onChangeFactory(v => setVideoBoxWidthPx(parseInt(v)))),
         inputFactory('video-box-height', 'Video height', videoBoxHeightPx, 'number', 'Video box height (px) ...',

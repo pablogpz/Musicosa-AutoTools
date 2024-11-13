@@ -120,6 +120,8 @@ export const mockTemplate = (partial?: Partial<Template>): Template => ({
         chance.guid({ version: 4 }),
     avatarScale: partial?.avatarScale ??
         chance.floating({ min: 0.1, max: 1 }),
+    authorAvatarScale: partial?.authorAvatarScale ??
+        chance.floating({ min: 0.1, max: 1 }),
     videoBoxWidthPx: partial?.videoBoxWidthPx ??
         chance.natural({ min: 1, max: 1280 }),
     videoBoxHeightPx: partial?.videoBoxHeightPx ??

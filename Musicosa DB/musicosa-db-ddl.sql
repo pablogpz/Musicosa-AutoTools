@@ -46,7 +46,7 @@ VALUES ('templates', 'total_height_px', '1080', 'integer');
 INSERT INTO settings (group_key, setting, value, type)
 VALUES ('generation', 'videoclips_override_top_n_duration', '10', 'integer');
 INSERT INTO settings (group_key, setting, value, type)
-VALUES ('generation', 'videoclips_override_duration_up_to_x_seconds', '180', 'integer');
+VALUES ('generation', 'videoclips_override_duration_up_to_x_seconds', '-1', 'integer');
 
 CREATE TABLE avatars
 (
@@ -103,6 +103,7 @@ CREATE TABLE templates
     entry                      TEXT    NOT NULL
         CONSTRAINT template_pk PRIMARY KEY,
     avatar_scale               REAL    NOT NULL DEFAULT 1.0,
+    author_avatar_scale        REAL    NOT NULL DEFAULT 1.0,
     video_box_width_px         INTEGER NOT NULL
         CONSTRAINT video_box_width_is_positive CHECK ( video_box_width_px > 0 ),
     video_box_height_px        INTEGER NOT NULL

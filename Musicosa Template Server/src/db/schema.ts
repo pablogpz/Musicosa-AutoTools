@@ -58,6 +58,7 @@ export type Entry = InferSelectModel<typeof entries>
 export const templates = sqliteTable('templates', {
     entry: text('entry').references(() => entries.id).primaryKey(),
     avatarScale: real('avatar_scale').notNull(),
+    authorAvatarScale: real('author_avatar_scale').notNull(),
     videoBoxWidthPx: integer('video_box_width_px').notNull(),
     videoBoxHeightPx: integer('video_box_height_px').notNull(),
     videoBoxPositionTopPx: integer('video_box_position_top_px').notNull(),

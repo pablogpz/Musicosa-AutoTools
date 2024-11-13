@@ -31,7 +31,7 @@ export type ResolvedAvatar = Omit<Avatar, 'imageFilename'> & { resolvedImageFile
 export type ResolvedScoring = Scoring & { formattedScore: string }
 
 export type ResolvedTemplateProps =
-    Pick<Template, 'avatarScale' | 'videoBoxWidthPx' | 'videoBoxHeightPx'> &
+    Pick<Template, 'avatarScale' | 'authorAvatarScale' | 'videoBoxWidthPx' | 'videoBoxHeightPx'> &
     Pick<Entry, 'title' | 'specialTopic'> &
     Pick<ResolvedEntryStats, 'rankingPlace' | 'formattedAvgScore'> &
     {
@@ -69,6 +69,7 @@ export const resolveTemplateProps = async (templateUUID: string): Promise<Resolv
     const templateResult = await db
         .select({
             avatarScale: templates.avatarScale,
+            authorAvatarScale: templates.authorAvatarScale,
             videoBoxWidthPx: templates.videoBoxWidthPx,
             videoBoxHeightPx: templates.videoBoxHeightPx
         })
@@ -114,6 +115,7 @@ export const resolveTemplateProps = async (templateUUID: string): Promise<Resolv
         rankingPlace: entryStats.rankingPlace,
         formattedAvgScore: formatNumberToDecimalPrecision(entryStats.avgScore!, decimalDigits),
         avatarScale: template.avatarScale,
+        authorAvatarScale: template.authorAvatarScale,
         videoBoxWidthPx: template.videoBoxWidthPx,
         videoBoxHeightPx: template.videoBoxHeightPx,
         author: allContestants.find(contestant => contestant.id === entry.author) ?? defaultAuthor,

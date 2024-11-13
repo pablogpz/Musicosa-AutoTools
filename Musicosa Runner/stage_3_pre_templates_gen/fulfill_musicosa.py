@@ -174,6 +174,7 @@ def generate_unfulfilled_templates(entries_sequence_number_index: dict[int, Entr
                                                    get_missing_templates())
 
     last_avatar_scale = ""
+    last_author_avatar_scale = ""
     last_video_width = ""
     last_video_height = ""
     last_video_top = ""
@@ -200,6 +201,13 @@ def generate_unfulfilled_templates(entries_sequence_number_index: dict[int, Entr
                                     default=last_avatar_scale,
                                     indentation_level=2)
         last_avatar_scale = avatar_scale
+
+        author_avatar_scale =  better_input("Author's avatar scale (factor)",
+                                    lambda x: re.match(r"^\d+([.]\d+)?$", x) is not None,
+                                    lambda x: f"Invalid scale factor '{x}' (Must be a numeric factor)",
+                                    default=last_author_avatar_scale,
+                                    indentation_level=2)
+        last_author_avatar_scale = author_avatar_scale
 
         video_width = better_input("Videoclip width (px)",
                                    lambda x: x.isdigit() and int(x) > 0,
@@ -232,6 +240,7 @@ def generate_unfulfilled_templates(entries_sequence_number_index: dict[int, Entr
         for sequence_number in selection:
             templates[sequence_number] = Template(entry=entries_sequence_number_index[sequence_number],
                                                   avatar_scale=float(avatar_scale),
+                                                  author_avatar_scale=float(author_avatar_scale),
                                                   video_box_width_px=int(video_width),
                                                   video_box_height_px=int(video_height),
                                                   video_box_position_top_px=int(video_top),

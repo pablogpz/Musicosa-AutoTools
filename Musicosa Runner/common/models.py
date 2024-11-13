@@ -215,6 +215,7 @@ class Entry:
 class Template:
     entry: Entry
     avatar_scale: float
+    author_avatar_scale: float
     video_box_width_px: int
     video_box_height_px: int
     video_box_position_top_px: int
@@ -223,6 +224,7 @@ class Template:
     class ORM(Model):
         entry = ForeignKeyField(Entry.ORM, column_name="entry", primary_key=True)
         avatar_scale = FloatField(column_name="avatar_scale", default=1.0)
+        author_avatar_scale = FloatField(column_name="author_avatar_scale", default=1.0)
         video_box_width_px = IntegerField(column_name="video_box_width_px")
         video_box_height_px = IntegerField(column_name="video_box_height_px")
         video_box_position_top_px = IntegerField(column_name="video_box_position_top_px")
@@ -236,6 +238,7 @@ class Template:
             # noinspection PyTypeChecker
             return Template(entry=self.entry.to_domain(),
                             avatar_scale=self.avatar_scale,
+                            author_avatar_scale=self.author_avatar_scale,
                             video_box_width_px=self.video_box_width_px,
                             video_box_height_px=self.video_box_height_px,
                             video_box_position_top_px=self.video_box_position_top_px,
@@ -244,6 +247,7 @@ class Template:
     def to_orm(self) -> "Template.ORM":
         return Template.ORM(entry=self.entry.to_orm(),
                             avatar_scale=self.avatar_scale,
+                            author_avatar_scale=self.author_avatar_scale,
                             video_box_width_px=self.video_box_width_px,
                             video_box_height_px=self.video_box_height_px,
                             video_box_position_top_px=self.video_box_position_top_px,
