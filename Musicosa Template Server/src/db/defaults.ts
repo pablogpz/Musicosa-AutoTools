@@ -54,7 +54,7 @@ export const defaultTemplate: Template = {
     avatarScale: 0.425,
     authorAvatarScale: 0.6,
     videoBoxWidthPx: 1200,
-    videoBoxHeightPx: 675,
+    videoBoxHeightPx: 676,
     videoBoxPositionTopPx: 86,
     videoBoxPositionLeftPx: 720,
 }

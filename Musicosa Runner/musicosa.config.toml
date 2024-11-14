@@ -2,7 +2,7 @@ start_from = 1
 artifacts_folder = "artifacts"
 
 [stage_1]
-csv_forms_folder = "contestant_forms"
+csv_forms_folder = "contestant_forms/4th-edition"
 valid_titles_file = "titles.txt"
 
 [stage_4]
@@ -16,7 +16,7 @@ quiet_ffmpeg = true
 [stage_6]
 video_bits_folder = "artifacts/video_bits"
 overwrite_video_bits = true
-stitch_final_video = true
+stitch_final_video = false
 final_video_name = "musicosa-4th-edition"
 quiet_ffmpeg = true
 quiet_ffmpeg_final_video = false
