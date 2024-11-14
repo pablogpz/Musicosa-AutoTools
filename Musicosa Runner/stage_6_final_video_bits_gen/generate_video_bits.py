@@ -1,5 +1,6 @@
 from os import path
 from os.path import basename
+from math import ceil
 
 import ffmpeg
 from ffmpeg import VideoStream, AudioStream
@@ -101,7 +102,8 @@ def generate_video_bit(videoclip_path: str, vid_opts: EntryVideoOptions, templat
         scaled_videoclip_stream = (videoclip_stream
                                    .scale(w=vid_opts.width, h=vid_opts.height,
                                           force_original_aspect_ratio="decrease")
-                                   .pad(width=vid_opts.width, height=vid_opts.height, x="(ow-iw)/2", y="(oh-ih)/2",
+                                   .pad(width=ceil(vid_opts.width / 2) * 2, height=ceil(vid_opts.height / 2) * 2,
+                                        x="(ow-iw)/2", y="(oh-ih)/2",
                                         color="Black")
                                    .setsar(sar=1))
 
@@ -111,7 +113,9 @@ def generate_video_bit(videoclip_path: str, vid_opts: EntryVideoOptions, templat
         (ffmpeg
          .output(output_video_bit_stream, videoclip_audio_stream,
                  filename=video_bit_path,
-                 r=VIDEO_FPS)
+                 r=VIDEO_FPS,
+                 vcodec="libx264",
+                 b="6000k")
          .run(overwrite_output=True, quiet=quiet_ffmpeg))
     except FFMpegError as err:
         print(f"[GENERATION FAILED] {vid_opts.entry_title}: {err}")
@@ -146,7 +150,9 @@ def generate_final_video(video_bits_files: list[str],
 
         (ffmpeg
          .output(concat_videos_node.video(0).copy(), concat_videos_node.audio(0).acopy(),
-                 filename=final_video_path)
+                 filename=final_video_path,
+                 vcodec="libx264",
+                 b="6000k")
          .run(overwrite_output=True, quiet=quiet_ffmpeg))
 
         print(f"[FINAL VIDEO GENERATED] At '{final_video_path}' from {len(video_bits_files)} clips")
