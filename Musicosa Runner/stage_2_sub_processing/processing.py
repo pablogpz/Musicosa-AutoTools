@@ -24,8 +24,10 @@ def process_musicosa(musicosa: Musicosa) -> tuple[list[ContestantStats], list[En
                                                               ranking_place=None,
                                                               ranking_sequence=None)
 
-            entries_stats[score.entry_title].avg_score += round(score.score_value / contestants_count,
-                                                                significant_decimal_digits)
+            entries_stats[score.entry_title].avg_score += score.score_value
+
+    for entry_stats in entries_stats.values():
+        entry_stats.avg_score = round(entry_stats.avg_score / contestants_count, significant_decimal_digits)
 
     # Contestants average score
 
