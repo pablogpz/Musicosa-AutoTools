@@ -109,3 +109,58 @@ FROM (SELECT c.name AS contestant, sum(abs(cge.score - se.avg_score)) AS data
                JOIN contestants c ON cge.contestant = c.id
       GROUP BY cge.contestant
       ORDER BY data) sq;
+
+-- POST-CEREMONY REQUESTED STATS
+
+-- 7 ABUSER (por Arancha jajaja)
+SELECT contestants.name, count(*) as data
+FROM contestant_grades_entries
+         JOIN contestants ON contestant_grades_entries.contestant = contestants.id
+WHERE score = 7
+GROUP BY contestant
+ORDER BY data DESC;
+
+-- Frecuencia de notas
+SELECT contestant_grades_entries.score, count(*) as data
+FROM contestant_grades_entries
+GROUP BY score
+ORDER BY data DESC;
+
+-- Diferencia la nota personal y la autofelación
+SELECT personal_mean_sq.name, autofelacion_sq.data - personal_mean_sq.data as data
+FROM (SELECT c.name, avg(cge.score) AS data
+      FROM contestants c
+               JOIN contestant_grades_entries cge ON c.id = cge.contestant
+      GROUP BY c.id
+      ORDER BY data DESC) AS personal_mean_sq
+         JOIN (SELECT a.name, avg(cge.score) AS data
+               FROM entries e
+                        JOIN contestants a ON e.author = a.id
+                        JOIN contestant_grades_entries cge ON e.id = cge.entry
+                        JOIN contestants c ON cge.contestant = c.id
+               WHERE e.author = cge.contestant
+               GROUP BY e.author
+               ORDER BY data DESC) autofelacion_sq ON personal_mean_sq.name = autofelacion_sq.name
+ORDER BY data;
+
+-- Sagas
+SELECT saga,
+       group_concat(e.title),
+       count(*)          as data0,
+       avg(se.avg_score) as data1,
+       group_concat(se.ranking_place)
+FROM entries_extra_info eei
+         JOIN entries e ON eei.entry = e.id
+         JOIN stats_entries se ON eei.entry = se.entry
+GROUP BY saga
+ORDER BY data1 DESC;
+
+-- Cómo hemos puntuado a Adrián
+SELECT c.name, avg(cge.score) AS data0, group_concat(cge.score) as data1
+FROM entries e
+         JOIN contestant_grades_entries cge ON e.id = cge.entry
+         JOIN contestants c ON cge.contestant = c.id
+WHERE e.author = (SELECT id FROM contestants WHERE name = 'Ana')
+  AND cge.contestant <> (SELECT id FROM contestants WHERE name = 'Ana')
+GROUP BY cge.contestant
+ORDER BY data0 DESC;

@@ -357,6 +357,27 @@ class EntryStats:
                               ranking_sequence=self.ranking_sequence)
 
 
+@dataclass
+class EntryExtraInfo:
+    entry: Entry
+    saga: str
+
+    class ORM(Model):
+        entry = ForeignKeyField(Entry.ORM, column_name="entry", primary_key=True)
+        saga = TextField(column_name="saga", null=False)
+
+        class Meta:
+            database = db
+            table_name = "entries_extra_info"
+
+        def to_domain(self) -> "EntryExtraInfo":
+            # noinspection PyTypeChecker
+            return EntryExtraInfo(entry=self.entry.to_domain(), saga=self.saga)
+
+    def to_orm(self) -> "EntryExtraInfo.ORM":
+        return EntryExtraInfo.ORM(entry=self.entry.to_orm(), saga=self.saga)
+
+
 # MODEL PARSERS
 
 def parse_setting_value(type_str: SettingType, value: str) -> SettingValueType:

@@ -167,3 +167,13 @@ CREATE TABLE stats_entries
     CONSTRAINT entry_fk FOREIGN KEY (entry) REFERENCES entries (id)
         ON UPDATE CASCADE ON DELETE CASCADE
 );
+
+CREATE TABLE entries_extra_info
+(
+    entry TEXT NOT NULL
+        CONSTRAINT entries_extra_info_pk PRIMARY KEY,
+    saga  TEXT NOT NULL,
+
+    CONSTRAINT entry_fk FOREIGN KEY (entry) REFERENCES entries (id)
+        ON UPDATE CASCADE ON DELETE CASCADE
+);
