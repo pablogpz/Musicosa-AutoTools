@@ -40,7 +40,7 @@ from stage_6_final_video_bits_gen.execute import execute as execute_stage_6
 from stage_6_final_video_bits_gen.stage_input import load_entries_video_options_from_db
 from stage_6_final_video_bits_gen.type_definitions import EntryVideoOptions, Timestamp, StageSixOutput, StageSixInput
 
-# STAGE CONSTANTS
+# STAGE IDs
 
 STAGE_ONE: Literal[1] = 1
 STAGE_TWO: Literal[2] = 2
@@ -76,7 +76,8 @@ DEFAULT_STAGE_6_QUIET_FFMPEG = True
 DEFAULT_QUIET_FFMPEG_FINAL_VIDEO = False
 
 
-# Config dataclasses. Keep in sync with TOML keys
+# Config dataclasses
+#     Note: Keep in sync with TOML keys
 
 @dataclass
 class StageOneConfig:
@@ -387,7 +388,7 @@ def noconf_stage_gate[SI, SO](
 
 if __name__ == '__main__':
 
-    # CONFIGURATION
+    # MUSICOSA CONFIG
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--config_file", default=DEFAULT_CONFIG_FILE)
