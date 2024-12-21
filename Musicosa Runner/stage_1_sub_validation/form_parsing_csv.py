@@ -1,11 +1,10 @@
 import os
 from os.path import basename
 
-from common.constants import VIDEO_TIMESTAMP_SEPARATOR
-from common.time_utils import validate_time_str, time_str_zfill
 from common.type_definitions import StageException
-from stage_1_sub_validation.constants import CSV_SEPARATOR, CSV_FIELDS_COUNT, ALLOWED_DECIMAL_SEPARATOR_CHARS, \
-    NORMALIZED_DECIMAL_SEPARATOR_CHAR
+from form_parsing_utils import parse_special_topic_str
+from stage_1_sub_validation.constants import CSV_SEPARATOR, CSV_FIELDS_COUNT
+from stage_1_sub_validation.form_parsing_utils import parse_score_str, parse_video_timestamp_str
 from stage_1_sub_validation.type_definitions import ContestantSubmissionEntry, ContestantSubmission
 
 
@@ -17,12 +16,8 @@ def parse_contestant_form_entry_csv(entry_line: str) -> ContestantSubmissionEntr
 
     title = line[0].strip()
 
-    score_normalized = line[1].strip()
-    for separator in ALLOWED_DECIMAL_SEPARATOR_CHARS:
-        if separator in score_normalized:
-            score_normalized = score_normalized.replace(separator, NORMALIZED_DECIMAL_SEPARATOR_CHAR)
     try:
-        score = float(score_normalized)
+        score = parse_score_str(line[1])
     except ValueError as err:
         raise StageException(f"[{title}] Error parsing score value '{line[1]}'") from err
 
@@ -35,25 +30,15 @@ def parse_contestant_form_entry_csv(entry_line: str) -> ContestantSubmissionEntr
     video_url = line[3].strip() or None
 
     if raw_video_timestamp := line[4].strip():
-        raw_video_timestamp = raw_video_timestamp.replace(" ", "").split(VIDEO_TIMESTAMP_SEPARATOR)
-
-        if len(raw_video_timestamp) != 2:
-            raise StageException(f"[{title}] Error parsing video timestamp '{line[4]}'")
-
-        timestamp_start, timestamp_end = raw_video_timestamp
-
-        if not validate_time_str(timestamp_start):
-            raise StageException(f"[{title}] Error parsing video timestamp start '{timestamp_start}'")
-
-        if not validate_time_str(timestamp_end):
-            raise StageException(f"[{title}] Error parsing video timestamp end '{timestamp_end}'")
-
-        video_timestamp = f"{time_str_zfill(timestamp_start)}{VIDEO_TIMESTAMP_SEPARATOR}{time_str_zfill(timestamp_end)}"
+        try:
+            video_timestamp = parse_video_timestamp_str(raw_video_timestamp)
+        except ValueError as err:
+            raise StageException(f"[{title}] {err}") from err
     else:
         video_timestamp = None
 
-    if special_topic := line[5].strip():
-        special_topic = special_topic.upper()
+    if raw_special_topic := line[5].strip():
+        special_topic = parse_special_topic_str(raw_special_topic)
     else:
         special_topic = None
 
@@ -62,8 +47,8 @@ def parse_contestant_form_entry_csv(entry_line: str) -> ContestantSubmissionEntr
 
 
 def parse_contestant_form_csv(form_file: str) -> ContestantSubmission:
-    contestant_name = basename(form_file).rsplit('.', 1)[0]
     entries: list[ContestantSubmissionEntry] = []
+    contestant_name = basename(form_file).rsplit('.', 1)[0]
 
     with open(form_file, "r", encoding="UTF-8") as file:
         for csv_line in file:
@@ -76,8 +61,8 @@ def parse_contestant_form_csv(form_file: str) -> ContestantSubmission:
 
 
 def parse_contestant_forms_csv_folder(forms_folder: str) -> list[ContestantSubmission]:
-    form_files = [file for file in os.listdir(forms_folder) if file.endswith('.csv')]
     submissions: list[ContestantSubmission] = []
+    form_files = [file for file in os.listdir(forms_folder) if file.endswith('.csv')]
 
     for form_file in form_files:
         submissions.append(parse_contestant_form_csv(f"{forms_folder}/{form_file}"))

@@ -1,12 +1,12 @@
 from common.type_definitions import StageException
+from form_parsing_xlsx import parse_contestant_forms_xlsx_folder
 from models import SpecialEntryTopic
-from stage_1_sub_validation.form_parsing_csv import parse_contestant_forms_csv_folder
 from stage_1_sub_validation.type_definitions import ContestantSubmission
 
 
-def get_submissions_from_forms_folder(csv_forms_folder: str) -> list[ContestantSubmission]:
+def get_submissions_from_forms_folder(forms_folder: str) -> list[ContestantSubmission]:
     try:
-        contestant_submissions = parse_contestant_forms_csv_folder(csv_forms_folder)
+        contestant_submissions = parse_contestant_forms_xlsx_folder(forms_folder)
     except Exception as err:
         raise StageException(f"[Submission forms parsing error] {err}") from err
 
