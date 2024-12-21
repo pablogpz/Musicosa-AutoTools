@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from models import SpecialEntryTopic
+from common.model.models import SpecialEntryTopic
 
 
 @dataclass

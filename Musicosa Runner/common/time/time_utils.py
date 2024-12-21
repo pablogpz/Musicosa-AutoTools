@@ -60,8 +60,10 @@ def parse_time(time_str: str) -> time | None:
 
     return time.fromisoformat(time_str_zfill(time_str))
 
+
 def time_to_seconds(time_value: time) -> int:
     return time_value.hour * 3600 + time_value.minute * 60 + time_value.second
+
 
 def seconds_between(start: time, end: time) -> int:
     return time_to_seconds(end) - time_to_seconds(start)

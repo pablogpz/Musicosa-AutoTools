@@ -1,8 +1,8 @@
-from common.models import SpecialEntryTopic
-from common.settings import is_setting_set
+from common.model.models import SpecialEntryTopic
+from common.model.settings import is_setting_set
 from common.type_definitions import StageException
+from stage_1_sub_validation.logic.validation import validate_contestant_submission_collection
 from stage_1_sub_validation.type_definitions import StageOneOutput, ContestantSubmission
-from stage_1_sub_validation.validation import validate_contestant_submission_collection
 
 
 def execute(submissions: list[ContestantSubmission], valid_titles: list[str],

@@ -3,7 +3,7 @@ from typing import Literal
 
 from peewee import PeeweeException
 
-from common.models import Setting
+from common.model.models import Setting
 
 
 class SettingsGroups(Enum):

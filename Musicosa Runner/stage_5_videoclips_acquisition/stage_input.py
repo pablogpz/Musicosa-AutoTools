@@ -1,4 +1,4 @@
-from common.models import Entry
+from common.model.models import Entry
 
 
 def load_entries_from_db() -> list[Entry]:

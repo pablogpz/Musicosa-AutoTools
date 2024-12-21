@@ -1,4 +1,4 @@
-from models import Template
+from common.model.models import Template
 from stage_4_templates_gen.type_definitions import Template as S4Template
 
 

@@ -2,9 +2,9 @@ import os
 from os import path
 
 from common.constants import VIDEO_FORMAT
-from common.settings import is_setting_set
+from common.model.settings import is_setting_set
 from common.type_definitions import StageException
-from stage_6_final_video_bits_gen.generate_video_bits import generate_all_video_bits, generate_final_video
+from stage_6_final_video_bits_gen.logic.generate_video_bits import generate_all_video_bits, generate_final_video
 from stage_6_final_video_bits_gen.type_definitions import EntryVideoOptions, StageSixOutput
 
 

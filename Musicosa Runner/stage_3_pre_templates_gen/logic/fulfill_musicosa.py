@@ -1,14 +1,15 @@
 import re
 from os.path import basename
 
-from common.better_input import better_input
 from common.constants import VIDEO_TIMESTAMP_SEPARATOR, VIDEO_DURATION_OVERRIDE_FULL_DURATION_VALUE
-from common.models import Avatar, Setting, Contestant, Template, Entry, VideoOptions
-from common.settings import get_setting_by_key, SettingsGroups, TemplateSettingsNames, GenerationSettingsNames, \
+from common.input.better_input import better_input
+from common.model.models import Avatar, Setting, Contestant, Template, Entry, VideoOptions
+from common.model.settings import get_setting_by_key, SettingsGroups, TemplateSettingsNames, GenerationSettingsNames, \
     is_setting_set
-from common.time_utils import parse_time, validate_video_timestamp_str, time_str_zfill
+from common.time.time_utils import parse_time, validate_video_timestamp_str, time_str_zfill
 from stage_3_pre_templates_gen.constants import AVATAR_SUPPORTED_FORMATS
-from stage_3_pre_templates_gen.fulfill_helpers import get_missing_sequence_numbers, parse_sequence_selection_of_kvstore, \
+from stage_3_pre_templates_gen.logic.fulfill_helpers import get_missing_sequence_numbers, \
+    parse_sequence_selection_of_kvstore, \
     format_sequence_numbers, validate_sequence_selection
 from stage_3_pre_templates_gen.type_definitions import AvatarPairing
 
@@ -202,11 +203,11 @@ def generate_unfulfilled_templates(entries_sequence_number_index: dict[int, Entr
                                     indentation_level=2)
         last_avatar_scale = avatar_scale
 
-        author_avatar_scale =  better_input("Author's avatar scale (factor)",
-                                    lambda x: re.match(r"^\d+([.]\d+)?$", x) is not None,
-                                    lambda x: f"Invalid scale factor '{x}' (Must be a numeric factor)",
-                                    default=last_author_avatar_scale,
-                                    indentation_level=2)
+        author_avatar_scale = better_input("Author's avatar scale (factor)",
+                                           lambda x: re.match(r"^\d+([.]\d+)?$", x) is not None,
+                                           lambda x: f"Invalid scale factor '{x}' (Must be a numeric factor)",
+                                           default=last_author_avatar_scale,
+                                           indentation_level=2)
         last_author_avatar_scale = author_avatar_scale
 
         video_width = better_input("Videoclip width (px)",

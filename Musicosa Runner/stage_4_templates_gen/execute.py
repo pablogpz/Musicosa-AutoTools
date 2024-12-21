@@ -3,10 +3,10 @@ from os import path
 
 from validators import url as validate_url, ValidationError
 
-from common.settings import is_setting_set
+from common.model.settings import is_setting_set
 from common.type_definitions import StageException
 from stage_4_templates_gen.constants import MAX_GEN_RETRY_ATTEMPTS
-from stage_4_templates_gen.generate_templates import generate_all_templates
+from stage_4_templates_gen.logic.generate_templates import generate_all_templates
 from stage_4_templates_gen.type_definitions import Template, StageFourOutput
 
 

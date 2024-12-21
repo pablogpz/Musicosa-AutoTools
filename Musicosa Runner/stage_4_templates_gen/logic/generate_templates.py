@@ -4,8 +4,8 @@ from os.path import basename
 from playwright.sync_api import Response, sync_playwright
 
 from common.constants import TEMPLATE_IMG_FORMAT
-from common.settings import get_setting_by_key
-from common.slugify import slugify
+from common.model.settings import get_setting_by_key
+from common.naming.slugify import slugify
 from stage_4_templates_gen.type_definitions import Template
 
 

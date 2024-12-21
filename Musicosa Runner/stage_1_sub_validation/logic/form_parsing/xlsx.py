@@ -3,9 +3,9 @@ import os
 from openpyxl.reader.excel import load_workbook
 
 from common.type_definitions import StageException
-from constants import XLSX_CONTESTANT_NAME_COORDS, XLSX_FORM_DATA_COORDS
-from form_parsing_utils import parse_video_timestamp_str, parse_special_topic_str
-from stage_1_sub_validation.form_parsing_utils import parse_score_str
+from stage_1_sub_validation.constants import XLSX_CONTESTANT_NAME_COORDS, XLSX_FORM_DATA_COORDS
+from stage_1_sub_validation.logic.form_parsing.utils import parse_score_str
+from stage_1_sub_validation.logic.form_parsing.utils import parse_video_timestamp_str, parse_special_topic_str
 from stage_1_sub_validation.type_definitions import ContestantSubmissionEntry, ContestantSubmission
 
 

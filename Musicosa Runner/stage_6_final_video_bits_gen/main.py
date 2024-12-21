@@ -4,7 +4,8 @@ from peewee import PeeweeException
 
 from common.type_definitions import StageException
 from stage_6_final_video_bits_gen.defaults import DEFAULT_ARTIFACTS_FOLDER, DEFAULT_VIDEO_BITS_FOLDER, \
-    DEFAULT_FINAL_VIDEO_NAME, DEFAULT_STITCH_FINAL_VIDEO_FLAG, DEFAULT_OVERWRITE_VIDEO_BITS,DEFAULT_QUIET_FFMPEG,DEFAULT_QUIET_FFMPEG_FINAL_VIDEO
+    DEFAULT_FINAL_VIDEO_NAME, DEFAULT_STITCH_FINAL_VIDEO_FLAG, DEFAULT_OVERWRITE_VIDEO_BITS, DEFAULT_QUIET_FFMPEG, \
+    DEFAULT_QUIET_FFMPEG_FINAL_VIDEO
 from stage_6_final_video_bits_gen.execute import execute
 from stage_6_final_video_bits_gen.stage_input import load_entries_video_options_from_db
 

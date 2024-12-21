@@ -1,20 +1,20 @@
 from os import path
 from os.path import basename
-from math import ceil
 
 import ffmpeg
 from ffmpeg import VideoStream, AudioStream
 from ffmpeg.exceptions import FFMpegError
 from ffmpeg.filters import concat
+from math import ceil
 
 from common.constants import VIDEO_DURATION_OVERRIDE_FULL_DURATION_VALUE, TEMPLATE_IMG_FORMAT, VIDEO_FORMAT
-from common.settings import get_setting_by_key
-from common.slugify import slugify
-from common.time_utils import parse_time, time_to_seconds
+from common.model.settings import get_setting_by_key
+from common.naming.slugify import slugify
+from common.time.time_utils import parse_time, time_to_seconds
 from common.type_definitions import StageException
 from stage_6_final_video_bits_gen.constants import VIDEO_FPS
+from stage_6_final_video_bits_gen.logic.video_helpers import get_video_duration_seconds
 from stage_6_final_video_bits_gen.type_definitions import EntryVideoOptions
-from stage_6_final_video_bits_gen.video_helpers import get_video_duration_seconds
 
 
 def generate_all_video_bits(

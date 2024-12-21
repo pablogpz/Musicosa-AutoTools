@@ -1,4 +1,5 @@
 # Musicosa Runner
+
 **Author:** Juan Pablo García Plaza Pérez (@pablogpz)
 
 ## Overview
@@ -15,11 +16,13 @@ the final video bits (or stitch the entire final video)
 ## Usage
 
 To run the pipeline, execute the main script:
+
 ```sh
 python musicosa.py
 ```
 
 ### Environment
+
 See `.env.example` to provide the mandatory env vars
 
 ## Configuration

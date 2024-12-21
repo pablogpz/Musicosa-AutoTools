@@ -2,9 +2,9 @@ import os
 from os.path import basename
 
 from common.type_definitions import StageException
-from form_parsing_utils import parse_special_topic_str
 from stage_1_sub_validation.constants import CSV_SEPARATOR, CSV_FIELDS_COUNT
-from stage_1_sub_validation.form_parsing_utils import parse_score_str, parse_video_timestamp_str
+from stage_1_sub_validation.logic.form_parsing.utils import parse_score_str, parse_video_timestamp_str
+from stage_1_sub_validation.logic.form_parsing.utils import parse_special_topic_str
 from stage_1_sub_validation.type_definitions import ContestantSubmissionEntry, ContestantSubmission
 
 

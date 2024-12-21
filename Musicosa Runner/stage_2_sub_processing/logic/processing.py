@@ -1,6 +1,6 @@
 from functools import reduce
 
-from common.settings import get_setting_by_key
+from common.model.settings import get_setting_by_key
 from stage_2_sub_processing.type_definitions import Musicosa, ContestantStats, EntryStats, Entry
 
 

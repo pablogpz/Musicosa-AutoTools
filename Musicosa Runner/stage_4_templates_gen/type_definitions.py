@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 
+
 @dataclass
 class Template:
     uuid: str
     entry_title: str
+
 
 @dataclass
 class StageFourInput:

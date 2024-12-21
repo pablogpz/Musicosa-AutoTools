@@ -6,7 +6,7 @@ from typing import Literal
 from peewee import Model, TextField, CompositeKey, AutoField, FloatField, ForeignKeyField, IntegerField
 
 from common.db.database import db
-from common.time_utils import parse_time
+from common.time.time_utils import parse_time
 
 
 @dataclass

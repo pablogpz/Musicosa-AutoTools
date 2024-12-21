@@ -1,6 +1,6 @@
+from common.model.models import SpecialEntryTopic
 from common.type_definitions import StageException
-from form_parsing_xlsx import parse_contestant_forms_xlsx_folder
-from models import SpecialEntryTopic
+from stage_1_sub_validation.logic.form_parsing.xlsx import parse_contestant_forms_xlsx_folder
 from stage_1_sub_validation.type_definitions import ContestantSubmission
 
 

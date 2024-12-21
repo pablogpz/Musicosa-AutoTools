@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from common.models import Entry
+from common.model.models import Entry
 
 
 @dataclass

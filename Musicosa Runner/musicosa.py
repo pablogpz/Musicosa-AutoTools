@@ -9,14 +9,14 @@ from typing import Literal, Never, Protocol, Any
 
 from peewee import PeeweeException
 
-from common.better_input import better_input
 from common.constants import VIDEO_TIMESTAMP_SEPARATOR
 from common.db.database import db
 from common.db.peewee_helpers import bulk_pack
-from common.identifiers import generate_contestant_uuid5, generate_entry_uuid5
-from common.models import Contestant, Avatar, Entry, Scoring, VideoOptions, Template, Setting, ContestantStats, \
+from common.input.better_input import better_input
+from common.model.models import Contestant, Avatar, Entry, Scoring, VideoOptions, Template, Setting, ContestantStats, \
     EntryStats, Metadata, SpecialEntryTopic
-from common.time_utils import parse_time
+from common.naming.identifiers import generate_contestant_uuid5, generate_entry_uuid5
+from common.time.time_utils import parse_time
 from stage_1_sub_validation.execute import execute as execute_stage_1
 from stage_1_sub_validation.stage_input import get_submissions_from_forms_folder, get_submission_entry_valid_titles, \
     get_special_entry_topics_from_db

@@ -6,8 +6,8 @@ import yt_dlp
 from ffmpeg.exceptions import FFMpegError
 
 from common.constants import VIDEO_FORMAT
-from common.models import Entry
-from common.slugify import slugify
+from common.model.models import Entry
+from common.naming.slugify import slugify
 from common.type_definitions import StageException
 
 
@@ -29,7 +29,7 @@ def download_all_videoclips(entries: list[Entry], artifacts_folder: str, quiet_f
 
     ytdl_options = {
         **ytdl_base_options,
-        "format_sort": ["res:1080"], # Prefer sources up to 1080p resolution
+        "format_sort": ["res:1080"],  # Prefer sources up to 1080p resolution
         "outtmpl": "",  # IMPORTANT: Leave here for the workaround to work
     }
 

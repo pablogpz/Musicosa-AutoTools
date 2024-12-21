@@ -1,6 +1,6 @@
-from common.settings import is_setting_set
+from common.model.settings import is_setting_set
 from common.type_definitions import StageException
-from stage_3_pre_templates_gen.fulfill_musicosa import generate_unfulfilled_avatar_pairings, \
+from stage_3_pre_templates_gen.logic.fulfill_musicosa import generate_unfulfilled_avatar_pairings, \
     generate_unfulfilled_templates_settings, \
     generate_unfulfilled_templates, generate_unfulfilled_video_options, generate_unfulfilled_generation_settings
 from stage_3_pre_templates_gen.type_definitions import StageThreeOutput, Musicosa

@@ -1,6 +1,6 @@
-from common.settings import is_setting_set
+from common.model.settings import is_setting_set
 from common.type_definitions import StageException
-from stage_2_sub_processing.processing import process_musicosa
+from stage_2_sub_processing.logic.processing import process_musicosa
 from stage_2_sub_processing.type_definitions import StageTwoOutput, Musicosa
 
 

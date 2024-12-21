@@ -5,11 +5,10 @@ from peewee import PeeweeException
 from common.constants import VIDEO_TIMESTAMP_SEPARATOR
 from common.db.database import db
 from common.db.peewee_helpers import bulk_pack
-from common.models import Entry, Scoring, VideoOptions, Contestant
-from common.time_utils import parse_time
+from common.model.models import Entry, Scoring, VideoOptions, Contestant, SpecialEntryTopic
+from common.naming.identifiers import generate_contestant_uuid5, generate_entry_uuid5
+from common.time.time_utils import parse_time
 from common.type_definitions import StageException
-from identifiers import generate_contestant_uuid5, generate_entry_uuid5
-from models import SpecialEntryTopic
 from stage_1_sub_validation.defaults import DEFAULT_CSV_FORMS_FOLDER, DEFAULT_VALID_TITLES_FILE
 from stage_1_sub_validation.execute import execute
 from stage_1_sub_validation.stage_input import get_submissions_from_forms_folder, get_submission_entry_valid_titles, \

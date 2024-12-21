@@ -1,9 +1,9 @@
 import os
 from os import path
 
-from common.models import Entry
+from common.model.models import Entry
 from common.type_definitions import StageException
-from stage_5_videoclips_acquisition.download_videoclips import download_all_videoclips
+from stage_5_videoclips_acquisition.logic.download_videoclips import download_all_videoclips
 from stage_5_videoclips_acquisition.type_definitions import StageFiveOutput
 
 
