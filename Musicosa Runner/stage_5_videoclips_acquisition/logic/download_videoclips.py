@@ -75,8 +75,13 @@ class MP4RemuxPostProcessor(yt_dlp.postprocessor.PostProcessor):
         super().__init__(self)
         self.quiet_ffmpeg = quiet_ffmpeg
 
-    def run(self, information):
-        downloaded_videoclip_path = information["filepath"]
+    def run(self, info):
+        downloaded_videoclip_path = info["filepath"]
+
+        if downloaded_videoclip_path.endswith(".mp4"):
+            print(f"[POST-PROCESS][SKIP REMUXING] Skipping '{basename(downloaded_videoclip_path)}'")
+            return [], info
+
         remuxed_videoclip_path = f"{downloaded_videoclip_path.rsplit(".", 1)[0]}.mp4"
 
         print(f"[POST-PROCESS][REMUX START] Remuxing videoclip '{basename(downloaded_videoclip_path)}' to MP4")
@@ -92,6 +97,6 @@ class MP4RemuxPostProcessor(yt_dlp.postprocessor.PostProcessor):
         print(f"[POST-PROCESS][REMUX END] Remuxed videoclip '{basename(remuxed_videoclip_path)}'")
 
         safe_to_delete_files = [downloaded_videoclip_path]
-        new_information = {**information, "filepath": remuxed_videoclip_path}
+        new_info = {**info, "filepath": remuxed_videoclip_path}
 
-        return safe_to_delete_files, new_information
+        return safe_to_delete_files, new_info
