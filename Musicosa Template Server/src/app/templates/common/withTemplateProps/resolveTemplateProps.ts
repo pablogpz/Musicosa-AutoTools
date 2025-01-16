@@ -22,7 +22,7 @@ import { defaultAuthor, defaultAvatar } from '@/db/defaults'
 import contestantsRepository from '@/db/repository/contestants'
 import avatarsRepository from '@/db/repository/avatars'
 import settingsRepository from '@/db/repository/settings'
-import { DEFAULT_DECIMAL_DIGITS } from '@/app/defaults'
+import { DEFAULT_DISPLAY_DECIMAL_DIGITS } from '@/app/defaults'
 
 export type ResolvedEntryStats = EntryStats & { formattedAvgScore: string }
 
@@ -105,15 +105,15 @@ export const resolveTemplateProps = async (templateUUID: string): Promise<Resolv
         .then(results => results[0])
     const scoringEntries = await db.select().from(scoring).where(eq(scoring.entry, templateUUID))
 
-    const decimalDigitsSetting: TypedSetting<number> | undefined =
-        await settingsRepository.getSettingByKey('ranking.significant_decimal_digits')
-    const decimalDigits = decimalDigitsSetting?.value ?? DEFAULT_DECIMAL_DIGITS
+    const displayDecimalDigitsSetting: TypedSetting<number> | undefined =
+        await settingsRepository.getSettingByKey('templates.display_decimal_digits')
+    const displayDecimalDigits = displayDecimalDigitsSetting?.value ?? DEFAULT_DISPLAY_DECIMAL_DIGITS
 
     return {
         title: entry.title,
         specialTopic: entry.specialTopic,
         rankingPlace: entryStats.rankingPlace,
-        formattedAvgScore: formatNumberToDecimalPrecision(entryStats.avgScore!, decimalDigits),
+        formattedAvgScore: formatNumberToDecimalPrecision(entryStats.avgScore!, displayDecimalDigits),
         avatarScale: template.avatarScale,
         authorAvatarScale: template.authorAvatarScale,
         videoBoxWidthPx: template.videoBoxWidthPx,

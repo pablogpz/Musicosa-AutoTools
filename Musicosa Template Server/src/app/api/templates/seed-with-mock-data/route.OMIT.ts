@@ -36,7 +36,12 @@ import {
 } from '@/db/mocks/schema'
 import { RankingSettingsNames, SettingsGroups, TemplatesSettingsNames } from '@/db/settings'
 import { MetadataFields } from '@/db/metadata'
-import { DEFAULT_DECIMAL_DIGITS, DEFAULT_TEMPLATE_HEIGHT, DEFAULT_TEMPLATE_WIDTH } from '@/app/defaults'
+import {
+    DEFAULT_DECIMAL_DIGITS,
+    DEFAULT_DISPLAY_DECIMAL_DIGITS,
+    DEFAULT_TEMPLATE_HEIGHT,
+    DEFAULT_TEMPLATE_WIDTH
+} from '@/app/defaults'
 import { Chance } from 'chance'
 
 const DEFAULT_CONTESTANT_COUNT = 5
@@ -55,6 +60,10 @@ export async function GET(request: NextRequest) {
     const metadataCollectionValues = Object.values(MetadataFields).map(field => mockMetadata({ field }))
     const settingsValues = [
         mockSetting({
+            groupKey: SettingsGroups.ranking, setting: RankingSettingsNames.significantDecimalDigits,
+            value: DEFAULT_DECIMAL_DIGITS, type: 'integer'
+        }),
+        mockSetting({
             groupKey: SettingsGroups.templates, setting: TemplatesSettingsNames.totalWidthPx,
             value: DEFAULT_TEMPLATE_WIDTH, type: 'integer'
         }),
@@ -63,8 +72,8 @@ export async function GET(request: NextRequest) {
             value: DEFAULT_TEMPLATE_HEIGHT, type: 'integer'
         }),
         mockSetting({
-            groupKey: SettingsGroups.ranking, setting: RankingSettingsNames.significantDecimalDigits,
-            value: DEFAULT_DECIMAL_DIGITS, type: 'integer'
+            groupKey: SettingsGroups.templates, setting: TemplatesSettingsNames.displayDecimalDigits,
+            value: DEFAULT_DISPLAY_DECIMAL_DIGITS, type: 'integer'
         }),
     ]
     const avatarsValues = mockAvatars(contestantsCount)

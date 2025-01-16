@@ -50,10 +50,10 @@ function inputFactory(
 export interface TemplateEditorProps {
     templateWidth: number
     templateHeight: number
-    decimalDigits: number
+    displayDecimalDigits: number
 }
 
-export default function TemplateEditor({ templateWidth, templateHeight, decimalDigits }: TemplateEditorProps) {
+export default function TemplateEditor({ templateWidth, templateHeight, displayDecimalDigits }: TemplateEditorProps) {
     const INITIAL_CONTESTANT_COUNT = 5
 
     const [contestantCount, setContestantCount] = useState<number>(INITIAL_CONTESTANT_COUNT)
@@ -71,7 +71,7 @@ export default function TemplateEditor({ templateWidth, templateHeight, decimalD
         title,
         specialTopic,
         rankingPlace,
-        formattedAvgScore: formatNumberToDecimalPrecision(avgScore, decimalDigits),
+        formattedAvgScore: formatNumberToDecimalPrecision(avgScore, displayDecimalDigits),
         avatarScale,
         authorAvatarScale,
         videoBoxWidthPx,

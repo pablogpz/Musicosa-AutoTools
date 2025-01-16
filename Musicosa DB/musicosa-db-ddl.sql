@@ -44,6 +44,8 @@ VALUES ('templates', 'total_width_px', '1920', 'integer');
 INSERT INTO settings (group_key, setting, value, type)
 VALUES ('templates', 'total_height_px', '1080', 'integer');
 INSERT INTO settings (group_key, setting, value, type)
+VALUES ('templates', 'display_decimal_digits', '2', 'integer');
+INSERT INTO settings (group_key, setting, value, type)
 VALUES ('generation', 'videoclips_override_top_n_duration', '10', 'integer');
 INSERT INTO settings (group_key, setting, value, type)
 VALUES ('generation', 'videoclips_override_duration_up_to_x_seconds', '-1', 'integer');

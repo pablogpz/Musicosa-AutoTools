@@ -11,7 +11,8 @@ export enum ValidationSettingsNames {
 
 export enum TemplatesSettingsNames {
     totalWidthPx = 'total_width_px',
-    totalHeightPx = 'total_height_px'
+    totalHeightPx = 'total_height_px',
+    displayDecimalDigits = "display_decimal_digits",
 }
 
 export enum RankingSettingsNames {
