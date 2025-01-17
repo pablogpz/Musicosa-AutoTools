@@ -28,7 +28,8 @@ class Musicosa:
 @dataclass
 class ContestantStats:
     contestant: Contestant
-    avg_score: float | None
+    avg_given_score: float | None
+    avg_received_score: float | None
 
 
 @dataclass

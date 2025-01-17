@@ -312,11 +312,13 @@ class Scoring:
 @dataclass
 class ContestantStats:
     contestant: Contestant
-    avg_score: float | None
+    avg_given_score: float | None
+    avg_received_score: float | None
 
     class ORM(Model):
         contestant = ForeignKeyField(Contestant.ORM, column_name="contestant", primary_key=True)
-        avg_score = FloatField(column_name="avg_score", null=True)
+        avg_given_score = FloatField(column_name="avg_given_score", null=True)
+        avg_received_score = FloatField(column_name="avg_received_score", null=True)
 
         class Meta:
             database = db
@@ -324,10 +326,14 @@ class ContestantStats:
 
         def to_domain(self) -> "ContestantStats":
             # noinspection PyTypeChecker
-            return ContestantStats(contestant=self.contestant.to_domain(), avg_score=self.avg_score)
+            return ContestantStats(contestant=self.contestant.to_domain(),
+                                   avg_given_score=self.avg_given_score,
+                                   avg_received_score=self.avg_received_score)
 
     def to_orm(self) -> "ContestantStats.ORM":
-        return ContestantStats.ORM(contestant=self.contestant.to_orm(), avg_score=self.avg_score)
+        return ContestantStats.ORM(contestant=self.contestant.to_orm(),
+                                   avg_given_score=self.avg_given_score,
+                                   avg_received_score=self.avg_received_score)
 
 
 @dataclass

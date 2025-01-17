@@ -557,9 +557,9 @@ if __name__ == '__main__':
         print(f"  # Contestants loaded: {len(musicosa.contestants)}")
         print(f"  # Entries loaded: {len(musicosa.entries)}")
         print("")
-        contestant_stats_display = [(stat.contestant.contestant_name, stat.avg_score)
+        contestant_stats_display = [(stat.contestant.contestant_name, stat.avg_given_score, stat.avg_received_score)
                                     for stat in result.contestants_stats]
-        print(f"  Contestant stats (name, avg_score): {contestant_stats_display}")
+        print(f"  Contestant stats (name, avg_given_score, avg_received_score): {contestant_stats_display}")
         print(f"  # Ranked entries: {len(result.entries_stats)}")
         print("")
 
@@ -574,7 +574,8 @@ if __name__ == '__main__':
 
         contestant_stats_models.extend(
             [ContestantStats(contestant=contestants_by_name[stat.contestant.contestant_name],
-                             avg_score=stat.avg_score)
+                             avg_given_score=stat.avg_given_score,
+                             avg_received_score=stat.avg_received_score)
              for stat in stage_2_result.contestants_stats])
 
         entry_stats_models.extend(

@@ -84,7 +84,8 @@ export type Scoring = InferSelectModel<typeof scoring>
 
 export const contestantsStats = sqliteTable('stats_contestants', {
     contestant: text('contestant').references(() => contestants.id).primaryKey(),
-    avgScore: real('avg_score'),
+    avgGivenScore: real('avg_given_score'),
+    avgReceivedScore: real('avg_received_score'),
 })
 export type ContestantStats = InferSelectModel<typeof contestantsStats>
 

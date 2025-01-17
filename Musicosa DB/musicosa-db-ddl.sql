@@ -147,9 +147,10 @@ CREATE TABLE contestant_grades_entries
 
 CREATE TABLE stats_contestants
 (
-    contestant TEXT NOT NULL
+    contestant         TEXT NOT NULL
         CONSTRAINT contestant_stats_pk PRIMARY KEY,
-    avg_score  REAL,
+    avg_given_score    REAL,
+    avg_received_score REAL,
 
     CONSTRAINT contestant_fk FOREIGN KEY (contestant) REFERENCES contestants (id)
         ON UPDATE CASCADE ON DELETE CASCADE

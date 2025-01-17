@@ -150,7 +150,9 @@ export const mockVideoOptionsCollection = (n: number, partial?: Partial<VideoOpt
 export const mockContestantStats = (partial?: Partial<ContestantStats>): ContestantStats => ({
     contestant: partial?.contestant ??
         chance.guid({ version: 4 }),
-    avgScore: partial?.avgScore ??
+    avgGivenScore: partial?.avgGivenScore ??
+        chance.floating({ min: 0, max: 10 }),
+    avgReceivedScore: partial?.avgReceivedScore ??
         chance.floating({ min: 0, max: 10 })
 })
 
