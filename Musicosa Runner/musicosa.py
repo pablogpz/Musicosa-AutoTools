@@ -25,10 +25,10 @@ from stage_2_sub_processing.execute import execute as execute_stage_2
 from stage_2_sub_processing.stage_input import load_musicosa_from_db as load_s2_musicosa_from_db
 from stage_2_sub_processing.type_definitions import Musicosa as S2Musicosa, Contestant as S2Contestant, \
     Entry as S2Entry, Score as S2Score, StageTwoOutput, StageTwoInput
-from stage_3_pre_templates_gen.execute import execute as execute_stage_3
-from stage_3_pre_templates_gen.stage_input import load_musicosa_from_db as load_s3_musicosa_from_db, \
+from stage_3_templates_pre_gen.execute import execute as execute_stage_3
+from stage_3_templates_pre_gen.stage_input import load_musicosa_from_db as load_s3_musicosa_from_db, \
     load_available_avatars_from_db
-from stage_3_pre_templates_gen.type_definitions import Musicosa as S3Musicosa, StageThreeOutput, AvatarPairing, \
+from stage_3_templates_pre_gen.type_definitions import Musicosa as S3Musicosa, StageThreeOutput, AvatarPairing, \
     StageThreeInput
 from stage_4_templates_gen.execute import execute as execute_stage_4
 from stage_4_templates_gen.stage_input import load_templates_from_db
@@ -619,7 +619,7 @@ if __name__ == '__main__':
         result = execute_stage_3(musicosa=stage_input.musicosa)
 
         print("")
-        print("[STAGE 3 SUMMARY | Pre-templates Generation]")
+        print("[STAGE 3 SUMMARY | Templates Pre-Generation]")
         print("")
         print(f"  # Paired contestants to avatars: {len(result.avatar_pairings) if result.avatar_pairings else 0}")
         print(
