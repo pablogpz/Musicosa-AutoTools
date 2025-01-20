@@ -56,12 +56,12 @@ function resolveAvatar(avatar: Avatar): ResolvedAvatar {
     } satisfies ResolvedAvatar
 }
 
-function resolveScoring(scoring: Scoring): ResolvedScoring {
+function resolveScoring(scoring: Scoring, displayDecimalDigits: number): ResolvedScoring {
     const { score } = scoring
 
     return {
         ...scoring,
-        formattedScore: score.toString()
+        formattedScore: formatNumberToDecimalPrecision(score, displayDecimalDigits)
     } satisfies ResolvedScoring
 }
 
@@ -121,6 +121,6 @@ export const resolveTemplateProps = async (templateUUID: string): Promise<Resolv
         author: allContestants.find(contestant => contestant.id === entry.author) ?? defaultAuthor,
         contestants: allContestants.filter(contestant => contestant.id !== entry.author),
         avatars: avatars.map(resolveAvatar),
-        scores: scoringEntries.map(scoring => resolveScoring(scoring))
+        scores: scoringEntries.map(scoring => resolveScoring(scoring, displayDecimalDigits))
     }
 }
