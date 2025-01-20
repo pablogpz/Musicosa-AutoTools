@@ -18,7 +18,7 @@ import {
     templates,
     TypedSetting
 } from '@/db/schema'
-import { defaultAuthor, defaultAvatar } from '@/db/defaults'
+import { defaultAuthor, defaultAvatar, defaultScoring } from '@/db/defaults'
 import contestantsRepository from '@/db/repository/contestants'
 import avatarsRepository from '@/db/repository/avatars'
 import settingsRepository from '@/db/repository/settings'
@@ -30,15 +30,15 @@ export type ResolvedAvatar = Omit<Avatar, 'imageFilename'> & { resolvedImageFile
 
 export type ResolvedScoring = Scoring & { formattedScore: string }
 
+export type ResolvedContestant = Omit<Contestant, 'avatar'> & { avatar: ResolvedAvatar, scoring: ResolvedScoring }
+
 export type ResolvedTemplateProps =
     Pick<Template, 'avatarScale' | 'authorAvatarScale' | 'videoBoxWidthPx' | 'videoBoxHeightPx'> &
     Pick<Entry, 'title' | 'specialTopic'> &
     Pick<ResolvedEntryStats, 'rankingPlace' | 'formattedAvgScore'> &
     {
-        author: Contestant
-        contestants: Contestant[]
-        avatars: ResolvedAvatar[]
-        scores: Pick<ResolvedScoring, 'contestant' | 'score' | 'formattedScore'>[]
+        author: ResolvedContestant
+        contestants: ResolvedContestant[]
     }
 
 function resolveAvatar(avatar: Avatar): ResolvedAvatar {
@@ -63,6 +63,15 @@ function resolveScoring(scoring: Scoring, displayDecimalDigits: number): Resolve
         ...scoring,
         formattedScore: formatNumberToDecimalPrecision(score, displayDecimalDigits)
     } satisfies ResolvedScoring
+}
+
+function resolveContestant(baseContestant: Contestant, avatar: Avatar, scoring: Scoring,
+                           displayDecimalDigits: number): ResolvedContestant {
+    return {
+        ...baseContestant,
+        avatar: resolveAvatar(avatar),
+        scoring: resolveScoring(scoring, displayDecimalDigits)
+    } satisfies ResolvedContestant
 }
 
 export const resolveTemplateProps = async (templateUUID: string): Promise<ResolvedTemplateProps | undefined> => {
@@ -109,6 +118,21 @@ export const resolveTemplateProps = async (templateUUID: string): Promise<Resolv
         await settingsRepository.getSettingByKey('templates.display_decimal_digits')
     const displayDecimalDigits = displayDecimalDigitsSetting?.value ?? DEFAULT_DISPLAY_DECIMAL_DIGITS
 
+    const author =
+        allContestants.find(contestant => contestant.id === entry.author) ?? defaultAuthor
+    const authorAvatar =
+        avatars.find(avatar => avatar.id === author.avatar) ?? defaultAvatar
+    const authorScoring =
+        scoringEntries.find(scoring => scoring.contestant === author.id) ?? defaultScoring
+
+    const contestants = allContestants
+        .filter(contestant => contestant.id !== entry.author)
+        .map(c => resolveContestant(
+            c,
+            avatars.find(avatar => avatar.id === c.avatar) ?? defaultAvatar,
+            scoringEntries.find(scoring => scoring.contestant === c.id) ?? defaultScoring,
+            displayDecimalDigits))
+
     return {
         title: entry.title,
         specialTopic: entry.specialTopic,
@@ -118,9 +142,7 @@ export const resolveTemplateProps = async (templateUUID: string): Promise<Resolv
         authorAvatarScale: template.authorAvatarScale,
         videoBoxWidthPx: template.videoBoxWidthPx,
         videoBoxHeightPx: template.videoBoxHeightPx,
-        author: allContestants.find(contestant => contestant.id === entry.author) ?? defaultAuthor,
-        contestants: allContestants.filter(contestant => contestant.id !== entry.author),
-        avatars: avatars.map(resolveAvatar),
-        scores: scoringEntries.map(scoring => resolveScoring(scoring, displayDecimalDigits))
+        author: resolveContestant(author, authorAvatar, authorScoring, displayDecimalDigits),
+        contestants: contestants
     }
 }

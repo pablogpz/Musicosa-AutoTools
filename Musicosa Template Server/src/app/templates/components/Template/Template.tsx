@@ -1,7 +1,6 @@
 import React from 'react'
 
 import { ResolvedTemplateProps } from '@/app/templates/common/withTemplateProps'
-import { defaultResolvedAvatar } from '@/app/templates/common/withTemplateProps/defaults'
 import Avatar from '@/app/templates/components/Avatar'
 import VideoPlaceholder from '@/app/templates/components/VideoPlaceholder'
 
@@ -21,12 +20,7 @@ export function Template(
         videoBoxHeightPx,
         author,
         contestants,
-        avatars,
-        scores
     }: TemplateProps) {
-
-    const authorAvatar = avatars.find(avatar => avatar.id === author.avatar) ?? defaultResolvedAvatar
-    const authorScore = scores.find(score => score.contestant === author.id)!.formattedScore
 
     return (
         <div className="grid grid-cols-[31.5%_68.5%] grid-rows-[71.5%_28.5%] w-full h-full bg-black p-7 overflow-clip">
@@ -36,7 +30,8 @@ export function Template(
                         [{rankingPlace}º] {title} {specialTopic && `(${specialTopic})`}
                     </p>
                     <div className="flex flex-row justify-center">
-                        <Avatar avatar={authorAvatar} avatarScale={authorAvatarScale} formattedScore={authorScore}/>
+                        <Avatar avatar={author.avatar} avatarScale={authorAvatarScale}
+                                formattedScore={author.scoring.formattedScore}/>
                         <p className="text-3xl text-white self-center">Media {formattedAvgScore}</p>
                     </div>
                 </div>
@@ -49,9 +44,9 @@ export function Template(
                     {contestants.map((contestant, i) =>
                         <Avatar
                             key={i}
-                            avatar={avatars.find(avatar => contestant.avatar === avatar.id) ?? defaultResolvedAvatar}
+                            avatar={contestant.avatar}
                             avatarScale={avatarScale}
-                            formattedScore={scores.find(score => score.contestant === contestant.id)!.formattedScore}/>)}
+                            formattedScore={contestant.scoring.formattedScore}/>)}
                 </div>
             </div>
         </div>
