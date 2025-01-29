@@ -31,10 +31,6 @@ def generate_unfulfilled_avatar_pairings(unfulfilled_contestants: list[Contestan
 
     last_filename = ""
     last_height = ""
-    last_score_top = ""
-    last_score_left = ""
-    last_score_font_scale = ""
-    last_score_font_color = ""
 
     if len(available_avatars) > 0:
         print("")
@@ -70,38 +66,7 @@ def generate_unfulfilled_avatar_pairings(unfulfilled_contestants: list[Contestan
                                   indentation_level=2)
             last_height = height
 
-            score_top = better_input("Score box relative top position (%)",
-                                     lambda x: re.match(r"^\d{1,3}([.]\d+)?$", x) and 0 < float(x) <= 100,
-                                     lambda x: f"Invalid position '{x}' (Must be a % number)",
-                                     default=last_score_top,
-                                     indentation_level=2)
-            last_score_top = score_top
-
-            score_left = better_input("Score box relative left position (%)",
-                                      lambda x: re.match(r"^\d{1,3}([.]\d+)?$", x) and 0 < float(x) <= 100,
-                                      lambda x: f"Invalid position '{x}' (Must be a % number)",
-                                      default=last_score_left,
-                                      indentation_level=2)
-            last_score_left = score_left
-
-            score_font_scale = better_input("Score font scale (factor)",
-                                            lambda x: re.match(r"^\d+([.]\d+)?$", x) is not None,
-                                            lambda x: f"Invalid scale factor '{x}' (Must be a numeric factor)",
-                                            default=last_score_font_scale,
-                                            indentation_level=2)
-            last_score_font_scale = score_font_scale
-
-            score_font_color = better_input("Score font color (CSS color)",
-                                            default=last_score_font_color,
-                                            indentation_level=2)
-            last_score_font_color = score_font_color
-
-            avatar = Avatar.Insert(image_filename=filename,
-                                   image_height=int(height),
-                                   score_box_position_top=float(score_top),
-                                   score_box_position_left=float(score_left),
-                                   score_box_font_scale=float(score_font_scale),
-                                   score_box_font_color=score_font_color or None)
+            avatar = Avatar.Insert(image_filename=filename, image_height=int(height))
         else:
             avatar = available_avatars[int(choice) - 1]
 
@@ -225,15 +190,15 @@ def generate_unfulfilled_templates(entries_sequence_number_index: dict[int, Entr
         last_video_height = video_height
 
         video_top = better_input("Videoclip absolute top position (px)",
-                                 lambda x: x.isdigit() and int(x) > 0,
-                                 lambda x: f"Invalid position '{x}' (Must be a positive number)",
+                                 lambda x: x.isdigit() and int(x) >= 0,
+                                 lambda x: f"Invalid position '{x}' (Must be a non-negative number)",
                                  default=last_video_top,
                                  indentation_level=2)
         last_video_top = video_top
 
         video_left = better_input("Videoclip absolute left position (px)",
-                                  lambda x: x.isdigit() and int(x) > 0,
-                                  lambda x: f"Invalid position '{x}' (Must be a positive number)",
+                                  lambda x: x.isdigit() and int(x) >= 0,
+                                  lambda x: f"Invalid position '{x}' (Must be a non-negative number)",
                                   default=last_video_left,
                                   indentation_level=2)
         last_video_left = video_left

@@ -9,17 +9,17 @@ export enum ValidationSettingsNames {
     scoreMaxValue = 'score_max_value',
 }
 
+export enum RankingSettingsNames {
+    significantDecimalDigits = 'significant_decimal_digits'
+}
+
 export enum TemplatesSettingsNames {
     totalWidthPx = 'total_width_px',
     totalHeightPx = 'total_height_px',
     displayDecimalDigits = "display_decimal_digits",
 }
 
-export enum RankingSettingsNames {
-    significantDecimalDigits = 'significant_decimal_digits'
-}
-
 export type SettingsKey =
     `${SettingsGroups.validation}.${ValidationSettingsNames}`
-    |`${SettingsGroups.templates}.${TemplatesSettingsNames}`
     | `${SettingsGroups.ranking}.${RankingSettingsNames}`
+    | `${SettingsGroups.templates}.${TemplatesSettingsNames}`

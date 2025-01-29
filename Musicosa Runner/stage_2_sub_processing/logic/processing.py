@@ -71,6 +71,23 @@ def process_musicosa(musicosa: Musicosa) -> tuple[list[ContestantStats], list[En
     return all_contestant_stats, all_entry_stats
 
 
+def calculate_entries_avg_score(all_contestant_scores: list[Score],
+                                contestants_count: int,
+                                significant_decimal_digits: int) -> list[tuple[str, float]]:
+    all_entry_avg_scores: dict[str, float] = {}
+
+    for score in all_contestant_scores:
+        if score.entry_title not in all_entry_avg_scores:
+            all_entry_avg_scores[score.entry_title] = 0
+
+        all_entry_avg_scores[score.entry_title] += score.score_value
+
+    for title, avg_score in all_entry_avg_scores.items():
+        all_entry_avg_scores[title] = round(avg_score / contestants_count, significant_decimal_digits)
+
+    return list(all_entry_avg_scores.items())
+
+
 def calculate_contestants_avg_given_score(contestants: list[Contestant], significant_decimal_digits: int) \
         -> list[tuple[str, float]]:
     all_contestant_avg_given_scores: list[tuple[str, float]] = []
@@ -104,20 +121,3 @@ def calculate_contestants_avg_received_score(contestants: list[Contestant],
         all_contestant_avg_received_scores.append((contestant.contestant_name, avg_received_score))
 
     return all_contestant_avg_received_scores
-
-
-def calculate_entries_avg_score(all_contestant_scores: list[Score],
-                                contestants_count: int,
-                                significant_decimal_digits: int) -> list[tuple[str, float]]:
-    all_entry_avg_scores: dict[str, float] = {}
-
-    for score in all_contestant_scores:
-        if score.entry_title not in all_entry_avg_scores:
-            all_entry_avg_scores[score.entry_title] = 0
-
-        all_entry_avg_scores[score.entry_title] += score.score_value
-
-    for title, avg_score in all_entry_avg_scores.items():
-        all_entry_avg_scores[title] = round(avg_score / contestants_count, significant_decimal_digits)
-
-    return list(all_entry_avg_scores.items())

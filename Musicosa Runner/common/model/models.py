@@ -73,19 +73,11 @@ class Avatar:
     id: int
     image_filename: str
     image_height: float
-    score_box_position_top: float
-    score_box_position_left: float
-    score_box_font_scale: float
-    score_box_font_color: str | None
 
     class ORM(Model):
         id = AutoField(primary_key=True)
         image_filename = TextField(column_name="image_filename")
         image_height = FloatField(column_name="image_height")
-        score_box_position_top = FloatField(column_name="score_box_position_top")
-        score_box_position_left = FloatField(column_name="score_box_position_left")
-        score_box_font_scale = FloatField(column_name="score_box_font_scale")
-        score_box_font_color = TextField(column_name="score_box_font_color", null=True)
 
         class Meta:
             database = db
@@ -93,39 +85,18 @@ class Avatar:
 
         def to_domain(self) -> "Avatar":
             # noinspection PyTypeChecker
-            return Avatar(id=self.id,
-                          image_filename=self.image_filename,
-                          image_height=self.image_height,
-                          score_box_position_top=self.score_box_position_top,
-                          score_box_position_left=self.score_box_position_left,
-                          score_box_font_scale=self.score_box_font_scale,
-                          score_box_font_color=self.score_box_font_color)
+            return Avatar(id=self.id, image_filename=self.image_filename, image_height=self.image_height)
 
     def to_orm(self) -> "Avatar.ORM":
-        return Avatar.ORM(id=self.id,
-                          image_filename=self.image_filename,
-                          image_height=self.image_height,
-                          score_box_position_top=self.score_box_position_top,
-                          score_box_position_left=self.score_box_position_left,
-                          score_box_font_scale=self.score_box_font_scale,
-                          score_box_font_color=self.score_box_font_color)
+        return Avatar.ORM(id=self.id, image_filename=self.image_filename, image_height=self.image_height)
 
     @dataclass
     class Insert:
         image_filename: str
         image_height: float
-        score_box_position_top: float
-        score_box_position_left: float
-        score_box_font_scale: float
-        score_box_font_color: str | None
 
         def to_orm(self) -> "Avatar.ORM":
-            return Avatar.ORM(image_filename=self.image_filename,
-                              image_height=self.image_height,
-                              score_box_position_top=self.score_box_position_top,
-                              score_box_position_left=self.score_box_position_left,
-                              score_box_font_scale=self.score_box_font_scale,
-                              score_box_font_color=self.score_box_font_color)
+            return Avatar.ORM(image_filename=self.image_filename, image_height=self.image_height)
 
 
 @dataclass

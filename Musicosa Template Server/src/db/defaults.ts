@@ -5,11 +5,7 @@ export const defaultAvatarId = 0
 export const defaultAvatar: Avatar = {
     id: defaultAvatarId,
     imageFilename: 'unknown.png',
-    imageHeight: 397.0,
-    scoreBoxPositionTop: 17.5,
-    scoreBoxPositionLeft: 81,
-    scoreBoxFontScale: 0.175,
-    scoreBoxFontColor: 'black'
+    imageHeight: 397.0
 }
 
 export const defaultContestantId = '00000000-0000-0000-0000-000000000000'
@@ -45,16 +41,16 @@ export const defaultScoring: Scoring = {
 export const defaultEntryStats: EntryStats = {
     entry: defaultEntryId,
     avgScore: 9.99,
-    rankingPlace: 132,
-    rankingSequence: 132,
+    rankingPlace: 120,
+    rankingSequence: 120,
 }
 
 export const defaultTemplate: Template = {
     entry: defaultEntryId,
-    avatarScale: 0.425,
-    authorAvatarScale: 0.6,
-    videoBoxWidthPx: 1200,
-    videoBoxHeightPx: 675,
-    videoBoxPositionTopPx: 86,
-    videoBoxPositionLeftPx: 720,
+    avatarScale: 0.5,
+    authorAvatarScale: 0.5,
+    videoBoxWidthPx: 1020,
+    videoBoxHeightPx: 574,
+    videoBoxPositionTopPx: 0,
+    videoBoxPositionLeftPx: 900,
 }

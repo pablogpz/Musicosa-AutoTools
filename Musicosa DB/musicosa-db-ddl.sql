@@ -1,6 +1,6 @@
 PRAGMA foreign_keys = ON;
 
--- MUSICOSA 4th EDITION DATABASE SCHEMA AND INITIAL VALUES
+-- MUSICOSA 5th EDITION DATABASE SCHEMA AND INITIAL VALUES
 
 CREATE TABLE metadata
 (
@@ -10,13 +10,13 @@ CREATE TABLE metadata
 );
 
 INSERT INTO metadata (field, value)
-VALUES ('edition', '4');
+VALUES ('edition', '5');
 INSERT INTO metadata (field, value)
-VALUES ('topic', 'BSO de películas/series/anime');
+VALUES ('topic', 'Canciones');
 INSERT INTO metadata (field, value)
-VALUES ('organiser', 'Pablo');
+VALUES ('organiser', 'Carmen y Cáster');
 INSERT INTO metadata (field, value)
-VALUES ('start_date', '14-09-2024');
+VALUES ('start_date', '02-12-2024');
 
 CREATE TABLE settings
 (
@@ -30,7 +30,7 @@ CREATE TABLE settings
 );
 
 INSERT INTO settings (group_key, setting, value, type)
-VALUES ('globals', 'rounds_count', '11', 'integer');
+VALUES ('globals', 'rounds_count', '12', 'integer');
 INSERT INTO settings (group_key, setting, value, type)
 VALUES ('validation', 'score_min_value', '0.0', 'real');
 INSERT INTO settings (group_key, setting, value, type)
@@ -38,7 +38,7 @@ VALUES ('validation', 'score_max_value', '10.0', 'real');
 INSERT INTO settings (group_key, setting, value, type)
 VALUES ('validation', 'entry_video_duration_seconds', '30', 'integer');
 INSERT INTO settings (group_key, setting, value, type)
-VALUES ('ranking', 'significant_decimal_digits', '3', 'integer');
+VALUES ('ranking', 'significant_decimal_digits', '10', 'integer');
 INSERT INTO settings (group_key, setting, value, type)
 VALUES ('templates', 'total_width_px', '1920', 'integer');
 INSERT INTO settings (group_key, setting, value, type)
@@ -58,17 +58,15 @@ CREATE TABLE special_entry_topics
 
 INSERT INTO special_entry_topics (designation)
 VALUES ('INFANCIA');
+INSERT INTO special_entry_topics (designation)
+VALUES ('VILLANCICOS');
 
 CREATE TABLE avatars
 (
     id                      INTEGER NOT NULL
         CONSTRAINT avatar_pk PRIMARY KEY AUTOINCREMENT,
     image_filename          TEXT    NOT NULL,
-    image_height            REAL    NOT NULL,
-    score_box_position_top  REAL    NOT NULL,
-    score_box_position_left REAL    NOT NULL,
-    score_box_font_scale    REAL    NOT NULL,
-    score_box_font_color    TEXT    NOT NULL DEFAULT 'black'
+    image_height            REAL    NOT NULL
 );
 
 CREATE TABLE contestants
@@ -121,8 +119,8 @@ CREATE TABLE video_options
 (
     entry           TEXT NOT NULL
         CONSTRAINT video_options_pk PRIMARY KEY,
-    timestamp_start TEXT NOT NULL DEFAULT '00:00:00',
-    timestamp_end   TEXT NOT NULL DEFAULT '00:00:30',
+    timestamp_start TEXT NOT NULL DEFAULT '00:00:30',
+    timestamp_end   TEXT NOT NULL DEFAULT '00:01:00',
 
     CONSTRAINT entry_fk FOREIGN KEY (entry) REFERENCES entries (id)
         ON UPDATE CASCADE ON DELETE CASCADE

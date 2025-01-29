@@ -16,7 +16,7 @@ quiet_ffmpeg = true
 [stage_6]
 video_bits_folder = "artifacts/video_bits"
 overwrite_video_bits = true
-stitch_final_video = true
-final_video_name = "musicosa-4th-edition"
+stitch_final_video = false
+final_video_name = "musicosa-5th-edition"
 quiet_ffmpeg = true
 quiet_ffmpeg_final_video = false

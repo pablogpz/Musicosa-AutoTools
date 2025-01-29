@@ -26,11 +26,7 @@ export type TypedSetting<T extends SettingValueType> = Omit<Setting, 'type'> & {
 export const avatars = sqliteTable('avatars', {
     id: integer('id').primaryKey({ autoIncrement: true }),
     imageFilename: text('image_filename').notNull(),
-    imageHeight: real('image_height').notNull(),
-    scoreBoxPositionTop: real('score_box_position_top').notNull(),
-    scoreBoxPositionLeft: real('score_box_position_left').notNull(),
-    scoreBoxFontScale: real('score_box_font_scale').notNull(),
-    scoreBoxFontColor: text('score_box_font_color')
+    imageHeight: real('image_height').notNull()
 })
 export type Avatar = InferSelectModel<typeof avatars>
 

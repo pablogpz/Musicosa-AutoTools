@@ -2,8 +2,11 @@ import React from 'react'
 
 import withTemplateProps from '@/app/templates/common/withTemplateProps'
 
-import { Template } from './Template'
+import { editionTemplateFactory } from './5th-edition/editionTemplateFactory'
 
-export default function templateFactory(uuid: string): Promise<React.ComponentType | undefined> {
-    return withTemplateProps(Template, uuid)
+export default async function templateFactory(uuid: string): Promise<React.ComponentType | undefined> {
+    const EditionTemplateComponent = await editionTemplateFactory(uuid)
+
+    if (!EditionTemplateComponent) return undefined
+    return withTemplateProps(EditionTemplateComponent, uuid)
 }

@@ -36,7 +36,8 @@ export function Template(
                         [{rankingPlace}º] {title} {specialTopic && `(${specialTopic})`}
                     </p>
                     <div className="flex flex-row justify-center">
-                        <Avatar avatar={authorAvatar} avatarScale={authorAvatarScale} formattedScore={authorScore}/>
+                        <Avatar avatar={authorAvatar} avatarScale={authorAvatarScale}/>
+                        <p className="text-xl text-white self-center">{authorScore}</p>
                         <p className="text-3xl text-white self-center">Media {formattedAvgScore}</p>
                     </div>
                 </div>
@@ -50,8 +51,7 @@ export function Template(
                         <Avatar
                             key={i}
                             avatar={avatars.find(avatar => contestant.avatar === avatar.id) ?? defaultResolvedAvatar}
-                            avatarScale={avatarScale}
-                            formattedScore={scores.find(score => score.contestant === contestant.id)!.formattedScore}/>)}
+                            avatarScale={avatarScale}/>)}
                 </div>
             </div>
         </div>

@@ -53,15 +53,7 @@ export const mockAvatar = (partial?: Partial<Avatar>): Avatar => ({
     imageFilename: partial?.imageFilename ??
         `${chance.word()}.png`,
     imageHeight: partial?.imageHeight ??
-        chance.floating({ min: 1, max: 1000 }),
-    scoreBoxPositionTop: partial?.scoreBoxPositionTop ??
-        chance.floating({ min: 1, max: 100 }),
-    scoreBoxPositionLeft: partial?.scoreBoxPositionLeft ??
-        chance.floating({ min: 1, max: 100 }),
-    scoreBoxFontScale: partial?.scoreBoxFontScale ??
-        chance.floating({ min: 0.1, max: 1 }),
-    scoreBoxFontColor: partial?.scoreBoxFontColor ??
-        chance.color()
+        chance.floating({ min: 1, max: 1000 })
 })
 
 export const mockAvatars = (n: number, partial?: Partial<Avatar>): Avatar[] =>
