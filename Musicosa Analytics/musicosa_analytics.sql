@@ -33,26 +33,16 @@ GROUP BY c.id
 ORDER BY data DESC;
 
 -- Media de puntuaciones recibidas en entradas propias
--- SELECT a.name, avg(se.avg_score) AS data
--- FROM entries e
---          JOIN contestants a ON e.author = a.id
---          JOIN stats_entries se ON e.id = se.entry
--- GROUP BY e.author
--- ORDER BY data DESC;
-SELECT c.name, sc.avg_score
+SELECT c.name, sc.avg_received_score
 FROM contestants c
          JOIN stats_contestants sc ON c.id = sc.contestant
-ORDER BY sc.avg_score DESC;
+ORDER BY sc.avg_received_score DESC;
 
 -- Medias de propias notas en entradas propias (Autofelación)
-SELECT a.name, avg(cge.score) AS data
-FROM entries e
-         JOIN contestants a ON e.author = a.id
-         JOIN contestant_grades_entries cge ON e.id = cge.entry
-         JOIN contestants c ON cge.contestant = c.id
-WHERE e.author = cge.contestant
-GROUP BY e.author
-ORDER BY data DESC;
+SELECT c.name, sc.avg_given_score
+FROM contestants c
+         JOIN stats_contestants sc ON c.id = sc.contestant
+ORDER BY sc.avg_given_score DESC;
 
 -- Amantes y enemigos
 SELECT c.name AS contestant, a.name AS "gives scores to", avg(cge.score) AS data
@@ -64,8 +54,8 @@ WHERE e.author <> cge.contestant
 GROUP BY e.author, cge.contestant
 ORDER BY cge.contestant, data DESC;
 
--- Amistad/enemistad con Shai Hulud
--- AMISTAD
+-- Líder/Hater entradas
+-- LÍDER
 SELECT c.name, count(c.name) AS data
 FROM (SELECT e.id as entryID, max(cge.score) AS maxScore, min(cge.score) AS minScore
       FROM entries e
@@ -78,7 +68,7 @@ WHERE cge.score = sq.maxScore
   AND cge.contestant <> e.author
 GROUP BY cge.contestant
 ORDER BY data DESC;
--- ENEMISTAD
+-- HATER
 SELECT c.name, count(c.name) AS data
 FROM (SELECT e.id as entryID, max(cge.score) AS maxScore, min(cge.score) AS minScore
       FROM entries e
