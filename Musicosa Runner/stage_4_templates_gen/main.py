@@ -63,6 +63,7 @@ if __name__ == "__main__":
     print(f"  # Templates to generate: {len(templates)}")
     print("")
     print(f"  # Successfully generated templates: "
-          f"{len(result.generated_templates) if result.generated_templates else 0}")
+          f"{len(result.generated_templates_slugs) if result.generated_templates_slugs else 0}")
+
     if result.failed_templates_uuids:
         print(f"  Failed to generate templates ['{"', '".join(result.failed_templates_uuids)}']")

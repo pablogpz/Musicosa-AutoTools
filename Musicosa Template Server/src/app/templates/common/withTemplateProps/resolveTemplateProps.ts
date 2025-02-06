@@ -7,38 +7,40 @@ import formatNumberToDecimalPrecision from '@/formatters/formatNumberToDecimalPr
 import db from '@/db/database'
 import {
     Avatar,
-    Contestant,
-    entries,
-    entriesStats,
-    Entry,
-    EntryStats,
-    Scoring,
-    scoring,
+    Award,
+    awards,
+    CastVote,
+    castVotes,
+    Member,
+    Nomination,
+    nominations,
+    nominationStats,
+    NominationStats,
     Template,
     templates,
     TypedSetting
 } from '@/db/schema'
-import { defaultAuthor, defaultAvatar, defaultScoring } from '@/db/defaults'
-import contestantsRepository from '@/db/repository/contestants'
+import { defaultAvatar, defaultCastVote } from '@/db/defaults'
+import membersRepository from '@/db/repository/members'
 import avatarsRepository from '@/db/repository/avatars'
 import settingsRepository from '@/db/repository/settings'
 import { DEFAULT_DISPLAY_DECIMAL_DIGITS } from '@/app/defaults'
 
-export type ResolvedEntryStats = EntryStats & { formattedAvgScore: string }
+export type ResolvedNominationStats = NominationStats & { formattedAvgScore: string }
 
 export type ResolvedAvatar = Omit<Avatar, 'imageFilename'> & { resolvedImageFilename: string }
 
-export type ResolvedScoring = Scoring & { formattedScore: string }
+export type ResolvedCastVote = CastVote & { formattedScore: string }
 
-export type ResolvedContestant = Omit<Contestant, 'avatar'> & { avatar: ResolvedAvatar, scoring: ResolvedScoring }
+export type ResolvedMember = Omit<Member, 'avatar'> & { avatar: ResolvedAvatar, vote: ResolvedCastVote }
 
 export type ResolvedTemplateProps =
-    Pick<Template, 'avatarScale' | 'authorAvatarScale' | 'videoBoxWidthPx' | 'videoBoxHeightPx'> &
-    Pick<Entry, 'title' | 'specialTopic'> &
-    Pick<ResolvedEntryStats, 'rankingPlace' | 'formattedAvgScore'> &
+    Pick<Nomination, 'gameTitle' | 'nominee'> &
+    Pick<ResolvedNominationStats, 'rankingPlace' | 'formattedAvgScore'> &
+    Pick<Template, 'avatarScale' | 'videoBoxWidthPx' | 'videoBoxHeightPx'> &
     {
-        author: ResolvedContestant
-        contestants: ResolvedContestant[]
+        award: Award
+        members: ResolvedMember[]
     }
 
 function resolveAvatar(avatar: Avatar): ResolvedAvatar {
@@ -56,93 +58,89 @@ function resolveAvatar(avatar: Avatar): ResolvedAvatar {
     } satisfies ResolvedAvatar
 }
 
-function resolveScoring(scoring: Scoring, displayDecimalDigits: number): ResolvedScoring {
-    const { score } = scoring
+function resolveCastVote(vote: CastVote, displayDecimalDigits: number): ResolvedCastVote {
+    const { score } = vote
 
     return {
-        ...scoring,
+        ...vote,
         formattedScore: formatNumberToDecimalPrecision(score, displayDecimalDigits)
-    } satisfies ResolvedScoring
+    } satisfies ResolvedCastVote
 }
 
-function resolveContestant(baseContestant: Contestant, avatar: Avatar, scoring: Scoring,
-                           displayDecimalDigits: number): ResolvedContestant {
+function resolveMember(baseMember: Member, avatar: Avatar, vote: CastVote, displayDecimalDigits: number): ResolvedMember {
     return {
-        ...baseContestant,
+        ...baseMember,
         avatar: resolveAvatar(avatar),
-        scoring: resolveScoring(scoring, displayDecimalDigits)
-    } satisfies ResolvedContestant
+        vote: resolveCastVote(vote, displayDecimalDigits)
+    } satisfies ResolvedMember
 }
 
 export const resolveTemplateProps = async (templateUUID: string): Promise<ResolvedTemplateProps | undefined> => {
     const templateResult = await db
         .select({
             avatarScale: templates.avatarScale,
-            authorAvatarScale: templates.authorAvatarScale,
             videoBoxWidthPx: templates.videoBoxWidthPx,
             videoBoxHeightPx: templates.videoBoxHeightPx
         })
         .from(templates)
-        .where(eq(templates.entry, templateUUID))
+        .where(eq(templates.nomination, templateUUID))
 
     if (templateResult.length === 0) return undefined
 
     // Data independent from template uuid
 
-    const allContestants = await contestantsRepository.getContestants()
+    const allMembers = await membersRepository.getMembers()
     const avatars = await avatarsRepository.getAvatars()
 
     // Data dependent on template uuid
 
     const template = templateResult[0]
-    const entry = await (db
+    const nomination = await (db
         .select({
-            title: entries.title,
-            author: entries.author,
-            specialTopic: entries.specialTopic
+            gameTitle: nominations.gameTitle,
+            nominee: nominations.nominee,
+            award: nominations.award
         })
-        .from(entries)
-        .where(eq(entries.id, templateUUID)))
+        .from(nominations)
+        .where(eq(nominations.id, templateUUID)))
         .then(results => results[0])
-    const entryStats = await (db
+    const award = await db
+        .select()
+        .from(awards)
+        .where(eq(awards.slug, nomination.award))
+        .then(results => results[0])
+    const stats = await (db
         .select({
-            rankingPlace: entriesStats.rankingPlace,
-            avgScore: entriesStats.avgScore
+            rankingPlace: nominationStats.rankingPlace,
+            avgScore: nominationStats.avgScore
         })
-        .from(entriesStats)
-        .where(eq(entriesStats.entry, templateUUID)))
+        .from(nominationStats)
+        .where(eq(nominationStats.nomination, templateUUID)))
         .then(results => results[0])
-    const scoringEntries = await db.select().from(scoring).where(eq(scoring.entry, templateUUID))
+    const votes = await db
+        .select()
+        .from(castVotes)
+        .where(eq(castVotes.nomination, templateUUID))
 
     const displayDecimalDigitsSetting: TypedSetting<number> | undefined =
         await settingsRepository.getSettingByKey('templates.display_decimal_digits')
     const displayDecimalDigits = displayDecimalDigitsSetting?.value ?? DEFAULT_DISPLAY_DECIMAL_DIGITS
 
-    const author =
-        allContestants.find(contestant => contestant.id === entry.author) ?? defaultAuthor
-    const authorAvatar =
-        avatars.find(avatar => avatar.id === author.avatar) ?? defaultAvatar
-    const authorScoring =
-        scoringEntries.find(scoring => scoring.contestant === author.id) ?? defaultScoring
-
-    const contestants = allContestants
-        .filter(contestant => contestant.id !== entry.author)
-        .map(c => resolveContestant(
-            c,
-            avatars.find(avatar => avatar.id === c.avatar) ?? defaultAvatar,
-            scoringEntries.find(scoring => scoring.contestant === c.id) ?? defaultScoring,
+    const members = allMembers
+        .map(m => resolveMember(m,
+            avatars.find(avatar => avatar.id === m.avatar) ?? defaultAvatar,
+            votes.find(vote => vote.member === m.id) ?? defaultCastVote,
             displayDecimalDigits))
 
     return {
-        title: entry.title,
-        specialTopic: entry.specialTopic,
-        rankingPlace: entryStats.rankingPlace,
-        formattedAvgScore: formatNumberToDecimalPrecision(entryStats.avgScore!, displayDecimalDigits),
+        gameTitle: nomination.gameTitle,
+        nominee: nomination.nominee,
+        rankingPlace: stats.rankingPlace,
+        formattedAvgScore: formatNumberToDecimalPrecision(stats.avgScore!, displayDecimalDigits),
         avatarScale: template.avatarScale,
-        authorAvatarScale: template.authorAvatarScale,
         videoBoxWidthPx: template.videoBoxWidthPx,
         videoBoxHeightPx: template.videoBoxHeightPx,
-        author: resolveContestant(author, authorAvatar, authorScoring, displayDecimalDigits),
-        contestants: contestants
+        award,
+        members: members
     }
 }

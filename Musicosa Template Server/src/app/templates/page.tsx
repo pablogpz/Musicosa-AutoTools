@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 
 import db from '@/db/database'
-import { entries, entriesStats } from '@/db/schema'
+import { nominations, nominationStats } from '@/db/schema'
 import templateFactory from '@/app/templates/components/Template/templateFactory'
 import TemplateContainer from '@/app/templates/components/TemplateContainer'
 
@@ -13,25 +13,29 @@ export default async function Page(
         searchParams: { [key: string]: string | string[] | undefined }
     }) {
 
+    if (!searchParams["award"] || typeof searchParams["award"] !== "string")
+        notFound()
     if (!searchParams["q"] || typeof searchParams["q"] !== "string" || isNaN(Number(searchParams["q"])))
         notFound()
 
+    const requestedAward = searchParams["award"]
     const requestedSequenceNumber = parseInt(searchParams["q"])
 
-    const entryIdSubquery = db
-        .select({ entryId: entriesStats.entry })
-        .from(entriesStats)
-        .where(eq(entriesStats.rankingSequence, requestedSequenceNumber))
+    const nominationsIdSubquery = db
+        .select({ nominationId: nominations.id })
+        .from(nominations)
+        .innerJoin(nominationStats, eq(nominationStats.nomination, nominations.id))
+        .where(and(eq(nominations.award, requestedAward), eq(nominationStats.rankingSequence, requestedSequenceNumber)))
         .as("sq")
     const template = await db
-        .select({ entryId: entries.id })
-        .from(entries)
-        .innerJoin(entryIdSubquery, eq(entries.id, entryIdSubquery.entryId))
+        .select({ nominationId: nominations.id })
+        .from(nominations)
+        .innerJoin(nominationsIdSubquery, eq(nominations.id, nominationsIdSubquery.nominationId))
 
     if (!template.length)
         notFound()
 
-    const TemplateComponent = await templateFactory(template[0].entryId)
+    const TemplateComponent = await templateFactory(template[0].nominationId)
 
     return TemplateComponent && (
         <TemplateContainer>

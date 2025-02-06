@@ -32,9 +32,6 @@ class Metadata:
 
 class MetadataFields(Enum):
     EDITION = "edition"
-    TOPIC = "topic"
-    ORGANISER = "organiser"
-    START_DATE = "start_date"
 
 
 type SettingType = Literal["integer", "real", "string", "boolean"]
@@ -110,26 +107,9 @@ class Avatar:
                           score_box_font_scale=self.score_box_font_scale,
                           score_box_font_color=self.score_box_font_color)
 
-    @dataclass
-    class Insert:
-        image_filename: str
-        image_height: float
-        score_box_position_top: float
-        score_box_position_left: float
-        score_box_font_scale: float
-        score_box_font_color: str | None
-
-        def to_orm(self) -> "Avatar.ORM":
-            return Avatar.ORM(image_filename=self.image_filename,
-                              image_height=self.image_height,
-                              score_box_position_top=self.score_box_position_top,
-                              score_box_position_left=self.score_box_position_left,
-                              score_box_font_scale=self.score_box_font_scale,
-                              score_box_font_color=self.score_box_font_color)
-
 
 @dataclass
-class Contestant:
+class Member:
     id: str
     name: str
     avatar: Avatar | None
@@ -141,90 +121,80 @@ class Contestant:
 
         class Meta:
             database = db
-            table_name = "contestants"
+            table_name = "members"
 
-        def to_domain(self) -> "Contestant":
+        def to_domain(self) -> "Member":
             # noinspection PyTypeChecker
-            return Contestant(id=self.id, name=self.name, avatar=self.avatar.to_domain() if self.avatar else None)
+            return Member(id=self.id, name=self.name, avatar=self.avatar.to_domain() if self.avatar else None)
 
-    def to_orm(self) -> "Contestant.ORM":
-        return Contestant.ORM(id=self.id, name=self.name, avatar=self.avatar.to_orm() if self.avatar else None)
+    def to_orm(self) -> "Member.ORM":
+        return Member.ORM(id=self.id, name=self.name, avatar=self.avatar.to_orm() if self.avatar else None)
 
 
 @dataclass
-class SpecialEntryTopic:
+class Award:
+    slug: str
     designation: str
 
     class ORM(Model):
-        designation = TextField(column_name="designation", primary_key=True)
+        slug = TextField(column_name="slug", primary_key=True)
+        designation = TextField(column_name="designation")
 
         class Meta:
             database = db
-            table_name = "special_entry_topics"
+            table_name = "awards"
 
-        def to_domain(self) -> "SpecialEntryTopic":
+        def to_domain(self) -> "Award":
             # noinspection PyTypeChecker
-            return SpecialEntryTopic(designation=self.designation)
+            return Award(slug=self.slug, designation=self.designation)
 
-    def to_orm(self) -> "SpecialEntryTopic.ORM":
-        return SpecialEntryTopic.ORM(designation=self.designation)
+    def to_orm(self) -> "Award.ORM":
+        return Award.ORM(slug=self.slug, designation=self.designation)
 
 
 @dataclass
-class Entry:
+class Nomination:
     id: str
-    title: str
-    author: Contestant | None
-    video_url: str
-    special_topic: SpecialEntryTopic | None
+    game_title: str
+    nominee: str | None
+    award: Award
 
     class ORM(Model):
         id = TextField(column_name="id", primary_key=True)
-        title = TextField(column_name="title", unique=True)
-        author = ForeignKeyField(Contestant.ORM, column_name="author", null=True)
-        video_url = TextField(column_name="video_url")
-        special_topic = ForeignKeyField(SpecialEntryTopic.ORM, column_name="special_topic", null=True)
+        game_title = TextField(column_name="game_title")
+        nominee = TextField(column_name="nominee", null=True)
+        award = ForeignKeyField(Award.ORM, column_name="award")
 
         class Meta:
             database = db
-            table_name = "entries"
+            table_name = "nominations"
 
-        @dataclass
-        class Create:
-            title: str
-            author: str
-            video_url: str
-
-        def to_domain(self) -> "Entry":
+        def to_domain(self) -> "Nomination":
             # noinspection PyTypeChecker
-            return Entry(id=self.id,
-                         title=self.title,
-                         author=self.author.to_domain() if self.author else None,
-                         video_url=self.video_url,
-                         special_topic=self.special_topic.to_domain() if self.special_topic else None)
+            return Nomination(id=self.id,
+                              game_title=self.game_title,
+                              nominee=self.nominee,
+                              award=self.award.to_domain())
 
-    def to_orm(self) -> "Entry.ORM":
-        return Entry.ORM(id=self.id,
-                         title=self.title,
-                         author=self.author.to_orm() if self.author else None,
-                         video_url=self.video_url,
-                         special_topic=self.special_topic.to_orm() if self.special_topic else None)
+    def to_orm(self) -> "Nomination.ORM":
+        return Nomination.ORM(id=self.id,
+                              game_title=self.game_title,
+                              nominee=self.nominee,
+                              award=self.award.to_orm())
 
 
 @dataclass
 class Template:
-    entry: Entry
+    nomination: Nomination
     avatar_scale: float
-    author_avatar_scale: float
     video_box_width_px: int
     video_box_height_px: int
     video_box_position_top_px: int
     video_box_position_left_px: int
 
     class ORM(Model):
-        entry = ForeignKeyField(Entry.ORM, column_name="entry", primary_key=True)
-        avatar_scale = FloatField(column_name="avatar_scale")
-        author_avatar_scale = FloatField(column_name="author_avatar_scale")
+        nomination = ForeignKeyField(Nomination.ORM, column_name="nomination", primary_key=True)
+        avatar_scale = FloatField(column_name="avatar_scale", default=1.0)
         video_box_width_px = IntegerField(column_name="video_box_width_px")
         video_box_height_px = IntegerField(column_name="video_box_height_px")
         video_box_position_top_px = IntegerField(column_name="video_box_position_top_px")
@@ -236,18 +206,16 @@ class Template:
 
         def to_domain(self) -> "Template":
             # noinspection PyTypeChecker
-            return Template(entry=self.entry.to_domain(),
+            return Template(nomination=self.nomination.to_domain(),
                             avatar_scale=self.avatar_scale,
-                            author_avatar_scale=self.author_avatar_scale,
                             video_box_width_px=self.video_box_width_px,
                             video_box_height_px=self.video_box_height_px,
                             video_box_position_top_px=self.video_box_position_top_px,
                             video_box_position_left_px=self.video_box_position_left_px)
 
     def to_orm(self) -> "Template.ORM":
-        return Template.ORM(entry=self.entry.to_orm(),
+        return Template.ORM(nomination=self.nomination.to_orm(),
                             avatar_scale=self.avatar_scale,
-                            author_avatar_scale=self.author_avatar_scale,
                             video_box_width_px=self.video_box_width_px,
                             video_box_height_px=self.video_box_height_px,
                             video_box_position_top_px=self.video_box_position_top_px,
@@ -255,15 +223,38 @@ class Template:
 
 
 @dataclass
-class VideoOptions:
-    entry: Entry
-    timestamp_start: time | None
-    timestamp_end: time | None
+class Videoclip:
+    id: int
+    url: str
 
     class ORM(Model):
-        entry = ForeignKeyField(Entry.ORM, column_name="entry", primary_key=True)
-        timestamp_start = TextField(column_name="timestamp_start", null=True)
-        timestamp_end = TextField(column_name="timestamp_end", null=True)
+        id = IntegerField(column_name="id", primary_key=True)
+        url = TextField(column_name="url")
+
+        class Meta:
+            database = db
+            table_name = "videoclips"
+
+        def to_domain(self) -> "Videoclip":
+            # noinspection PyTypeChecker
+            return Videoclip(id=self.id, url=self.url)
+
+    def to_orm(self) -> "Videoclip.ORM":
+        return Videoclip.ORM(id=self.id, url=self.url)
+
+
+@dataclass
+class VideoOptions:
+    nomination: Nomination
+    videoclip: Videoclip
+    timestamp_start: time
+    timestamp_end: time
+
+    class ORM(Model):
+        nomination = ForeignKeyField(Nomination.ORM, column_name="nomination", primary_key=True)
+        videoclip = ForeignKeyField(Videoclip.ORM, column_name="videoclip")
+        timestamp_start = TextField(column_name="timestamp_start")
+        timestamp_end = TextField(column_name="timestamp_end")
 
         class Meta:
             database = db
@@ -271,96 +262,73 @@ class VideoOptions:
 
         def to_domain(self) -> "VideoOptions":
             # noinspection PyTypeChecker
-            return VideoOptions(entry=self.entry.to_domain(),
+            return VideoOptions(nomination=self.nomination.to_domain(),
+                                videoclip=self.videoclip.to_domain(),
                                 timestamp_start=parse_time(self.timestamp_start),
                                 timestamp_end=parse_time(self.timestamp_end))
 
     def to_orm(self) -> "VideoOptions.ORM":
-        return VideoOptions.ORM(entry=self.entry.to_orm(),
+        return VideoOptions.ORM(nomination=self.nomination.to_orm(),
+                                videoclip=self.videoclip.to_orm(),
                                 timestamp_start=str(self.timestamp_start),
                                 timestamp_end=str(self.timestamp_end))
 
 
 @dataclass
-class Scoring:
-    contestant: Contestant | None
-    entry: Entry
+class CastVote:
+    member: Member | None
+    nomination: Nomination
     score: float
 
     class ORM(Model):
-        contestant = ForeignKeyField(Contestant.ORM, column_name="contestant", null=True)
-        entry = ForeignKeyField(Entry.ORM, column_name="entry")
+        member = ForeignKeyField(Member.ORM, column_name="member", null=True)
+        nomination = ForeignKeyField(Nomination.ORM, column_name="nomination")
         score = FloatField(column_name="score")
 
         class Meta:
             database = db
-            table_name = "contestant_grades_entries"
-            primary_key = CompositeKey("contestant", "entry")
+            table_name = "member_grades_nominations"
+            primary_key = CompositeKey("member", "nomination")
 
-        def to_domain(self) -> "Scoring":
+        def to_domain(self) -> "CastVote":
             # noinspection PyTypeChecker
-            return Scoring(contestant=self.contestant.to_domain(),
-                           entry=self.entry.to_domain(),
-                           score=self.score)
+            return CastVote(member=self.member.to_domain() if self.member else None,
+                            nomination=self.nomination.to_domain(),
+                            score=self.score)
 
-    def to_orm(self) -> "Scoring.ORM":
-        return Scoring.ORM(contestant=self.contestant.to_orm(),
-                           entry=self.entry.to_orm(),
-                           score=self.score)
+    def to_orm(self) -> "CastVote.ORM":
+        return CastVote.ORM(member=self.member.to_orm() if self.member else None,
+                            nomination=self.nomination.to_orm(),
+                            score=self.score)
 
 
 @dataclass
-class ContestantStats:
-    contestant: Contestant
-    avg_given_score: float | None
-    avg_received_score: float | None
-
-    class ORM(Model):
-        contestant = ForeignKeyField(Contestant.ORM, column_name="contestant", primary_key=True)
-        avg_given_score = FloatField(column_name="avg_given_score", null=True)
-        avg_received_score = FloatField(column_name="avg_received_score", null=True)
-
-        class Meta:
-            database = db
-            table_name = "stats_contestants"
-
-        def to_domain(self) -> "ContestantStats":
-            # noinspection PyTypeChecker
-            return ContestantStats(contestant=self.contestant.to_domain(),
-                                   avg_given_score=self.avg_given_score,
-                                   avg_received_score=self.avg_received_score)
-
-    def to_orm(self) -> "ContestantStats.ORM":
-        return ContestantStats.ORM(contestant=self.contestant.to_orm(),
-                                   avg_given_score=self.avg_given_score,
-                                   avg_received_score=self.avg_received_score)
-
-
-@dataclass
-class EntryStats:
-    entry: Entry
+class NominationStats:
+    nomination: Nomination
     avg_score: float | None
     ranking_place: int | None
     ranking_sequence: int | None
 
     class ORM(Model):
-        entry = ForeignKeyField(Entry.ORM, column_name="entry", primary_key=True)
+        nomination = ForeignKeyField(Nomination.ORM, column_name="nomination", primary_key=True)
         avg_score = FloatField(column_name="avg_score", null=True)
         ranking_place = IntegerField(column_name="ranking_place", null=True)
         ranking_sequence = IntegerField(column_name="ranking_sequence", unique=True, null=True)
 
         class Meta:
             database = db
-            table_name = "stats_entries"
+            table_name = "stats_nominations"
 
-        def to_domain(self) -> "EntryStats":
+        def to_domain(self) -> "NominationStats":
             # noinspection PyTypeChecker
-            return EntryStats(entry=self.entry.to_domain(), avg_score=self.avg_score, ranking_place=self.ranking_place,
-                              ranking_sequence=self.ranking_sequence)
+            return NominationStats(nomination=self.nomination.to_domain(), avg_score=self.avg_score,
+                                   ranking_place=self.ranking_place,
+                                   ranking_sequence=self.ranking_sequence)
 
-    def to_orm(self) -> "EntryStats.ORM":
-        return EntryStats.ORM(entry=self.entry.to_orm(), avg_score=self.avg_score, ranking_place=self.ranking_place,
-                              ranking_sequence=self.ranking_sequence)
+    def to_orm(self) -> "NominationStats.ORM":
+        return NominationStats.ORM(nomination=self.nomination.to_orm(), avg_score=self.avg_score,
+                                   ranking_place=self.ranking_place,
+                                   ranking_sequence=self.ranking_sequence)
 
 
 # MODEL PARSERS

@@ -1,16 +1,15 @@
 from common.db.database import db
-from common.db.peewee_helpers import bulk_pack
-from common.model.models import Contestant, Entry, ContestantStats, EntryStats
+from common.model.models import NominationStats
 from common.type_definitions import StageException
 from stage_2_sub_processing.execute import execute
-from stage_2_sub_processing.stage_input import load_musicosa_from_db
+from stage_2_sub_processing.stage_input import load_tfa_from_db
 
 if __name__ == "__main__":
 
     # Data retrieval
 
     try:
-        musicosa = load_musicosa_from_db()
+        tfa = load_tfa_from_db()
     except Exception as err:
         print(f"[Stage 2 | Data retrieval] {err}")
         exit(1)
@@ -18,39 +17,24 @@ if __name__ == "__main__":
     # Stage execution
 
     try:
-        result = execute(musicosa=musicosa)
+        result = execute(tfa=tfa)
     except StageException as err:
         print(f"[Stage 2 | Execution] {err}")
         exit(1)
 
     # Data persistence
 
-    contestants_stats = result.contestants_stats
-    entries_stats = result.entries_stats
-
-    contestants = [contestant.to_domain() for contestant in Contestant.ORM.select()]
-    contestants_by_name = dict([(contestant.name, contestant) for contestant in contestants])
-    entries = [entry.to_domain() for entry in Entry.ORM.select()]
-    entries_by_title = dict([(entry.title, entry) for entry in entries])
+    raw_nominations_stats: list[NominationStats.ORM] = []
+    for stat in result.nomination_stats:
+        raw_nominations_stats.append(
+            NominationStats.ORM(nomination=stat.nomination_id,
+                                avg_score=stat.avg_score,
+                                ranking_place=stat.ranking_place,
+                                ranking_sequence=stat.ranking_sequence))
 
     try:
         with db.atomic():
-            (ContestantStats.ORM
-             .insert_many(bulk_pack(
-                [ContestantStats(contestant=contestants_by_name[stat.contestant.contestant_name],
-                                 avg_given_score=stat.avg_given_score,
-                                 avg_received_score=stat.avg_received_score)
-                 for stat in contestants_stats]))
-             .execute())
-
-            (EntryStats.ORM
-             .insert_many(bulk_pack(
-                [EntryStats(entry=entries_by_title[stat.entry.title],
-                            avg_score=stat.avg_score,
-                            ranking_place=stat.ranking_place,
-                            ranking_sequence=stat.ranking_sequence)
-                 for stat in entries_stats]))
-             .execute())
+            NominationStats.ORM.insert_many([stat.__data__ for stat in raw_nominations_stats]).execute()  # CAREFUL !
     except Exception as err:
         print(f"[Stage 2 | Data persistence] {err}")
         exit(1)
@@ -58,12 +42,7 @@ if __name__ == "__main__":
     # Execution feedback
 
     print("")
-    print("[STAGE 2 SUMMARY | Submissions Processing]")
-    print(f"  # Contestants loaded: {len(musicosa.contestants)}")
-    print(f"  # Entries loaded: {len(musicosa.entries)}")
+    print("[STAGE 2 SUMMARY | Awards Processing]")
+    print(f"  # Awards loaded: {len(tfa.awards)}")
     print("")
-    contestant_stats_display = [(stat.contestant.contestant_name, stat.avg_given_score, stat.avg_received_score) for
-                                stat in
-                                contestants_stats]
-    print(f"  Contestant stats (name, avg_given_score, avg_received_score): {contestant_stats_display}")
-    print(f"  # Ranked entries: {len(entries_stats)}")
+    print(f"  # Ranked nominations: {len(result.nomination_stats)}")

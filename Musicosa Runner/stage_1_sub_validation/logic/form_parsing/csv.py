@@ -2,69 +2,53 @@ import os
 from os.path import basename
 
 from common.type_definitions import StageException
-from stage_1_sub_validation.constants import CSV_SEPARATOR, CSV_FIELDS_COUNT
-from stage_1_sub_validation.logic.form_parsing.utils import parse_score_str, parse_video_timestamp_str
-from stage_1_sub_validation.logic.form_parsing.utils import parse_special_topic_str
-from stage_1_sub_validation.type_definitions import ContestantSubmissionEntry, ContestantSubmission
+from stage_1_sub_validation.constants import CSV_SEPARATOR, CSV_MEMBER_NAME_HEADER, CSV_UNUSED_HEADERS
+from stage_1_sub_validation.logic.form_parsing.utils import parse_score_str, unquote
+from stage_1_sub_validation.type_definitions import AwardForm, MemberSubmission, CastVote
 
 
-def parse_contestant_form_entry_csv(entry_line: str) -> ContestantSubmissionEntry:
-    line = entry_line.strip().split(CSV_SEPARATOR)
+def parse_member_submission(submission_values: dict[str, str]) -> MemberSubmission:
+    member_name = submission_values[CSV_MEMBER_NAME_HEADER]
+    cast_votes: list[CastVote] = []
 
-    if len(line) != CSV_FIELDS_COUNT:
-        raise StageException(f"Fields count mismatch ({line})")
-
-    title = line[0].strip()
-
-    try:
-        score = parse_score_str(line[1])
-    except ValueError as err:
-        raise StageException(f"[{title}] Error parsing score value '{line[1]}'") from err
-
-    is_author = line[2].strip() != ""
-
-    if not is_author:
-        return ContestantSubmissionEntry(title=title, score=score, is_author=is_author, video_timestamp=None,
-                                         video_url=None, special_topic=None)
-
-    video_url = line[3].strip() or None
-
-    if raw_video_timestamp := line[4].strip():
+    for nominee, score_str in {k: v for (k, v) in submission_values.items() if k != CSV_MEMBER_NAME_HEADER}.items():
         try:
-            video_timestamp = parse_video_timestamp_str(raw_video_timestamp)
+            score = parse_score_str(score_str) / 100
         except ValueError as err:
-            raise StageException(f"[{title}] {err}") from err
-    else:
-        video_timestamp = None
+            raise StageException(f"[{member_name}] [{nominee}] Error parsing score value '{score_str}'") from err
 
-    if raw_special_topic := line[5].strip():
-        special_topic = parse_special_topic_str(raw_special_topic)
-    else:
-        special_topic = None
+        cast_votes.append(CastVote(nominee, score))
 
-    return ContestantSubmissionEntry(title=title, score=score, is_author=is_author, video_timestamp=video_timestamp,
-                                     video_url=video_url, special_topic=special_topic)
+    return MemberSubmission(member_name, cast_votes)
 
 
-def parse_contestant_form_csv(form_file: str) -> ContestantSubmission:
-    entries: list[ContestantSubmissionEntry] = []
-    contestant_name = basename(form_file).rsplit('.', 1)[0]
+def parse_award_form_csv(form_file: str) -> AwardForm:
+    award_slug = basename(form_file).removesuffix('.csv')
+    submissions: list[MemberSubmission] = []
 
-    with open(form_file, "r", encoding="UTF-8") as file:
-        for csv_line in file:
+    with open(form_file, 'r', encoding='UTF-8-SIG') as file:
+        lines = file.readlines()
+        header_line = lines[0]
+        submission_lines = lines[1:]
+
+        headers = [header.replace('"', '').strip() for header in header_line.split(f"\"{CSV_SEPARATOR}\"")]
+
+        for submission_line in submission_lines:
+            submission_values = {k: v for (k, v)
+                                 in zip(headers, [unquote(v) for v in submission_line.split(CSV_SEPARATOR)])
+                                 if k not in CSV_UNUSED_HEADERS}
             try:
-                entries.append(parse_contestant_form_entry_csv(csv_line))
+                submissions.append(parse_member_submission(submission_values))
             except StageException as err:
-                raise StageException(f"[{contestant_name}] {err}") from err
+                raise StageException(f"[{award_slug}] {err}") from err
 
-    return ContestantSubmission(name=contestant_name, entries=entries)
+        return AwardForm(award_slug, submissions)
 
 
-def parse_contestant_forms_csv_folder(forms_folder: str) -> list[ContestantSubmission]:
-    submissions: list[ContestantSubmission] = []
-    form_files = [file for file in os.listdir(forms_folder) if file.endswith('.csv')]
+def parse_award_forms_csv_folder(forms_folder: str) -> list[AwardForm]:
+    award_forms: list[AwardForm] = []
 
-    for form_file in form_files:
-        submissions.append(parse_contestant_form_csv(f"{forms_folder}/{form_file}"))
+    for form_file in [f for f in os.listdir(forms_folder) if f.endswith('.csv')]:
+        award_forms.append(parse_award_form_csv(f"{forms_folder}/{form_file}"))
 
-    return submissions
+    return award_forms

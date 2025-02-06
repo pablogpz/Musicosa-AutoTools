@@ -1,25 +1,19 @@
-import { defaultAuthor, defaultAvatar, defaultContestant, defaultScoring } from '@/db/defaults'
+import { defaultAvatar, defaultCastVote, defaultMember } from '@/db/defaults'
 
-import { ResolvedAvatar, ResolvedContestant, ResolvedScoring } from './resolveTemplateProps'
+import { ResolvedAvatar, ResolvedCastVote, ResolvedMember } from './resolveTemplateProps'
 
 export const defaultResolvedAvatar: ResolvedAvatar = {
     ...defaultAvatar,
     resolvedImageFilename: defaultAvatar.imageFilename
 }
 
-export const defaultResolvedScoring: ResolvedScoring = {
-    ...defaultScoring,
-    formattedScore: defaultScoring.score.toString()
+export const defaultResolvedCastVote: ResolvedCastVote = {
+    ...defaultCastVote,
+    formattedScore: defaultCastVote.score.toString()
 }
 
-export const defaultResolvedAuthor: ResolvedContestant = {
-    ...defaultAuthor,
+export const defaultResolvedMember: ResolvedMember = {
+    ...defaultMember,
     avatar: defaultResolvedAvatar,
-    scoring: defaultResolvedScoring
-}
-
-export const defaultResolvedContestant: ResolvedContestant = {
-    ...defaultContestant,
-    avatar: defaultResolvedAvatar,
-    scoring: defaultResolvedScoring
+    vote: defaultResolvedCastVote
 }

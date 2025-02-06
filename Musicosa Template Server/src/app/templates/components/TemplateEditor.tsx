@@ -4,12 +4,14 @@ import React, { ChangeEvent, ChangeEventHandler, HTMLInputTypeAttribute, useStat
 
 import formatNumberToDecimalPrecision from '@/formatters/formatNumberToDecimalPrecision'
 
-import { defaultEntry, defaultEntryStats, defaultScoring, defaultTemplate } from '@/db/defaults'
 import {
-    defaultResolvedAuthor,
-    defaultResolvedContestant,
-    defaultResolvedScoring
-} from '@/app/templates/common/withTemplateProps/defaults'
+    defaultAward,
+    defaultCastVote,
+    defaultNomination,
+    defaultNominationStats,
+    defaultTemplate
+} from '@/db/defaults'
+import { defaultResolvedCastVote, defaultResolvedMember } from '@/app/templates/common/withTemplateProps/defaults'
 import BaseTemplateContainer from '@/app/templates/components/TemplateContainer/BaseTemplateContainer'
 import { Template, TemplateProps } from '@/app/templates/components/Template'
 
@@ -50,53 +52,46 @@ export interface TemplateEditorProps {
 }
 
 export default function TemplateEditor({ templateWidth, templateHeight, displayDecimalDigits }: TemplateEditorProps) {
-    const INITIAL_CONTESTANT_COUNT = 5
+    const INITIAL_MEMBERS_COUNT = 3
 
-    const [contestantCount, setContestantCount] = useState<number>(INITIAL_CONTESTANT_COUNT)
-    const [score, setScore] = useState<number>(defaultScoring.score)
-    const [title, setTitle] = useState<string>(defaultEntry.title)
-    const [specialTopic, setSpecialTopic] = useState<string>(defaultEntry.specialTopic!)
-    const [rankingPlace, setRankingPlace] = useState<number>(defaultEntryStats.rankingPlace!)
-    const [avgScore, setAvgScore] = useState<number>(defaultEntryStats.avgScore!)
+    const [membersCount, setMembersCount] = useState<number>(INITIAL_MEMBERS_COUNT)
+    const [score, setScore] = useState<number>(defaultCastVote.score)
+    const [gameTitle, setGameTitle] = useState<string>(defaultNomination.gameTitle)
+    const [nominee, setNominee] = useState<string>(defaultNomination.nominee!)
+    const [rankingPlace, setRankingPlace] = useState<number>(defaultNominationStats.rankingPlace!)
+    const [avgScore, setAvgScore] = useState<number>(defaultNominationStats.avgScore!)
     const [avatarScale, setAvatarScale] = useState<number>(defaultTemplate.avatarScale)
-    const [authorAvatarScale, setAuthorAvatarScale] = useState<number>(defaultTemplate.authorAvatarScale)
     const [videoBoxWidthPx, setVideoBoxWidthPx] = useState<number>(defaultTemplate.videoBoxWidthPx)
     const [videoBoxHeightPx, setVideoBoxHeightPx] = useState<number>(defaultTemplate.videoBoxHeightPx)
+    const [awardSlug, setAwardSlug] = useState<string>(defaultAward.slug)
+    const [awardDesignation, setAwardDesignation] = useState<string>(defaultAward.designation)
 
     const templateProps: TemplateProps = {
-        title,
-        specialTopic,
+        gameTitle: gameTitle,
+        nominee: nominee,
         rankingPlace,
         formattedAvgScore: formatNumberToDecimalPrecision(avgScore, displayDecimalDigits),
         avatarScale,
-        authorAvatarScale,
         videoBoxWidthPx,
         videoBoxHeightPx,
-        author: {
-            ...defaultResolvedAuthor,
-            scoring: {
-                ...defaultResolvedScoring,
+        award: { slug: awardSlug, designation: awardDesignation },
+        members: Array.from({ length: membersCount }, () => ({
+            ...defaultResolvedMember,
+            vote: {
+                ...defaultResolvedCastVote,
                 score,
                 formattedScore: formatNumberToDecimalPrecision(score, displayDecimalDigits)
             }
-        },
-        contestants: Array.from({ length: contestantCount - 1 }, () => ({
-            ...defaultResolvedContestant,
-            scoring: {
-                ...defaultResolvedScoring,
-                score,
-                formattedScore: formatNumberToDecimalPrecision(score, displayDecimalDigits)
-            }
-        }))
+        })),
     }
 
     const templateParamInputs = [
-        inputFactory('contestant-count', 'Contestant count', contestantCount, 'number', 'Including the author ...',
-            onChangeFactory(v => setContestantCount(parseInt(v)))),
-        inputFactory('title', 'Entry title', title, 'text', 'Entry title ...',
-            onChangeFactory(v => setTitle(v))),
-        inputFactory('special-topic', 'Special entry topic', specialTopic, 'text', 'Entry topic ...',
-            onChangeFactory(v => setSpecialTopic(v))),
+        inputFactory('members-count', 'Members count', membersCount, 'number', 'Members count ...',
+            onChangeFactory(v => setMembersCount(parseInt(v)))),
+        inputFactory('game-title', 'Game title', gameTitle, 'text', 'Nominated game title ...',
+            onChangeFactory(v => setGameTitle(v))),
+        inputFactory('nominee', 'Nominee', nominee, 'text', 'Nominee ...',
+            onChangeFactory(v => setNominee(v))),
         inputFactory('ranking-place', 'Ranking place', rankingPlace, 'number', 'Numeric ranking place ...',
             onChangeFactory(v => setRankingPlace(parseInt(v)))),
         inputFactory('avg-score', 'Avg score', avgScore, 'number', 'Average score ...',
@@ -105,12 +100,14 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
             onChangeFactory(v => setScore(parseFloat(v)))),
         inputFactory('avatar-scale', 'Avatar scale', avatarScale, 'number', 'Avatar scale factor ...',
             onChangeFactory(v => setAvatarScale(parseFloat(v)))),
-        inputFactory('author-avatar-scale', 'Author avatar scale', authorAvatarScale, 'number', 'Author avatar scale factor ...',
-            onChangeFactory(v => setAuthorAvatarScale(parseFloat(v)))),
         inputFactory('video-box-width', 'Video width', videoBoxWidthPx, 'number', 'Video box width (px) ...',
             onChangeFactory(v => setVideoBoxWidthPx(parseInt(v)))),
         inputFactory('video-box-height', 'Video height', videoBoxHeightPx, 'number', 'Video box height (px) ...',
-            onChangeFactory(v => setVideoBoxHeightPx(parseInt(v))))
+            onChangeFactory(v => setVideoBoxHeightPx(parseInt(v)))),
+        inputFactory('award-slug', 'Award slug', awardSlug, 'text', 'Award slug ...',
+            onChangeFactory(v => setAwardSlug(v))),
+        inputFactory('award-designation', 'Award designation', awardDesignation, 'text', 'Award designation ...',
+            onChangeFactory(v => setAwardDesignation(v)))
     ]
 
     return (

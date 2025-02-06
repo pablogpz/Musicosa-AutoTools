@@ -6,12 +6,12 @@ import yt_dlp
 from ffmpeg.exceptions import FFMpegError
 
 from common.constants import VIDEO_FORMAT
-from common.model.models import Entry
+from common.model.models import Videoclip
 from common.naming.slugify import slugify
 from common.type_definitions import StageException
 
 
-def download_all_videoclips(entries: list[Entry], artifacts_folder: str, quiet_ffmpeg: bool) \
+def download_all_videoclips(videoclips: list[Videoclip], artifacts_folder: str, quiet_ffmpeg: bool) \
         -> tuple[list[str] | None, list[str] | None]:
     acquired_videoclips: list[str] = []
     failed_to_acquire: list[str] = []
@@ -36,34 +36,35 @@ def download_all_videoclips(entries: list[Entry], artifacts_folder: str, quiet_f
     with yt_dlp.YoutubeDL(ytdl_options) as ytdl:
         ytdl.add_post_processor(MP4RemuxPostProcessor(quiet_ffmpeg=quiet_ffmpeg))
 
-        for entry in entries:
+        for videoclip in videoclips:
+            videoclip_friendly_name = videoclip.url
 
-            if path.isfile(f"{artifacts_folder}/{slugify(entry.title)}.{VIDEO_FORMAT}"):
-                print(f"[SKIPPING DOWNLOAD] {entry.title}")
+            if path.isfile(f"{artifacts_folder}/{slugify(videoclip_friendly_name)}.{VIDEO_FORMAT}"):
+                print(f"[SKIPPING DOWNLOAD] {videoclip_friendly_name}")
                 continue
 
             # WARNING: This is a workaround to allow changing the output template after YoutubeDL initialization
-            ytdl.params["outtmpl"]["default"] = f"{artifacts_folder}/{slugify(entry.title)}.%(ext)s"
+            ytdl.params["outtmpl"]["default"] = f"{artifacts_folder}/{slugify(videoclip_friendly_name)}.%(ext)s"
 
-            print(f"[DOWNLOAD START] {entry.title}")
+            print(f"[DOWNLOAD START] {videoclip_friendly_name}")
 
             try:
-                error_code = ytdl.download([entry.video_url])
+                error_code = ytdl.download([videoclip.url])
             except yt_dlp.DownloadError as err:
-                print(f"[DOWNLOAD FAILED] {entry.title}: {err}")
-                failed_to_acquire.append(entry.title)
+                print(f"[DOWNLOAD FAILED] {videoclip_friendly_name}: {err}")
+                failed_to_acquire.append(videoclip_friendly_name)
                 continue
             except FFMpegError as err:
-                print(f"[POST-PROCESS][REMUX FAILED] {entry.title}: {err}")
-                failed_to_acquire.append(entry.title)
+                print(f"[POST-PROCESS][REMUX FAILED] {videoclip_friendly_name}: {err}")
+                failed_to_acquire.append(videoclip_friendly_name)
                 continue
 
             if not error_code:
-                print(f"[DOWNLOAD END] {entry.title}")
-                acquired_videoclips.append(entry.title)
+                print(f"[DOWNLOAD END] {videoclip_friendly_name}")
+                acquired_videoclips.append(videoclip_friendly_name)
             else:
-                print(f"[DOWNLOAD FAILED] {entry.title} (Error code: {error_code})")
-                failed_to_acquire.append(entry.title)
+                print(f"[DOWNLOAD FAILED] {videoclip_friendly_name} (Error code: {error_code})")
+                failed_to_acquire.append(videoclip_friendly_name)
 
     return acquired_videoclips or None, failed_to_acquire or None
 

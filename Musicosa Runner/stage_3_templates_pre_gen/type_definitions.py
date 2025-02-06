@@ -1,31 +1,19 @@
 from dataclasses import dataclass
 
-from common.model.models import Contestant, Avatar, Template, Setting, Entry, VideoOptions
+from common.model.models import Template, Setting, Nomination
 
 
 @dataclass
-class AvatarPairing:
-    contestant: Contestant
-    avatar: Avatar | Avatar.Insert
-
-
-@dataclass
-class Musicosa:
-    unfulfilled_contestants: list[Contestant]
-    available_avatars: list[Avatar]
-    entries_index_of_unfulfilled_templates: dict[int, Entry]
-    entries_index_of_unfulfilled_video_options: dict[int, Entry]
+class TFA:
+    nominations_index_of_unfulfilled_templates: dict[int, Nomination]
 
 
 @dataclass
 class StageThreeInput:
-    musicosa: Musicosa
+    tfa: TFA
 
 
 @dataclass
 class StageThreeOutput:
-    avatar_pairings: list[AvatarPairing] | None
     templates_settings: list[Setting] | None
     templates: list[Template] | None
-    generation_settings: list[Setting] | None
-    video_options: list[VideoOptions] | None

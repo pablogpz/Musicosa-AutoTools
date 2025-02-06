@@ -1,29 +1,30 @@
 from dataclasses import dataclass
 
-from common.model.models import SpecialEntryTopic
-
 
 @dataclass
-class ContestantSubmissionEntry:
-    title: str
+class CastVote:
+    nomination: str
     score: float
-    is_author: bool
-    video_url: str | None
-    video_timestamp: str | None
-    special_topic: str | None
 
 
 @dataclass
-class ContestantSubmission:
+class MemberSubmission:
     name: str
-    entries: list[ContestantSubmissionEntry]
+    cast_votes: list[CastVote]
+
+
+@dataclass
+class AwardForm:
+    award_slug: str
+    submissions: list[MemberSubmission]
 
 
 @dataclass
 class StageOneInput:
-    submissions: list[ContestantSubmission]
-    valid_titles: list[str]
-    special_entry_topics: list[SpecialEntryTopic] | None
+    award_forms: list[AwardForm]
+    valid_award_slugs: list[str]
+    awards_count: int
+    members_count: int
 
 
 @dataclass

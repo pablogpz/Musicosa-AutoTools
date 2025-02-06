@@ -2,8 +2,7 @@ start_from = 1
 artifacts_folder = "artifacts"
 
 [stage_1]
-csv_forms_folder = "contestant_forms"
-valid_titles_file = "titles.txt"
+award_forms_folder = "award_forms"
 
 [stage_4]
 api_url = "http://localhost:3000/templates"
@@ -16,7 +15,4 @@ quiet_ffmpeg = true
 [stage_6]
 video_bits_folder = "artifacts/video_bits"
 overwrite_video_bits = true
-stitch_final_video = true
-final_video_name = "musicosa-4th-edition"
 quiet_ffmpeg = true
-quiet_ffmpeg_final_video = false

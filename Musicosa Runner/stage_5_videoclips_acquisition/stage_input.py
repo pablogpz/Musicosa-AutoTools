@@ -1,5 +1,5 @@
-from common.model.models import Entry
+from common.model.models import Videoclip
 
 
-def load_entries_from_db() -> list[Entry]:
-    return [entry.to_domain() for entry in Entry.ORM.select()]
+def load_videoclips_from_db() -> list[Videoclip]:
+    return [r.to_domain() for r in Videoclip.ORM.select()]

@@ -7,21 +7,14 @@ from common.model.models import Setting
 
 
 class SettingsGroups(Enum):
-    GLOBAL = "globals"
     VALIDATION = "validation"
     RANKING = "ranking"
     TEMPLATES = "templates"
-    GENERATION = "generation"
-
-
-class GlobalSettingsNames(Enum):
-    ROUNDS_COUNT = "rounds_count"
 
 
 class ValidationSettingsNames(Enum):
     SCORE_MIN_VALUE = "score_min_value"
     SCORE_MAX_VALUE = "score_max_value"
-    ENTRY_VIDEO_TIMESTAMP_DURATION = "entry_video_duration_seconds"
 
 
 class RankingSettingsNames(Enum):
@@ -33,21 +26,12 @@ class TemplateSettingsNames(Enum):
     TOTAL_HEIGHT_PX = "total_height_px"
 
 
-class GenerationSettingsNames(Enum):
-    VIDEOCLIPS_OVERRIDE_TOP_N_DURATION = "videoclips_override_top_n_duration"
-    VIDEOCLIPS_OVERRIDE_DURATION_SECONDS = "videoclips_override_duration_up_to_x_seconds"
-
-
 type SettingsKeys = Literal[
-    "globals.rounds_count",
     "validation.score_min_value",
     "validation.score_max_value",
-    "validation.entry_video_duration_seconds",
     "ranking.significant_decimal_digits",
     "templates.total_width_px",
     "templates.total_height_px",
-    "generation.videoclips_override_top_n_duration",
-    "generation.videoclips_override_duration_up_to_x_seconds"
 ]
 
 
