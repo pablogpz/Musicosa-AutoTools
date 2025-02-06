@@ -1,6 +1,6 @@
 PRAGMA foreign_keys = ON;
 
--- BASE MUSICOSA DATABASE SCHEMA AND INITIAL VALUES
+-- BASE "TFA" DATABASE SCHEMA AND INITIAL VALUES
 
 CREATE TABLE metadata
 (
@@ -10,13 +10,7 @@ CREATE TABLE metadata
 );
 
 INSERT INTO metadata (field, value)
-VALUES ('edition', ''); -- FIXME: Fill edition number (Ex: 4)
-INSERT INTO metadata (field, value)
-VALUES ('topic', ''); --FIXME: Fill edition topic (Ex: Canciones)
-INSERT INTO metadata (field, value)
-VALUES ('organiser', ''); --FIXME: Fill organiser(s) name(s)
-INSERT INTO metadata (field, value)
-VALUES ('start_date', ''); --FIXME: Fill start date (Ex: 14/09/2024)
+VALUES ('edition', ''); -- FIXME: TO BE FILLED
 
 CREATE TABLE settings
 (
@@ -30,28 +24,17 @@ CREATE TABLE settings
 );
 
 INSERT INTO settings (group_key, setting, value, type)
-VALUES ('globals', 'rounds_count', '', 'integer'); --FIXME: To be filled
-INSERT INTO settings (group_key, setting, value, type)
 VALUES ('validation', 'score_min_value', '0.0', 'real');
 INSERT INTO settings (group_key, setting, value, type)
 VALUES ('validation', 'score_max_value', '10.0', 'real');
 INSERT INTO settings (group_key, setting, value, type)
-VALUES ('validation', 'entry_video_duration_seconds', '30', 'integer');
-INSERT INTO settings (group_key, setting, value, type)
-VALUES ('ranking', 'significant_decimal_digits', '', 'integer'); --FIXME: To be filled
+VALUES ('ranking', 'significant_decimal_digits', '3', 'integer');
 INSERT INTO settings (group_key, setting, value, type)
 VALUES ('templates', 'total_width_px', '1920', 'integer');
 INSERT INTO settings (group_key, setting, value, type)
 VALUES ('templates', 'total_height_px', '1080', 'integer');
---FIXME: To be filled
 INSERT INTO settings (group_key, setting, value, type)
-VALUES ('templates', 'display_decimal_digits', '', 'integer');
---FIXME: To be filled (Ex: 10)
-INSERT INTO settings (group_key, setting, value, type)
-VALUES ('generation', 'videoclips_override_top_n_duration', '', 'integer');
---FIXME: To be filled (Hint: -1 -> Disabled)
-INSERT INTO settings (group_key, setting, value, type)
-VALUES ('generation', 'videoclips_override_duration_up_to_x_seconds', '', 'integer');
+VALUES ('templates', 'display_decimal_digits', '3', 'integer');
 
 CREATE TABLE avatars
 (
@@ -65,11 +48,11 @@ CREATE TABLE avatars
     score_box_font_color    TEXT    NOT NULL DEFAULT 'black'
 );
 
-CREATE TABLE contestants
+CREATE TABLE members
 (
     -- uuid_v5 (namespace: ISO OID (RFC 4122), name: name)
     id     TEXT(36) NOT NULL
-        CONSTRAINT contestant_pk PRIMARY KEY,
+        CONSTRAINT member_pk PRIMARY KEY,
     name   TEXT     NOT NULL UNIQUE,
     avatar INTEGER,
 
@@ -77,39 +60,31 @@ CREATE TABLE contestants
         ON UPDATE CASCADE ON DELETE SET NULL
 );
 
-CREATE TABLE special_entry_topics
+CREATE TABLE awards
 (
+    slug        TEXT NOT NULL
+        CONSTRAINT award_pk PRIMARY KEY,
     designation TEXT NOT NULL
-        CONSTRAINT special_entry_topics_pk PRIMARY KEY
 );
 
---TODO: Register all special topics
--- INSERT INTO special_entry_topics (designation)
--- VALUES ('');
-
-CREATE TABLE entries
+CREATE TABLE nominations
 (
-    -- uuid_v5 (namespace: ISO OID (RFC 4122), name: title)
-    id            TEXT(36) NOT NULL
-        CONSTRAINT entry_pk PRIMARY KEY,
-    title         TEXT     NOT NULL UNIQUE,
-    author        TEXT,
-    video_url     TEXT     NOT NULL,
-    special_topic TEXT,
+    -- uuid_v5 (namespace: ISO OID (RFC 4122), name: game_title + nominee + award)
+    id         TEXT(36) NOT NULL
+        CONSTRAINT nomination_pk PRIMARY KEY,
+    game_title TEXT     NOT NULL,
+    nominee    TEXT,
+    award      TEXT     NOT NULL,
 
-    CONSTRAINT authored_by_fk FOREIGN KEY (author) REFERENCES contestants (id)
-        ON UPDATE CASCADE ON DELETE SET NULL,
-
-    CONSTRAINT is_of_special_topic_fk FOREIGN KEY (special_topic) REFERENCES special_entry_topics (designation)
-        ON UPDATE CASCADE ON DELETE SET NULL
+    CONSTRAINT award_fk FOREIGN KEY (award) REFERENCES awards (slug)
+        ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE templates
 (
-    entry                      TEXT    NOT NULL
+    nomination                 TEXT    NOT NULL
         CONSTRAINT template_pk PRIMARY KEY,
     avatar_scale               REAL    NOT NULL DEFAULT 1.0,
-    author_avatar_scale        REAL    NOT NULL DEFAULT 1.0,
     video_box_width_px         INTEGER NOT NULL
         CONSTRAINT video_box_width_is_positive CHECK ( video_box_width_px > 0 ),
     video_box_height_px        INTEGER NOT NULL
@@ -117,58 +92,57 @@ CREATE TABLE templates
     video_box_position_top_px  INTEGER NOT NULL,
     video_box_position_left_px INTEGER NOT NULL,
 
-    CONSTRAINT entry_fk FOREIGN KEY (entry) REFERENCES entries (id)
+    CONSTRAINT nomination_fk FOREIGN KEY (nomination) REFERENCES nominations (id)
         ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE TABLE videoclips
+(
+    id  INTEGER NOT NULL
+        CONSTRAINT videoclip_pk PRIMARY KEY,
+    url TEXT    NOT NULL
 );
 
 CREATE TABLE video_options
 (
-    entry           TEXT NOT NULL
+    nomination      TEXT    NOT NULL
         CONSTRAINT video_options_pk PRIMARY KEY,
-    timestamp_start TEXT NOT NULL DEFAULT '00:00:00',
-    timestamp_end   TEXT NOT NULL DEFAULT '00:00:30',
+    videoclip       INTEGER NOT NULL,
+    timestamp_start TEXT    NOT NULL,
+    timestamp_end   TEXT    NOT NULL,
 
-    CONSTRAINT entry_fk FOREIGN KEY (entry) REFERENCES entries (id)
-        ON UPDATE CASCADE ON DELETE CASCADE
-);
-
-CREATE TABLE contestant_grades_entries
-(
-    contestant TEXT,
-    entry      TEXT NOT NULL,
-    score      REAL NOT NULL,
-
-    CONSTRAINT contestant_fk FOREIGN KEY (contestant) REFERENCES contestants (id)
-        ON UPDATE CASCADE ON DELETE SET NULL,
-
-    CONSTRAINT entry_fk FOREIGN KEY (entry) REFERENCES entries (id)
+    CONSTRAINT nomination_fk FOREIGN KEY (nomination) REFERENCES nominations (id)
         ON UPDATE CASCADE ON DELETE CASCADE,
 
-    CONSTRAINT contestant_grades_entries_pk PRIMARY KEY (contestant, entry)
-);
-
-CREATE TABLE stats_contestants
-(
-    contestant         TEXT NOT NULL
-        CONSTRAINT contestant_stats_pk PRIMARY KEY,
-    avg_given_score    REAL,
-    avg_received_score REAL,
-
-    CONSTRAINT contestant_fk FOREIGN KEY (contestant) REFERENCES contestants (id)
+    CONSTRAINT videoclip_fk FOREIGN KEY (videoclip) REFERENCES videoclips (id)
         ON UPDATE CASCADE ON DELETE CASCADE
 );
 
-CREATE TABLE stats_entries
+CREATE TABLE member_grades_nominations
 (
-    entry            TEXT NOT NULL
-        CONSTRAINT entry_stats_pk PRIMARY KEY,
+    member     TEXT,
+    nomination TEXT NOT NULL,
+    score      REAL NOT NULL,
+
+    CONSTRAINT member_fk FOREIGN KEY (member) REFERENCES members (id)
+        ON UPDATE CASCADE ON DELETE SET NULL,
+
+    CONSTRAINT nomination_fk FOREIGN KEY (nomination) REFERENCES nominations (id)
+        ON UPDATE CASCADE ON DELETE CASCADE,
+
+    CONSTRAINT member_grades_nominations_pk PRIMARY KEY (member, nomination)
+);
+
+CREATE TABLE stats_nominations
+(
+    nomination       TEXT NOT NULL
+        CONSTRAINT stats_nominations_pk PRIMARY KEY,
     avg_score        REAL,
     ranking_place    INTEGER
         CONSTRAINT ranking_place_is_1_indexed CHECK ( ranking_place >= 1 ),
-    ranking_sequence INTEGER UNIQUE
+    ranking_sequence INTEGER
         CONSTRAINT ranking_sequence_is_1_indexed CHECK ( ranking_sequence >= 1 ),
 
-
-    CONSTRAINT entry_fk FOREIGN KEY (entry) REFERENCES entries (id)
+    CONSTRAINT nomination_fk FOREIGN KEY (nomination) REFERENCES nominations (id)
         ON UPDATE CASCADE ON DELETE CASCADE
 );

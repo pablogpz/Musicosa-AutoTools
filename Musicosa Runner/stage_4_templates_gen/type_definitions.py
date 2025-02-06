@@ -4,7 +4,7 @@ from dataclasses import dataclass
 @dataclass
 class Template:
     uuid: str
-    entry_title: str
+    friendly_name: str
 
 
 @dataclass
@@ -18,5 +18,5 @@ class StageFourInput:
 
 @dataclass
 class StageFourOutput:
-    generated_templates: list[str] | None
+    generated_templates_slugs: list[str] | None
     failed_templates_uuids: list[str] | None

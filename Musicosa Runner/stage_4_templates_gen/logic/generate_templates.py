@@ -27,7 +27,7 @@ def generate_all_templates(api_url: str,
     def take_screenshot(path: str) -> None:
         print(f"[GENERATING TEMPLATE] {basename(path)}")
         page.screenshot(path=path, full_page=True)
-        generated_templates.append(template.entry_title)
+        generated_templates.append(template.friendly_name)
 
     with sync_playwright() as p:
         browser = p.chromium.launch()
@@ -35,11 +35,11 @@ def generate_all_templates(api_url: str,
 
         for template in templates:
 
-            template_path = f"{artifacts_folder}/{slugify(template.entry_title)}.{TEMPLATE_IMG_FORMAT}"
+            template_path = f"{artifacts_folder}/{slugify(template.friendly_name)}.{TEMPLATE_IMG_FORMAT}"
             template_url = f"{api_url}/{template.uuid}"
 
             if not overwrite and path.isfile(template_path):
-                print(f"[SKIPPING GENERATION] {template.entry_title}")
+                print(f"[SKIPPING GENERATION] {template.friendly_name}")
                 continue
 
             response = load_template_page(template_url)
@@ -47,7 +47,7 @@ def generate_all_templates(api_url: str,
             if response.status == 200:
                 take_screenshot(template_path)
             elif response.status == 404:
-                print(f"[TEMPLATE NOT FOUND] {template.entry_title}")
+                print(f"[TEMPLATE NOT FOUND] {template.friendly_name}")
                 failed_templates_uuids.append(template.uuid)
             else:
                 print(f"[GENERATION FAILED] {template} (HTTP status code: {response.status})")

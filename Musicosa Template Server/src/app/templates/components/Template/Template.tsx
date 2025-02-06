@@ -10,28 +10,28 @@ export type TemplateProps = ResolvedTemplateProps
 
 export function Template(
     {
+        gameTitle,
+        nominee,
         rankingPlace,
-        title,
-        specialTopic,
         formattedAvgScore,
         avatarScale,
-        authorAvatarScale,
         videoBoxWidthPx,
         videoBoxHeightPx,
-        author,
-        contestants,
+        award,
+        members
     }: TemplateProps) {
 
     return (
         <div className="grid grid-cols-[31.5%_68.5%] grid-rows-[71.5%_28.5%] w-full h-full bg-black p-7 overflow-clip">
             <div className="row-start-1 row-end-2 col-start-1 col-end-2 h-full">
                 <div className="flex flex-col h-full justify-evenly">
+                    <p className="text-5xl p-2 bg-white rounded">
+                        {award.designation}
+                    </p>
                     <p className="text-4xl p-2 bg-white rounded">
-                        [{rankingPlace}º] {title} {specialTopic && `(${specialTopic})`}
+                        [{rankingPlace}º] {gameTitle} {nominee && ` (${nominee})`}
                     </p>
                     <div className="flex flex-row justify-center">
-                        <Avatar avatar={author.avatar} avatarScale={authorAvatarScale}
-                                formattedScore={author.scoring.formattedScore}/>
                         <p className="text-3xl text-white self-center">Media {formattedAvgScore}</p>
                     </div>
                 </div>
@@ -41,12 +41,12 @@ export function Template(
             </div>
             <div className="row-start-2 row-end-3 col-start-1 col-end-3">
                 <div className="flex content-center justify-between">
-                    {contestants.map((contestant, i) =>
+                    {members.map((member, i) =>
                         <Avatar
                             key={i}
-                            avatar={contestant.avatar}
+                            avatar={member.avatar}
                             avatarScale={avatarScale}
-                            formattedScore={contestant.scoring.formattedScore}/>)}
+                            formattedScore={member.vote.formattedScore}/>)}
                 </div>
             </div>
         </div>

@@ -1,16 +1,16 @@
 from common.model.settings import is_setting_set
 from common.type_definitions import StageException
-from stage_2_sub_processing.logic.processing import process_musicosa
-from stage_2_sub_processing.type_definitions import StageTwoOutput, Musicosa
+from stage_2_sub_processing.logic.processing import process_tfa
+from stage_2_sub_processing.type_definitions import TFA, StageTwoOutput
 
 
-def execute(musicosa: Musicosa) -> StageTwoOutput:
+def execute(tfa: TFA) -> StageTwoOutput:
     if not is_setting_set("ranking.significant_decimal_digits"):
         raise StageException("Setting 'ranking.significant_decimal_digits' not set")
 
-    if not musicosa:
-        raise StageException("Musicosa data is empty")
+    if not tfa:
+        raise StageException("TFA data is empty")
 
-    contestants_stats, entries_stats = process_musicosa(musicosa=musicosa)
+    nomination_stats = process_tfa(tfa=tfa)
 
-    return StageTwoOutput(contestants_stats=contestants_stats, entries_stats=entries_stats)
+    return StageTwoOutput(nomination_stats=nomination_stats)

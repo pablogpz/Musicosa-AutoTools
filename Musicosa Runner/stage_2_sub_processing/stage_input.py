@@ -1,21 +1,21 @@
-from common.model.models import Contestant, Scoring, Entry
-from stage_2_sub_processing.type_definitions import Musicosa, Contestant as S2Contestant, Score as S2Score, \
-    Entry as S2Entry
+from common.model.models import Award, Nomination, CastVote
+from stage_2_sub_processing.type_definitions import TFA, Award as S2Award, Nomination as S2Nomination
 
 
-def load_musicosa_from_db() -> Musicosa:
-    contestants: list[Contestant] = [contestant.to_domain() for contestant in Contestant.ORM.select()]
-    s2_contestants: list[S2Contestant] = []
+def load_tfa_from_db() -> TFA:
+    awards: list[Award] = [r.to_domain() for r in Award.ORM.select()]
+    s2_awards: list[S2Award] = []
 
-    for contestant in contestants:
-        scoring_entries: list[Scoring] = [scoring.to_domain() for scoring in
-                                          Scoring.ORM.select().where(Scoring.ORM.contestant == contestant.id)]
-        s2_scores: list[S2Score] = [S2Score(entry_title=scoring.entry.title, score_value=scoring.score)
-                                    for scoring in scoring_entries]
+    for award in awards:
+        nominations: list[Nomination] = [r.to_domain() for r in
+                                         Nomination.ORM.select().where(Nomination.ORM.award == award.slug)]
+        s2_nominations: list[S2Nomination] = []
 
-        s2_contestants.append(S2Contestant(contestant_name=contestant.name, scores=s2_scores))
+        for nomination in nominations:
+            votes: list[CastVote] = [r.to_domain() for r in
+                                     CastVote.ORM.select().where(CastVote.ORM.nomination == nomination.id)]
+            s2_nominations.append(S2Nomination(nomination.id, [vote.score for vote in votes]))
 
-    entries: list[Entry] = [entry.to_domain() for entry in Entry.ORM.select()]
-    s2_entries: list[S2Entry] = [S2Entry(title=entry.title, author_name=entry.author.name) for entry in entries]
+        s2_awards.append(S2Award(award.slug, s2_nominations))
 
-    return Musicosa(contestants=s2_contestants, entries=s2_entries)
+    return TFA(s2_awards)

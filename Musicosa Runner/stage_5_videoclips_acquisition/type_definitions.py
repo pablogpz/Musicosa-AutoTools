@@ -1,13 +1,13 @@
 from dataclasses import dataclass
 
-from common.model.models import Entry
+from common.model.models import Videoclip
 
 
 @dataclass
 class StageFiveInput:
     artifacts_folder: str
     quiet_ffmpeg: bool
-    entries: list[Entry]
+    videoclips: list[Videoclip]
 
 
 @dataclass

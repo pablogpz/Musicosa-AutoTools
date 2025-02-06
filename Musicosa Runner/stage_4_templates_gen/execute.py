@@ -10,13 +10,12 @@ from stage_4_templates_gen.logic.generate_templates import generate_all_template
 from stage_4_templates_gen.type_definitions import Template, StageFourOutput
 
 
-def execute(
-        templates_api_url: str,
-        artifacts_folder: str,
-        templates: list[Template],
-        retry_attempts: int,
-        overwrite: bool,
-) -> StageFourOutput:
+def execute(templates_api_url: str,
+            artifacts_folder: str,
+            templates: list[Template],
+            retry_attempts: int,
+            overwrite: bool,
+            ) -> StageFourOutput:
     if not is_setting_set("templates.total_width_px"):
         raise StageException("Setting 'templates.total_width_px' not set")
 
@@ -45,4 +44,4 @@ def execute(
                                                            retry_attempts=retry_attempts,
                                                            overwrite=overwrite)
 
-    return StageFourOutput(generated_templates=generated, failed_templates_uuids=failed_to_generate)
+    return StageFourOutput(generated_templates_slugs=generated, failed_templates_uuids=failed_to_generate)

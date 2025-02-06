@@ -5,7 +5,7 @@ from peewee import PeeweeException
 from common.type_definitions import StageException
 from stage_5_videoclips_acquisition.defaults import DEFAULT_ARTIFACTS_FOLDER, DEFAULT_QUIET_FFMPEG
 from stage_5_videoclips_acquisition.execute import execute
-from stage_5_videoclips_acquisition.stage_input import load_entries_from_db
+from stage_5_videoclips_acquisition.stage_input import load_videoclips_from_db
 
 if __name__ == "__main__":
 
@@ -25,7 +25,7 @@ if __name__ == "__main__":
     # Data retrieval
 
     try:
-        entries = load_entries_from_db()
+        videoclips = load_videoclips_from_db()
     except PeeweeException as err:
         print(f"[Stage 5 | Data retrieval] {err}")
         exit(1)
@@ -33,7 +33,7 @@ if __name__ == "__main__":
     # Execution
 
     try:
-        result = execute(artifacts_folder=artifacts_folder, quiet_ffmpeg=quiet_ffmpeg, entries=entries)
+        result = execute(artifacts_folder=artifacts_folder, quiet_ffmpeg=quiet_ffmpeg, videoclips=videoclips)
     except StageException as err:
         print(f"[Stage 5 | Execution] {err}")
         exit(1)
@@ -42,8 +42,9 @@ if __name__ == "__main__":
 
     print("")
     print("[STAGE 5 SUMMARY | Videoclips Acquisition]")
-    print(f"  # Entries: {len(entries)}")
+    print(f"  # Videoclips: {len(videoclips)}")
     print("")
     print(f"  # Acquired videoclips: {len(result.acquired_videoclips) if result.acquired_videoclips else 0}")
+
     if result.failed_to_acquire:
         print(f"  Failed to acquire videoclips for: ['{"', '".join(result.failed_to_acquire)}']")

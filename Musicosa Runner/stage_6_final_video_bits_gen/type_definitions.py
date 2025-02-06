@@ -8,10 +8,11 @@ class Timestamp:
 
 
 @dataclass
-class EntryVideoOptions:
-    entry_id: str
-    entry_title: str
+class NominationVideoOptions:
+    award: str
+    template_friendly_name: str
     sequence_number: int
+    videoclip_friendly_name: str
     timestamp: Timestamp
     width: int
     height: int
@@ -23,17 +24,13 @@ class EntryVideoOptions:
 class StageSixInput:
     artifacts_folder: str
     video_bits_folder: str
-    entries_video_options: list[EntryVideoOptions]
+    nominations_video_options: list[NominationVideoOptions]
     overwrite: bool
-    stitch_final_video: bool
-    final_video_name: str
     quiet_ffmpeg: bool
-    quiet_ffmpeg_final_video: bool
 
 
 @dataclass
 class StageSixOutput:
     generated_video_bits_files: list[str] | None
-    entries_missing_sources: list[str] | None
+    nominations_missing_sources: list[str] | None
     failed_video_bits: list[str] | None
-    final_video: str | None

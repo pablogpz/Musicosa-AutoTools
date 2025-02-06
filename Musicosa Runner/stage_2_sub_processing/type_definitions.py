@@ -2,50 +2,35 @@ from dataclasses import dataclass
 
 
 @dataclass
-class Score:
-    entry_title: str
-    score_value: float
+class Nomination:
+    id: str
+    votes: list[float]
 
 
 @dataclass
-class Entry:
-    title: str
-    author_name: str
+class Award:
+    slug: str
+    nominations: list[Nomination]
 
 
 @dataclass
-class Contestant:
-    contestant_name: str
-    scores: list[Score]
-
-
-@dataclass
-class Musicosa:
-    contestants: list[Contestant]
-    entries: list[Entry]
-
-
-@dataclass
-class ContestantStats:
-    contestant: Contestant
-    avg_given_score: float | None
-    avg_received_score: float | None
-
-
-@dataclass
-class EntryStats:
-    entry: Entry
-    avg_score: float | None
-    ranking_place: int | None
-    ranking_sequence: int | None
+class TFA:
+    awards: list[Award]
 
 
 @dataclass
 class StageTwoInput:
-    musicosa: Musicosa
+    tfa: TFA
+
+
+@dataclass
+class NominationStats:
+    nomination_id: str
+    avg_score: float
+    ranking_place: int
+    ranking_sequence: int
 
 
 @dataclass
 class StageTwoOutput:
-    contestants_stats: list[ContestantStats]
-    entries_stats: list[EntryStats]
+    nomination_stats: list[NominationStats]

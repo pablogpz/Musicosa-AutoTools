@@ -1,8 +1,4 @@
-CSV_SEPARATOR = ";"
-CSV_FIELDS_COUNT = 6
-
-XLSX_CONTESTANT_NAME_COORDS = "F2"
-XLSX_FORM_DATA_COORDS = "C6:H137"
-
-ALLOWED_DECIMAL_SEPARATOR_CHARS = [",", "'"]
-NORMALIZED_DECIMAL_SEPARATOR_CHAR = "."
+CSV_SEPARATOR = ','
+CSV_MEMBER_NAME_HEADER = 'Nombre'
+CSV_UNUSED_HEADERS = ['Submission ID', 'Last updated', 'Submission started', 'Status', 'Current step', 'Errors', 'Url',
+                      'Network ID']

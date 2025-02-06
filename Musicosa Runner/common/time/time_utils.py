@@ -1,7 +1,5 @@
 from datetime import time
 
-from common.constants import VIDEO_TIMESTAMP_SEPARATOR
-
 
 def time_str_zfill(time_str: str) -> str | None:
     time_bits = time_str.split(":")
@@ -30,28 +28,6 @@ def validate_time_str(time_str: str) -> bool:
         return True
     except ValueError:
         return False
-
-
-def validate_video_timestamp_str(timestamp_str: str, duration: int | None = None) -> bool:
-    timestamp_bits = timestamp_str.split(VIDEO_TIMESTAMP_SEPARATOR)
-
-    if len(timestamp_bits) != 2:
-        return False
-
-    start, end = timestamp_bits
-
-    if not validate_time_str(start) or not validate_time_str(end):
-        return False
-
-    start_time, end_time = parse_time(start), parse_time(end)
-
-    if start_time >= end_time:
-        return False
-
-    if duration and seconds_between(start_time, end_time) != duration:
-        return False
-
-    return True
 
 
 def parse_time(time_str: str) -> time | None:

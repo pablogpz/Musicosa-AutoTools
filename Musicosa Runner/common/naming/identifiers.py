@@ -1,18 +1,34 @@
 from uuid import UUID, NAMESPACE_OID, uuid5
 
-CONTESTANTS_NAMESPACE = NAMESPACE_OID
-ENTRIES_NAMESPACE = NAMESPACE_OID
+MEMBERS_NAMESPACE = NAMESPACE_OID
+NOMINATIONS_NAMESPACE = NAMESPACE_OID
 
 
-def generate_contestant_uuid5(contestant_name: str) -> UUID:
-    if not contestant_name:
-        raise ValueError("Contestant name cannot be empty")
+def generate_member_uuid5(member_name: str) -> UUID:
+    if not member_name:
+        raise ValueError("Member name cannot be empty")
 
-    return uuid5(CONTESTANTS_NAMESPACE, contestant_name)
+    return uuid5(MEMBERS_NAMESPACE, member_name)
 
 
-def generate_entry_uuid5(entry_title: str) -> UUID:
-    if not entry_title:
-        raise ValueError("Entry title cannot be empty")
+def generate_nomination_uuid5(game_title: str, nominee: str, award_slug: str) -> UUID:
+    if not game_title:
+        raise ValueError("Game title cannot be empty")
 
-    return uuid5(ENTRIES_NAMESPACE, entry_title)
+    if not award_slug:
+        raise ValueError("Award slug cannot be empty")
+
+    return uuid5(NOMINATIONS_NAMESPACE, f"{game_title}{nominee}{award_slug}")
+
+
+def generate_nomination_uuid5_from_nomination_str(full_nomination_str: str, award_slug: str) -> UUID:
+    nomination_bits = full_nomination_str.rsplit(sep='(', maxsplit=1)
+
+    if len(nomination_bits) == 1:
+        game_title = nomination_bits[0].strip()
+        nominee = ''
+    else:
+        game_title = nomination_bits[1].removesuffix(')').strip()
+        nominee = nomination_bits[0].removesuffix(')').strip()
+
+    return generate_nomination_uuid5(game_title, nominee, award_slug)

@@ -34,31 +34,30 @@ export const avatars = sqliteTable('avatars', {
 })
 export type Avatar = InferSelectModel<typeof avatars>
 
-export const contestants = sqliteTable('contestants', {
+export const members = sqliteTable('members', {
     id: text('id').primaryKey(),
     name: text('name').notNull().unique(),
     avatar: integer('avatar').references(() => avatars.id)
 })
-export type Contestant = InferSelectModel<typeof contestants>
+export type Member = InferSelectModel<typeof members>
 
-export const specialEntryTopics = sqliteTable('special_entry_topics', {
-    designation: text('designation').primaryKey()
+export const awards = sqliteTable('awards', {
+    slug: text('slug').primaryKey(),
+    designation: text('designation').notNull()
 })
-export type SpecialEntryTopic = InferSelectModel<typeof specialEntryTopics>
+export type Award = InferSelectModel<typeof awards>
 
-export const entries = sqliteTable('entries', {
+export const nominations = sqliteTable('nominations', {
     id: text('id').primaryKey(),
-    title: text('title').notNull().unique(),
-    author: text('author').references(() => contestants.id),
-    videoUrl: text('video_url').notNull(),
-    specialTopic: text('special_topic').references(() => specialEntryTopics.designation)
+    gameTitle: text('game_title').notNull(),
+    nominee: text('nominee'),
+    award: text('award').references(() => awards.slug).notNull()
 })
-export type Entry = InferSelectModel<typeof entries>
+export type Nomination = InferSelectModel<typeof nominations>
 
 export const templates = sqliteTable('templates', {
-    entry: text('entry').references(() => entries.id).primaryKey(),
+    nomination: text('nomination').references(() => nominations.id).primaryKey(),
     avatarScale: real('avatar_scale').notNull(),
-    authorAvatarScale: real('author_avatar_scale').notNull(),
     videoBoxWidthPx: integer('video_box_width_px').notNull(),
     videoBoxHeightPx: integer('video_box_height_px').notNull(),
     videoBoxPositionTopPx: integer('video_box_position_top_px').notNull(),
@@ -66,33 +65,33 @@ export const templates = sqliteTable('templates', {
 })
 export type Template = InferSelectModel<typeof templates>
 
+export const videoclips = sqliteTable('videoclips', {
+    id: integer('id').primaryKey(),
+    url: text('url').notNull()
+})
+export type Videoclip = InferSelectModel<typeof videoclips>
+
 export const videoOptions = sqliteTable('video_options', {
-    entry: text('entry').references(() => entries.id).primaryKey(),
+    nomination: text('nomination').references(() => nominations.id).primaryKey(),
+    videoclip: integer('videoclip').references(() => videoclips.id).notNull(),
     timestampStart: text('timestamp_start').notNull(),
     timestampEnd: text('timestamp_end').notNull(),
 })
 export type VideoOptions = InferSelectModel<typeof videoOptions>
 
-export const scoring = sqliteTable('contestant_grades_entries', {
-    contestant: text('contestant').references(() => contestants.id),
-    entry: text('entry').references(() => entries.id).notNull(),
+export const castVotes = sqliteTable('member_grades_nominations', {
+    member: text('member').references(() => members.id),
+    nomination: text('nomination').references(() => nominations.id).notNull(),
     score: real('score').notNull()
 }, (table) => ({
-    pk: primaryKey({ columns: [table.contestant, table.entry] })
+    pk: primaryKey({ columns: [table.member, table.nomination] })
 }))
-export type Scoring = InferSelectModel<typeof scoring>
+export type CastVote = InferSelectModel<typeof castVotes>
 
-export const contestantsStats = sqliteTable('stats_contestants', {
-    contestant: text('contestant').references(() => contestants.id).primaryKey(),
-    avgGivenScore: real('avg_given_score'),
-    avgReceivedScore: real('avg_received_score'),
-})
-export type ContestantStats = InferSelectModel<typeof contestantsStats>
-
-export const entriesStats = sqliteTable('stats_entries', {
-    entry: text('entry').references(() => entries.id).primaryKey(),
+export const nominationStats = sqliteTable('stats_nominations', {
+    nomination: text('nomination').references(() => nominations.id).primaryKey(),
     avgScore: real('avg_score'),
     rankingPlace: integer('ranking_place'),
-    rankingSequence: integer('ranking_sequence').unique(),
+    rankingSequence: integer('ranking_sequence'),
 })
-export type EntryStats = InferSelectModel<typeof entriesStats>
+export type NominationStats = InferSelectModel<typeof nominationStats>
