@@ -1,6 +1,6 @@
 PRAGMA foreign_keys = ON;
 
--- MUSICOSA 4th EDITION DATABASE SCHEMA AND INITIAL VALUES
+-- BASE MUSICOSA DATABASE SCHEMA AND INITIAL VALUES
 
 CREATE TABLE metadata
 (
@@ -10,13 +10,13 @@ CREATE TABLE metadata
 );
 
 INSERT INTO metadata (field, value)
-VALUES ('edition', '4');
+VALUES ('edition', ''); -- FIXME: Fill edition number (Ex: 4)
 INSERT INTO metadata (field, value)
-VALUES ('topic', 'BSO de películas/series/anime');
+VALUES ('topic', ''); --FIXME: Fill edition topic (Ex: Canciones)
 INSERT INTO metadata (field, value)
-VALUES ('organiser', 'Pablo');
+VALUES ('organiser', ''); --FIXME: Fill organiser(s) name(s)
 INSERT INTO metadata (field, value)
-VALUES ('start_date', '14-09-2024');
+VALUES ('start_date', ''); --FIXME: Fill start date (Ex: 14/09/2024)
 
 CREATE TABLE settings
 (
@@ -30,7 +30,7 @@ CREATE TABLE settings
 );
 
 INSERT INTO settings (group_key, setting, value, type)
-VALUES ('globals', 'rounds_count', '11', 'integer');
+VALUES ('globals', 'rounds_count', '', 'integer'); --FIXME: To be filled
 INSERT INTO settings (group_key, setting, value, type)
 VALUES ('validation', 'score_min_value', '0.0', 'real');
 INSERT INTO settings (group_key, setting, value, type)
@@ -38,26 +38,20 @@ VALUES ('validation', 'score_max_value', '10.0', 'real');
 INSERT INTO settings (group_key, setting, value, type)
 VALUES ('validation', 'entry_video_duration_seconds', '30', 'integer');
 INSERT INTO settings (group_key, setting, value, type)
-VALUES ('ranking', 'significant_decimal_digits', '3', 'integer');
+VALUES ('ranking', 'significant_decimal_digits', '', 'integer'); --FIXME: To be filled
 INSERT INTO settings (group_key, setting, value, type)
 VALUES ('templates', 'total_width_px', '1920', 'integer');
 INSERT INTO settings (group_key, setting, value, type)
 VALUES ('templates', 'total_height_px', '1080', 'integer');
+--FIXME: To be filled
 INSERT INTO settings (group_key, setting, value, type)
-VALUES ('templates', 'display_decimal_digits', '2', 'integer');
+VALUES ('templates', 'display_decimal_digits', '', 'integer');
+--FIXME: To be filled (Ex: 10)
 INSERT INTO settings (group_key, setting, value, type)
-VALUES ('generation', 'videoclips_override_top_n_duration', '10', 'integer');
+VALUES ('generation', 'videoclips_override_top_n_duration', '', 'integer');
+--FIXME: To be filled (Hint: -1 -> Disabled)
 INSERT INTO settings (group_key, setting, value, type)
-VALUES ('generation', 'videoclips_override_duration_up_to_x_seconds', '-1', 'integer');
-
-CREATE TABLE special_entry_topics
-(
-    designation TEXT NOT NULL
-        CONSTRAINT special_entry_topics_pk PRIMARY KEY
-);
-
-INSERT INTO special_entry_topics (designation)
-VALUES ('INFANCIA');
+VALUES ('generation', 'videoclips_override_duration_up_to_x_seconds', '', 'integer');
 
 CREATE TABLE avatars
 (
@@ -82,6 +76,16 @@ CREATE TABLE contestants
     CONSTRAINT displayed_by_fk FOREIGN KEY (avatar) REFERENCES avatars (id)
         ON UPDATE CASCADE ON DELETE SET NULL
 );
+
+CREATE TABLE special_entry_topics
+(
+    designation TEXT NOT NULL
+        CONSTRAINT special_entry_topics_pk PRIMARY KEY
+);
+
+--TODO: Register all special topics
+-- INSERT INTO special_entry_topics (designation)
+-- VALUES ('');
 
 CREATE TABLE entries
 (
@@ -132,9 +136,7 @@ CREATE TABLE contestant_grades_entries
 (
     contestant TEXT,
     entry      TEXT NOT NULL,
-    score      REAL NOT NULL
-        CONSTRAINT score_is_natural CHECK ( score >= 0 )
-        CONSTRAINT score_is_below_or_equal_max_score CHECK ( score <= 10 ),
+    score      REAL NOT NULL,
 
     CONSTRAINT contestant_fk FOREIGN KEY (contestant) REFERENCES contestants (id)
         ON UPDATE CASCADE ON DELETE SET NULL,

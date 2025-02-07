@@ -30,13 +30,13 @@ export const avatars = sqliteTable('avatars', {
     scoreBoxPositionTop: real('score_box_position_top').notNull(),
     scoreBoxPositionLeft: real('score_box_position_left').notNull(),
     scoreBoxFontScale: real('score_box_font_scale').notNull(),
-    scoreBoxFontColor: text('score_box_font_color')
+    scoreBoxFontColor: text('score_box_font_color').notNull()
 })
 export type Avatar = InferSelectModel<typeof avatars>
 
 export const contestants = sqliteTable('contestants', {
     id: text('id').primaryKey(),
-    name: text('name').notNull(),
+    name: text('name').notNull().unique(),
     avatar: integer('avatar').references(() => avatars.id)
 })
 export type Contestant = InferSelectModel<typeof contestants>
@@ -68,8 +68,8 @@ export type Template = InferSelectModel<typeof templates>
 
 export const videoOptions = sqliteTable('video_options', {
     entry: text('entry').references(() => entries.id).primaryKey(),
-    timestampStart: text('timestamp_start'),
-    timestampEnd: text('timestamp_end'),
+    timestampStart: text('timestamp_start').notNull(),
+    timestampEnd: text('timestamp_end').notNull(),
 })
 export type VideoOptions = InferSelectModel<typeof videoOptions>
 

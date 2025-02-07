@@ -52,7 +52,7 @@ class Setting:
         group_key = TextField(column_name="group_key")
         setting = TextField(column_name="setting")
         value = TextField(column_name="value", null=True)
-        type = TextField(column_name="type", choices=["integer", "real", "string", "boolean"])
+        type = TextField(column_name="type", choices=["integer", "real", "string", "boolean"], default="string")
 
         class Meta:
             database = db
@@ -175,14 +175,14 @@ class Entry:
     id: str
     title: str
     author: Contestant | None
-    video_url: str | None
+    video_url: str
     special_topic: SpecialEntryTopic | None
 
     class ORM(Model):
         id = TextField(column_name="id", primary_key=True)
         title = TextField(column_name="title", unique=True)
         author = ForeignKeyField(Contestant.ORM, column_name="author", null=True)
-        video_url = TextField(column_name="video_url", null=True)
+        video_url = TextField(column_name="video_url")
         special_topic = ForeignKeyField(SpecialEntryTopic.ORM, column_name="special_topic", null=True)
 
         class Meta:
@@ -223,8 +223,8 @@ class Template:
 
     class ORM(Model):
         entry = ForeignKeyField(Entry.ORM, column_name="entry", primary_key=True)
-        avatar_scale = FloatField(column_name="avatar_scale", default=1.0)
-        author_avatar_scale = FloatField(column_name="author_avatar_scale", default=1.0)
+        avatar_scale = FloatField(column_name="avatar_scale")
+        author_avatar_scale = FloatField(column_name="author_avatar_scale")
         video_box_width_px = IntegerField(column_name="video_box_width_px")
         video_box_height_px = IntegerField(column_name="video_box_height_px")
         video_box_position_top_px = IntegerField(column_name="video_box_position_top_px")
@@ -283,7 +283,7 @@ class VideoOptions:
 
 @dataclass
 class Scoring:
-    contestant: Contestant
+    contestant: Contestant | None
     entry: Entry
     score: float
 
