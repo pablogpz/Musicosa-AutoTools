@@ -4,16 +4,12 @@ import React, { ChangeEvent, ChangeEventHandler, HTMLInputTypeAttribute, useStat
 
 import formatNumberToDecimalPrecision from '@/formatters/formatNumberToDecimalPrecision'
 
+import { defaultEntry, defaultEntryStats, defaultScoring, defaultTemplate } from '@/db/defaults'
 import {
-    defaultAuthor,
-    defaultContestant,
-    defaultContestantId,
-    defaultEntry,
-    defaultEntryStats,
-    defaultScoring,
-    defaultTemplate
-} from '@/db/defaults'
-import { defaultResolvedAvatar } from '@/app/templates/common/withTemplateProps/defaults'
+    defaultResolvedAuthor,
+    defaultResolvedContestant,
+    defaultResolvedScoring
+} from '@/app/templates/common/withTemplateProps/defaults'
 import BaseTemplateContainer from '@/app/templates/components/TemplateContainer/BaseTemplateContainer'
 import { Template, TemplateProps } from '@/app/templates/components/Template'
 
@@ -76,14 +72,22 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
         authorAvatarScale,
         videoBoxWidthPx,
         videoBoxHeightPx,
-        author: defaultAuthor,
-        contestants: Array.from({ length: contestantCount - 1 }, () => defaultContestant),
-        avatars: [defaultResolvedAvatar],
-        scores: [{
-            contestant: defaultContestantId,
-            score,
-            formattedScore: formatNumberToDecimalPrecision(score, displayDecimalDigits)
-        }]
+        author: {
+            ...defaultResolvedAuthor,
+            scoring: {
+                ...defaultResolvedScoring,
+                score,
+                formattedScore: formatNumberToDecimalPrecision(score, displayDecimalDigits)
+            }
+        },
+        contestants: Array.from({ length: contestantCount - 1 }, () => ({
+            ...defaultResolvedContestant,
+            scoring: {
+                ...defaultResolvedScoring,
+                score,
+                formattedScore: formatNumberToDecimalPrecision(score, displayDecimalDigits)
+            }
+        }))
     }
 
     const templateParamInputs = [
