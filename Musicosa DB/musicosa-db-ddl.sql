@@ -1,6 +1,6 @@
 PRAGMA foreign_keys = ON;
 
--- BASE "TFA" DATABASE SCHEMA AND INITIAL VALUES
+-- TFA 2º EDITION DATABASE SCHEMA AND INITIAL VALUES
 
 CREATE TABLE metadata
 (
@@ -10,7 +10,7 @@ CREATE TABLE metadata
 );
 
 INSERT INTO metadata (field, value)
-VALUES ('edition', ''); -- FIXME: TO BE FILLED
+VALUES ('edition', '2');
 
 CREATE TABLE settings
 (
@@ -34,7 +34,7 @@ VALUES ('templates', 'total_width_px', '1920', 'integer');
 INSERT INTO settings (group_key, setting, value, type)
 VALUES ('templates', 'total_height_px', '1080', 'integer');
 INSERT INTO settings (group_key, setting, value, type)
-VALUES ('templates', 'display_decimal_digits', '3', 'integer');
+VALUES ('templates', 'display_decimal_digits', '2', 'integer');
 
 CREATE TABLE avatars
 (

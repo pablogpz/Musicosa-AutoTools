@@ -13,7 +13,7 @@ import {
 } from '@/db/defaults'
 import { defaultResolvedCastVote, defaultResolvedMember } from '@/app/templates/common/withTemplateProps/defaults'
 import BaseTemplateContainer from '@/app/templates/components/TemplateContainer/BaseTemplateContainer'
-import { Template, TemplateProps } from '@/app/templates/components/Template'
+import { Template, TemplateProps } from '@/app/templates/components/Template/TFA-2/Template'
 
 function onChangeFactory(onChange: (value: string) => void): ChangeEventHandler<HTMLInputElement> {
     return (e: ChangeEvent<HTMLInputElement>): void => {
