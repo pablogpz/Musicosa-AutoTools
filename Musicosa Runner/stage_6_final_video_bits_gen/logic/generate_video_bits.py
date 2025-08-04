@@ -1,17 +1,14 @@
 from os import path
-from os.path import basename
 
 import ffmpeg
-from ffmpeg import VideoStream, AudioStream
 from ffmpeg.exceptions import FFMpegError
-from ffmpeg.filters import concat
+from ffmpeg_normalize import FFmpegNormalize, FFmpegNormalizeError
 from math import ceil
 
 from common.constants import VIDEO_DURATION_OVERRIDE_FULL_DURATION_VALUE, TEMPLATE_IMG_FORMAT, VIDEO_FORMAT
 from common.model.settings import get_setting_by_key
 from common.naming.slugify import slugify
 from common.time.time_utils import parse_time, time_to_seconds
-from common.type_definitions import StageException
 from stage_6_final_video_bits_gen.constants import VIDEO_FPS
 from stage_6_final_video_bits_gen.logic.video_helpers import get_video_duration_seconds
 from stage_6_final_video_bits_gen.type_definitions import EntryVideoOptions
@@ -47,7 +44,7 @@ def generate_all_video_bits(
             entries_missing_sources.append(vid_opts.entry_title)
             continue
 
-        print(f"[GENERATING] {vid_opts.entry_title}")
+        print(f"[GENERATING #{vid_opts.sequence_number}] {vid_opts.entry_title}")
 
         try:
             generated = generate_video_bit(source_videoclip, vid_opts, source_template, video_bit_path, quiet_ffmpeg)
@@ -104,7 +101,7 @@ def generate_video_bit(videoclip_path: str, vid_opts: EntryVideoOptions, templat
                                           force_original_aspect_ratio="decrease")
                                    .pad(width=ceil(vid_opts.width / 2) * 2, height=ceil(vid_opts.height / 2) * 2,
                                         x="(ow-iw)/2", y="(oh-ih)/2",
-                                        color="Black")
+                                        color="black")
                                    .setsar(sar=1))
 
         output_video_bit_stream = (template_stream
@@ -117,46 +114,17 @@ def generate_video_bit(videoclip_path: str, vid_opts: EntryVideoOptions, templat
                  vcodec="libx264",
                  b="6000k")
          .run(overwrite_output=True, quiet=quiet_ffmpeg))
+
+        normalizer = FFmpegNormalize(normalization_type="ebu", target_level=-18, loudness_range_target=12,
+                                     audio_codec="aac", sample_rate=48000,
+                                     video_codec="copy")
+        normalizer.add_media_file(video_bit_path, video_bit_path)
+        try:
+            normalizer.run_normalization()
+        except FFmpegNormalizeError as err:
+            print(f"[WARNING] Error normalising audio track of video bit ({video_bit_path}): {err}")
     except FFMpegError as err:
         print(f"[GENERATION FAILED] {vid_opts.entry_title}: {err}")
         raise
 
     return video_bit_path
-
-
-def generate_final_video(video_bits_files: list[str],
-                         final_video_folder: str,
-                         final_video_name: str,
-                         quiet_ffmpeg: bool) -> str:
-    streams: list[VideoStream | AudioStream] = []
-
-    print(f"[GENERATING FINAL VIDEO] '{final_video_name}.{VIDEO_FORMAT}'")
-
-    sorted_videos = sorted(video_bits_files, key=lambda x: int(basename(x).rsplit(".", 1)[0]), reverse=True)
-
-    for video_file in sorted_videos:
-        if not path.isfile(video_file):
-            raise StageException(f"Video file '{video_file}' missing for final video generation")
-
-        # Pairing sorted video and audio streams for concatenation
-        streams.append(ffmpeg.input(filename=video_file).video)
-        streams.append(ffmpeg.input(filename=video_file).audio)
-
-    final_video_path = f"{final_video_folder}/{final_video_name}.{VIDEO_FORMAT}"
-
-    try:
-        # Concatenating video bits sequentially
-        concat_videos_node = concat(*streams, n=len(streams) / 2, v=1, a=1)
-
-        (ffmpeg
-         .output(concat_videos_node.video(0).copy(), concat_videos_node.audio(0).acopy(),
-                 filename=final_video_path,
-                 vcodec="libx264",
-                 b="6000k")
-         .run(overwrite_output=True, quiet=quiet_ffmpeg))
-
-        print(f"[FINAL VIDEO GENERATED] At '{final_video_path}' from {len(video_bits_files)} clips")
-    except FFMpegError as err:
-        raise StageException(f"Failed to generate final video: {err}") from err
-
-    return final_video_path

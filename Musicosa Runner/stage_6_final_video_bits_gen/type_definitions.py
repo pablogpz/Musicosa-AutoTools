@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Literal
 
 
 @dataclass
@@ -19,6 +20,64 @@ class EntryVideoOptions:
     position_left: int
 
 
+TransitionType = Literal[
+    "custom",
+    "fade",
+    "wipeleft",
+    "wiperight",
+    "wipeup",
+    "wipedown",
+    "slideleft",
+    "slideright",
+    "slideup",
+    "slidedown",
+    "circlecrop",
+    "rectcrop",
+    "distance",
+    "fadeblack",
+    "fadewhite",
+    "radial",
+    "smoothleft",
+    "smoothright",
+    "smoothup",
+    "smoothdown",
+    "circleopen",
+    "circleclose",
+    "vertopen",
+    "vertclose",
+    "horzopen",
+    "horzclose",
+    "dissolve",
+    "pixelize",
+    "diagtl",
+    "diagtr",
+    "diagbl",
+    "diagbr",
+    "hlslice",
+    "hrslice",
+    "vuslice",
+    "vdslice",
+    "hblur",
+    "fadegrays",
+    "wipetl",
+    "wipetr",
+    "wipebl",
+    "wipebr",
+    "squeezeh",
+    "squeezev",
+    "zoomin",
+    "fadefast",
+    "fadeslow",
+]
+
+
+@dataclass
+class TransitionOptions:
+    presentation_duration: int
+    transition_duration: int
+    type: TransitionType
+
+
 @dataclass
 class StageSixInput:
     artifacts_folder: str
@@ -27,6 +86,7 @@ class StageSixInput:
     overwrite: bool
     stitch_final_video: bool
     final_video_name: str
+    transition_options: TransitionOptions
     quiet_ffmpeg: bool
     quiet_ffmpeg_final_video: bool
 

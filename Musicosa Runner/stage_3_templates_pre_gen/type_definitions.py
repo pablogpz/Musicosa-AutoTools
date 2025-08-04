@@ -25,7 +25,7 @@ class StageThreeInput:
 @dataclass
 class StageThreeOutput:
     avatar_pairings: list[AvatarPairing] | None
-    templates_settings: list[Setting] | None
+    frame_settings: list[Setting] | None
     templates: list[Template] | None
     generation_settings: list[Setting] | None
     video_options: list[VideoOptions] | None

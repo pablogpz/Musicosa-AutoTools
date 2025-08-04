@@ -1,11 +1,14 @@
 import os
 from os import path
+from typing import get_args
 
 from common.constants import VIDEO_FORMAT
 from common.model.settings import is_setting_set
 from common.type_definitions import StageException
-from stage_6_final_video_bits_gen.logic.generate_video_bits import generate_all_video_bits, generate_final_video
-from stage_6_final_video_bits_gen.type_definitions import EntryVideoOptions, StageSixOutput
+from stage_6_final_video_bits_gen.logic.generate_final_video import generate_final_video
+from stage_6_final_video_bits_gen.logic.generate_video_bits import generate_all_video_bits
+from stage_6_final_video_bits_gen.type_definitions import EntryVideoOptions, StageSixOutput, TransitionOptions, \
+    TransitionType
 
 
 def execute(artifacts_folder: str,
@@ -14,6 +17,7 @@ def execute(artifacts_folder: str,
             overwrite: bool,
             stitch_final_video: bool,
             final_video_name: str,
+            transition_options: TransitionOptions,
             quiet_ffmpeg: bool,
             quiet_ffmpeg_final_video: bool) -> StageSixOutput:
     if not is_setting_set("validation.entry_video_duration_seconds"):
@@ -37,11 +41,20 @@ def execute(artifacts_folder: str,
     if not path.isdir(video_bits_folder):
         os.makedirs(video_bits_folder)
 
-    if entries_video_options is None:
+    if entries_video_options is None or len(entries_video_options) == 0:
         raise StageException("No video options provided")
 
     if not final_video_name:
         raise StageException("No final video name provided")
+
+    if transition_options.presentation_duration <= 0:
+        raise StageException(
+            f"presentation_duration ({transition_options.presentation_duration}) must be a positive integer")
+    if transition_options.transition_duration <= 0:
+        raise StageException(
+            f"transition_duration ({transition_options.transition_duration}) must be a positive integer")
+    if transition_options.type not in get_args(TransitionType):
+        raise StageException(f"transition_type ({transition_options.type}) must be one of [{get_args(TransitionType)}]")
 
     generated, missing_sources, failed_to_generate = (
         generate_all_video_bits(artifacts_folder=artifacts_folder,
@@ -64,10 +77,13 @@ def execute(artifacts_folder: str,
                   f"{len(entries_video_options) - len(generated_or_existing_video_bits)}"
                   f" missing video bits")
         else:
-            final_video_path = generate_final_video(video_bits_files=list(generated_or_existing_video_bits),
+            final_video_path = generate_final_video(artifacts_folder=artifacts_folder,
+                                                    video_bits_folder=video_bits_folder,
                                                     final_video_folder=video_bits_folder,
                                                     final_video_name=final_video_name,
-                                                    quiet_ffmpeg=quiet_ffmpeg_final_video)
+                                                    quiet_ffmpeg=quiet_ffmpeg_final_video,
+                                                    vid_opts=entries_video_options,
+                                                    transition_options=transition_options)
 
     return StageSixOutput(generated_video_bits_files=generated,
                           entries_missing_sources=missing_sources,

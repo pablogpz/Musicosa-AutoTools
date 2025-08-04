@@ -10,7 +10,7 @@ class SettingsGroups(Enum):
     GLOBAL = "globals"
     VALIDATION = "validation"
     RANKING = "ranking"
-    TEMPLATES = "templates"
+    FRAME = "frame"
     GENERATION = "generation"
 
 
@@ -28,9 +28,9 @@ class RankingSettingsNames(Enum):
     SIGNIFICANT_DECIMAL_DIGITS = "significant_decimal_digits"
 
 
-class TemplateSettingsNames(Enum):
-    TOTAL_WIDTH_PX = "total_width_px"
-    TOTAL_HEIGHT_PX = "total_height_px"
+class FrameSettingsNames(Enum):
+    WIDTH_PX = "width_px"
+    HEIGHT_PX = "height_px"
 
 
 class GenerationSettingsNames(Enum):
@@ -44,8 +44,8 @@ type SettingsKeys = Literal[
     "validation.score_max_value",
     "validation.entry_video_duration_seconds",
     "ranking.significant_decimal_digits",
-    "templates.total_width_px",
-    "templates.total_height_px",
+    "frame.width_px",
+    "frame.height_px",
     "generation.videoclips_override_top_n_duration",
     "generation.videoclips_override_duration_up_to_x_seconds"
 ]

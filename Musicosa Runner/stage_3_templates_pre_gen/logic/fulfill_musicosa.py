@@ -4,7 +4,7 @@ from os.path import basename
 from common.constants import VIDEO_TIMESTAMP_SEPARATOR, VIDEO_DURATION_OVERRIDE_FULL_DURATION_VALUE
 from common.input.better_input import better_input
 from common.model.models import Avatar, Setting, Contestant, Template, Entry, VideoOptions
-from common.model.settings import get_setting_by_key, SettingsGroups, TemplateSettingsNames, GenerationSettingsNames, \
+from common.model.settings import get_setting_by_key, SettingsGroups, FrameSettingsNames, GenerationSettingsNames, \
     is_setting_set
 from common.time.time_utils import parse_time, validate_video_timestamp_str, time_str_zfill
 from stage_3_templates_pre_gen.constants import AVATAR_SUPPORTED_FORMATS
@@ -112,42 +112,42 @@ def generate_unfulfilled_avatar_pairings(unfulfilled_contestants: list[Contestan
     return pairings
 
 
-def generate_unfulfilled_templates_settings() -> list[Setting] | None:
-    templates_settings: list[Setting] = []
+def generate_unfulfilled_frame_settings() -> list[Setting] | None:
+    frame_settings: list[Setting] = []
 
     print("")
-    print("[Templates General Settings]")
+    print("[Frame Settings]")
     print("")
 
-    if not is_setting_set("templates.total_width_px"):
-        print("  Template total width not set...")
-        total_width = better_input("Total width of a template (px)",
+    if not is_setting_set("frame.width_px"):
+        print("  Frame width not set...")
+        total_width = better_input("Width of the frame where assets get rendered (px)",
                                    lambda x: x.isdigit() and int(x) > 0,
                                    lambda x: f"Invalid width '{x}' (Must be a positive number)",
                                    indentation_level=4)
 
-        templates_settings.append(Setting(group_key=SettingsGroups.TEMPLATES.value,
-                                          setting=TemplateSettingsNames.TOTAL_WIDTH_PX.value,
-                                          value=int(total_width),
-                                          type="integer"))
+        frame_settings.append(Setting(group_key=SettingsGroups.FRAME.value,
+                                      setting=FrameSettingsNames.WIDTH_PX.value,
+                                      value=int(total_width),
+                                      type="integer"))
     else:
-        print("Template total width set ✔")
+        print("Frame width set ✔")
 
-    if not is_setting_set("templates.total_height_px"):
-        print("  Template total height not set...")
-        total_height = better_input("Total height of a template (px)",
+    if not is_setting_set("frame.height_px"):
+        print("  Frame height not set...")
+        total_height = better_input("Height of the frame where assets get rendered (px)",
                                     lambda x: x.isdigit() and int(x) > 0,
                                     lambda x: f"Invalid height '{x}' (Must be a positive number)",
                                     indentation_level=4)
 
-        templates_settings.append(Setting(group_key=SettingsGroups.TEMPLATES.value,
-                                          setting=TemplateSettingsNames.TOTAL_HEIGHT_PX.value,
-                                          value=int(total_height),
-                                          type="integer"))
+        frame_settings.append(Setting(group_key=SettingsGroups.FRAME.value,
+                                      setting=FrameSettingsNames.HEIGHT_PX.value,
+                                      value=int(total_height),
+                                      type="integer"))
     else:
-        print("Template total height set ✔")
+        print("Frame height set ✔")
 
-    return templates_settings or None
+    return frame_settings or None
 
 
 def generate_unfulfilled_templates(entries_sequence_number_index: dict[int, Entry]) -> list[Template] | None:

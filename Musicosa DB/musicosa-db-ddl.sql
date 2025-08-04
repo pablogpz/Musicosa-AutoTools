@@ -40,9 +40,9 @@ VALUES ('validation', 'entry_video_duration_seconds', '30', 'integer');
 INSERT INTO settings (group_key, setting, value, type)
 VALUES ('ranking', 'significant_decimal_digits', '', 'integer'); --FIXME: To be filled
 INSERT INTO settings (group_key, setting, value, type)
-VALUES ('templates', 'total_width_px', '1920', 'integer');
+VALUES ('frame', 'width_px', '1920', 'integer');
 INSERT INTO settings (group_key, setting, value, type)
-VALUES ('templates', 'total_height_px', '1080', 'integer');
+VALUES ('frame', 'height_px', '1080', 'integer');
 --FIXME: To be filled
 INSERT INTO settings (group_key, setting, value, type)
 VALUES ('templates', 'display_decimal_digits', '', 'integer');

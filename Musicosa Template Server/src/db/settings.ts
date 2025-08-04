@@ -1,5 +1,6 @@
 export enum SettingsGroups {
     validation = 'validation',
+    frame = 'frame',
     templates = 'templates',
     ranking = 'ranking'
 }
@@ -9,9 +10,12 @@ export enum ValidationSettingsNames {
     scoreMaxValue = 'score_max_value',
 }
 
+export enum FrameSettingsNames {
+    widthPx = 'width_px',
+    heightPx = 'height_px',
+}
+
 export enum TemplatesSettingsNames {
-    totalWidthPx = 'total_width_px',
-    totalHeightPx = 'total_height_px',
     displayDecimalDigits = "display_decimal_digits",
 }
 
@@ -21,5 +25,6 @@ export enum RankingSettingsNames {
 
 export type SettingsKey =
     `${SettingsGroups.validation}.${ValidationSettingsNames}`
-    |`${SettingsGroups.templates}.${TemplatesSettingsNames}`
+    | `${SettingsGroups.frame}.${FrameSettingsNames}`
+    | `${SettingsGroups.templates}.${TemplatesSettingsNames}`
     | `${SettingsGroups.ranking}.${RankingSettingsNames}`

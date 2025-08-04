@@ -39,9 +39,9 @@ if __name__ == "__main__":
                      .where(Contestant.ORM.id == pairing.contestant.id)
                      .execute())
 
-        if result.templates_settings:
+        if result.frame_settings:
             with db.atomic():
-                Setting.ORM.replace_many(bulk_pack(result.templates_settings)).execute()
+                Setting.ORM.replace_many(bulk_pack(result.frame_settings)).execute()
 
         if result.templates:
             with db.atomic():
@@ -64,7 +64,7 @@ if __name__ == "__main__":
     print("[STAGE 3 SUMMARY | Templates Pre-Generation]")
     print("")
     print(f"  # Paired contestants to avatars: {len(result.avatar_pairings) if result.avatar_pairings else 0}")
-    print(f"  # Templates general settings set: {len(result.templates_settings) if result.templates_settings else 0}")
+    print(f"  # Frame settings set: {len(result.frame_settings) if result.frame_settings else 0}")
     print(f"  # Entry templates fulfilled: {len(result.templates) if result.templates else 0}")
     print(f"  # Generation general settings set: "
           f"{len(result.generation_settings) if result.generation_settings else 0}")

@@ -34,13 +34,13 @@ import {
     mockTemplate,
     mockVideoOption,
 } from '@/db/mocks/schema'
-import { RankingSettingsNames, SettingsGroups, TemplatesSettingsNames } from '@/db/settings'
+import { FrameSettingsNames, RankingSettingsNames, SettingsGroups, TemplatesSettingsNames } from '@/db/settings'
 import { MetadataFields } from '@/db/metadata'
 import {
     DEFAULT_DECIMAL_DIGITS,
     DEFAULT_DISPLAY_DECIMAL_DIGITS,
-    DEFAULT_TEMPLATE_HEIGHT,
-    DEFAULT_TEMPLATE_WIDTH
+    DEFAULT_FRAME_HEIGHT,
+    DEFAULT_FRAME_WIDTH
 } from '@/app/defaults'
 import { Chance } from 'chance'
 
@@ -64,12 +64,12 @@ export async function GET(request: NextRequest) {
             value: DEFAULT_DECIMAL_DIGITS, type: 'integer'
         }),
         mockSetting({
-            groupKey: SettingsGroups.templates, setting: TemplatesSettingsNames.totalWidthPx,
-            value: DEFAULT_TEMPLATE_WIDTH, type: 'integer'
+            groupKey: SettingsGroups.templates, setting: FrameSettingsNames.widthPx,
+            value: DEFAULT_FRAME_WIDTH, type: 'integer'
         }),
         mockSetting({
-            groupKey: SettingsGroups.templates, setting: TemplatesSettingsNames.totalHeightPx,
-            value: DEFAULT_TEMPLATE_HEIGHT, type: 'integer'
+            groupKey: SettingsGroups.templates, setting: FrameSettingsNames.heightPx,
+            value: DEFAULT_FRAME_HEIGHT, type: 'integer'
         }),
         mockSetting({
             groupKey: SettingsGroups.templates, setting: TemplatesSettingsNames.displayDecimalDigits,

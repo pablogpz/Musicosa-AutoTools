@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm'
 import db from '@/db/database'
 import { entries, entriesStats } from '@/db/schema'
 import templateFactory from '@/app/templates/components/Template/templateFactory'
-import TemplateContainer from '@/app/templates/components/TemplateContainer'
+import FrameContainer from '@/app/components/FrameContainer'
 
 export default async function Page(
     {
@@ -34,9 +34,9 @@ export default async function Page(
     const TemplateComponent = await templateFactory(template[0].entryId)
 
     return TemplateComponent && (
-        <TemplateContainer>
+        <FrameContainer>
             <TemplateComponent/>
-        </TemplateContainer>
+        </FrameContainer>
     )
 }
 

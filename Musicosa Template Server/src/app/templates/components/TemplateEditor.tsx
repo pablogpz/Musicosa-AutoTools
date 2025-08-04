@@ -10,8 +10,8 @@ import {
     defaultResolvedContestant,
     defaultResolvedScoring
 } from '@/app/templates/common/withTemplateProps/defaults'
-import BaseTemplateContainer from '@/app/templates/components/TemplateContainer/BaseTemplateContainer'
 import { Template, TemplateProps } from '@/app/templates/components/Template'
+import BaseFrameContainer from '@/app/components/FrameContainer/BaseFrameContainer'
 
 function onChangeFactory(onChange: (value: string) => void): ChangeEventHandler<HTMLInputElement> {
     return (e: ChangeEvent<HTMLInputElement>): void => {
@@ -115,9 +115,9 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
 
     return (
         <>
-            <BaseTemplateContainer width={templateWidth} height={templateHeight}>
+            <BaseFrameContainer width={templateWidth} height={templateHeight}>
                 <Template {...templateProps} />
-            </BaseTemplateContainer>
+            </BaseFrameContainer>
             <div className="flex items-center mt-7 select-none" style={{ width: templateWidth }}>
                 <div className="flex flex-col justify-center mx-5 h-fit select-none">
                     <h1 className="text-2xl font-bold select-none">CONTROLS</h1>

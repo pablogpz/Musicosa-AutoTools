@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import db from '@/db/database'
 import { entries } from '@/db/schema'
 
-import templateFactory from '@/app/templates/components/Template/templateFactory'
+import presentationFactory from '@/app/presentations/components/Presentation/presentationFactory'
 import FrameContainer from '@/app/components/FrameContainer'
 
 type Params = { uuid: string }
@@ -15,15 +15,14 @@ export async function generateStaticParams(): Promise<Params[]> {
 }
 
 export default async function Page({ params }: { params: Params }) {
-    const TemplateComponent = await templateFactory(params.uuid)
+    const PresentationComponent = await presentationFactory(params.uuid)
 
-    if (!TemplateComponent)
+    if (!PresentationComponent)
         notFound()
 
     return (
         <FrameContainer>
-            <TemplateComponent/>
+            <PresentationComponent/>
         </FrameContainer>
     )
 }
-

@@ -1,14 +1,17 @@
 start_from = 1
 artifacts_folder = "artifacts"
+stitch_final_video = true
 
 [stage_1]
 csv_forms_folder = "contestant_forms"
 valid_titles_file = "titles.txt"
 
 [stage_4]
-api_url = "http://localhost:3000/templates"
+templates_api_url = "http://localhost:3000/templates"
+presentations_api_url = "http://localhost:3000/presentations"
 gen_retry_attempts = 3
 overwrite_templates = true
+overwrite_presentations = true
 
 [stage_5]
 quiet_ffmpeg = true
@@ -16,7 +19,9 @@ quiet_ffmpeg = true
 [stage_6]
 video_bits_folder = "artifacts/video_bits"
 overwrite_video_bits = true
-stitch_final_video = true
 final_video_name = "musicosa-4th-edition"
+presentation_duration = 5
+transition_duration = 3
+transition_type = "fade"
 quiet_ffmpeg = true
-quiet_ffmpeg_final_video = false
+quiet_ffmpeg_final_video = true
