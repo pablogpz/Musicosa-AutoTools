@@ -28,7 +28,7 @@ export type ResolvedEntryStats = EntryStats & { formattedAvgScore: string }
 
 export type ResolvedAvatar = Omit<Avatar, 'imageFilename'> & { resolvedImageFilename: string }
 
-export type ResolvedScoring = Scoring & { formattedScore: string }
+export type ResolvedScoring = Omit<Scoring, 'contestant' | 'entry'> & { formattedScore: string }
 
 export type ResolvedContestant = Omit<Contestant, 'avatar'> & { avatar: ResolvedAvatar, scoring: ResolvedScoring }
 
