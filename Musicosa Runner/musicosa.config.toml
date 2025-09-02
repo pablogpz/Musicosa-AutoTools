@@ -19,7 +19,7 @@ quiet_ffmpeg = true
 [stage_6]
 video_bits_folder = "artifacts/video_bits"
 overwrite_video_bits = true
-final_video_name = "musicosa-4th-edition"
+final_video_name = "musicosa-Xth-edition"
 presentation_duration = 5
 transition_duration = 3
 transition_type = "fade"

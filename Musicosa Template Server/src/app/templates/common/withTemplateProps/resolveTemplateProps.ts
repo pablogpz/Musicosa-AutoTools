@@ -22,6 +22,7 @@ import { defaultAuthor, defaultAvatar, defaultScoring } from '@/db/defaults'
 import contestantsRepository from '@/db/repository/contestants'
 import avatarsRepository from '@/db/repository/avatars'
 import settingsRepository from '@/db/repository/settings'
+import entriesRepository from '@/db/repository/entries'
 import { DEFAULT_DISPLAY_DECIMAL_DIGITS } from '@/app/defaults'
 
 export type ResolvedEntryStats = EntryStats & { formattedAvgScore: string }
@@ -37,7 +38,10 @@ export type ResolvedTemplateProps =
     Pick<Entry, 'title' | 'specialTopic'> &
     Pick<ResolvedEntryStats, 'rankingPlace' | 'formattedAvgScore'> &
     {
-        author: ResolvedContestant
+        avgScoreDelta: number,
+        author: ResolvedContestant,
+        sequenceNumberInAuthorEntries: [number, number],
+        sequenceNumberInSpecialTopic: [number, number] | undefined,
         contestants: ResolvedContestant[]
     }
 
@@ -89,6 +93,10 @@ export const resolveTemplateProps = async (templateUUID: string): Promise<Resolv
 
     // Data independent from template uuid
 
+    const displayDecimalDigitsSetting: TypedSetting<number> | undefined =
+        await settingsRepository.getSettingByKey('templates.display_decimal_digits')
+    const displayDecimalDigits = displayDecimalDigitsSetting?.value ?? DEFAULT_DISPLAY_DECIMAL_DIGITS
+
     const allContestants = await contestantsRepository.getContestants()
     const avatars = await avatarsRepository.getAvatars()
 
@@ -114,9 +122,8 @@ export const resolveTemplateProps = async (templateUUID: string): Promise<Resolv
         .then(results => results[0])
     const scoringEntries = await db.select().from(scoring).where(eq(scoring.entry, templateUUID))
 
-    const displayDecimalDigitsSetting: TypedSetting<number> | undefined =
-        await settingsRepository.getSettingByKey('templates.display_decimal_digits')
-    const displayDecimalDigits = displayDecimalDigitsSetting?.value ?? DEFAULT_DISPLAY_DECIMAL_DIGITS
+    const avgScoreDelta = await entriesRepository.getAvgScoreDeltaWithPreviousEntry(templateUUID)
+    if (avgScoreDelta === undefined) return undefined
 
     const author =
         allContestants.find(contestant => contestant.id === entry.author) ?? defaultAuthor
@@ -124,6 +131,13 @@ export const resolveTemplateProps = async (templateUUID: string): Promise<Resolv
         avatars.find(avatar => avatar.id === author.avatar) ?? defaultAvatar
     const authorScoring =
         scoringEntries.find(scoring => scoring.contestant === author.id) ?? defaultScoring
+
+    const sequenceNumberInAuthorEntries =
+        await entriesRepository.getEntrySequenceNumberInAuthorEntries(templateUUID)
+    if (!sequenceNumberInAuthorEntries) return undefined
+
+    const sequenceNumberInSpecialTopic =
+        await entriesRepository.getEntrySequenceNumberInSpecialTopic(templateUUID)
 
     const contestants = allContestants
         .filter(contestant => contestant.id !== entry.author)
@@ -138,11 +152,14 @@ export const resolveTemplateProps = async (templateUUID: string): Promise<Resolv
         specialTopic: entry.specialTopic,
         rankingPlace: entryStats.rankingPlace,
         formattedAvgScore: formatNumberToDecimalPrecision(entryStats.avgScore!, displayDecimalDigits),
+        avgScoreDelta,
         avatarScale: template.avatarScale,
         authorAvatarScale: template.authorAvatarScale,
         videoBoxWidthPx: template.videoBoxWidthPx,
         videoBoxHeightPx: template.videoBoxHeightPx,
         author: resolveContestant(author, authorAvatar, authorScoring, displayDecimalDigits),
+        sequenceNumberInAuthorEntries,
+        sequenceNumberInSpecialTopic,
         contestants: contestants
     }
 }

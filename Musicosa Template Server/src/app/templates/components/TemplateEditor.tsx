@@ -4,14 +4,18 @@ import React, { ChangeEvent, ChangeEventHandler, HTMLInputTypeAttribute, useStat
 
 import formatNumberToDecimalPrecision from '@/formatters/formatNumberToDecimalPrecision'
 
-import { defaultEntry, defaultEntryStats, defaultScoring, defaultTemplate } from '@/db/defaults'
+import { defaultAuthor, defaultEntry, defaultEntryStats, defaultScoring, defaultTemplate } from '@/db/defaults'
+import BaseFrameContainer from '@/app/components/FrameContainer/BaseFrameContainer'
 import {
+    defaultAvgScoreDelta,
     defaultResolvedAuthor,
     defaultResolvedContestant,
-    defaultResolvedScoring
+    defaultSequenceNumberInAuthorEntries,
+    defaultSequenceNumberInSpecialTopic,
+    defaultTemplateSettingsProps
 } from '@/app/templates/common/withTemplateProps/defaults'
+import { ResolvedContestant } from '@/app/templates/common/withTemplateProps'
 import { Template, TemplateProps } from '@/app/templates/components/Template'
-import BaseFrameContainer from '@/app/components/FrameContainer/BaseFrameContainer'
 
 function onChangeFactory(onChange: (value: string) => void): ChangeEventHandler<HTMLInputElement> {
     return (e: ChangeEvent<HTMLInputElement>): void => {
@@ -31,7 +35,7 @@ function inputFactory(
     return (
         <div key={id} className="flex flex-col-reverse h-fit">
             <input id={id}
-                   className="w-44 px-2 py-1 text-md font-light outline-none rounded border-b-2 border-solid border-black
+                   className="px-2 py-1 text-md font-light outline-none rounded border-b-2 border-solid border-black
                             placeholder:text-zinc-400 placeholder:italic placeholder:font-normal
                             focus:border-purple-500 focus:bg-purple-50 peer"
                    type={inputType} value={value} placeholder={`${placeholder}`}
@@ -53,41 +57,53 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
     const INITIAL_CONTESTANT_COUNT = 5
 
     const [contestantCount, setContestantCount] = useState<number>(INITIAL_CONTESTANT_COUNT)
-    const [score, setScore] = useState<number>(defaultScoring.score)
     const [title, setTitle] = useState<string>(defaultEntry.title)
     const [specialTopic, setSpecialTopic] = useState<string>(defaultEntry.specialTopic!)
     const [rankingPlace, setRankingPlace] = useState<number>(defaultEntryStats.rankingPlace!)
+    const [authorName, setAuthorName] = useState<string>(defaultAuthor.name)
     const [avgScore, setAvgScore] = useState<number>(defaultEntryStats.avgScore!)
+    const [score, setScore] = useState<number>(defaultScoring.score)
     const [avatarScale, setAvatarScale] = useState<number>(defaultTemplate.avatarScale)
     const [authorAvatarScale, setAuthorAvatarScale] = useState<number>(defaultTemplate.authorAvatarScale)
     const [videoBoxWidthPx, setVideoBoxWidthPx] = useState<number>(defaultTemplate.videoBoxWidthPx)
     const [videoBoxHeightPx, setVideoBoxHeightPx] = useState<number>(defaultTemplate.videoBoxHeightPx)
+    const [SNAEntries, setSNAEntries] = useState<number>(defaultSequenceNumberInAuthorEntries[0])
+    const [SNAEntriesOutOf, setSNAEntriesOutOf] = useState<number>(defaultSequenceNumberInAuthorEntries[1])
+    const [SNSTEntries, setSNSTEntries] = useState<number>(defaultSequenceNumberInSpecialTopic![0])
+    const [SNSTEntriesOutOf, setSNSTEntriesOutOf] = useState<number>(defaultSequenceNumberInSpecialTopic![1])
+    const [avgScoreDelta, setAvgScoreDelta] = useState<number>(defaultAvgScoreDelta)
+
+    const scoringDefaults = {
+        score,
+        formattedScore: formatNumberToDecimalPrecision(score, displayDecimalDigits)
+    }
+
+    const author: ResolvedContestant = {
+        ...defaultResolvedAuthor,
+        scoring: { ...scoringDefaults }
+    }
+
+    const baseContestant: ResolvedContestant = {
+        ...defaultResolvedContestant,
+        scoring: { ...scoringDefaults }
+    }
 
     const templateProps: TemplateProps = {
         title,
         specialTopic,
         rankingPlace,
         formattedAvgScore: formatNumberToDecimalPrecision(avgScore, displayDecimalDigits),
+        avgScoreDelta,
         avatarScale,
         authorAvatarScale,
         videoBoxWidthPx,
         videoBoxHeightPx,
-        author: {
-            ...defaultResolvedAuthor,
-            scoring: {
-                ...defaultResolvedScoring,
-                score,
-                formattedScore: formatNumberToDecimalPrecision(score, displayDecimalDigits)
-            }
-        },
-        contestants: Array.from({ length: contestantCount - 1 }, () => ({
-            ...defaultResolvedContestant,
-            scoring: {
-                ...defaultResolvedScoring,
-                score,
-                formattedScore: formatNumberToDecimalPrecision(score, displayDecimalDigits)
-            }
-        }))
+        author,
+        sequenceNumberInAuthorEntries: [SNAEntries, SNAEntriesOutOf],
+        sequenceNumberInSpecialTopic: [SNSTEntries, SNSTEntriesOutOf],
+        contestants: Array.from({ length: contestantCount - 1 }, () => baseContestant),
+        scoreMinValue: defaultTemplateSettingsProps.scoreMinValue,
+        scoreMaxValue: defaultTemplateSettingsProps.scoreMaxValue,
     }
 
     const templateParamInputs = [
@@ -99,10 +115,22 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
             onChangeFactory(v => setSpecialTopic(v))),
         inputFactory('ranking-place', 'Ranking place', rankingPlace, 'number', 'Numeric ranking place ...',
             onChangeFactory(v => setRankingPlace(parseInt(v)))),
-        inputFactory('avg-score', 'Avg score', avgScore, 'number', 'Average score ...',
-            onChangeFactory(v => setAvgScore(parseFloat(v)))),
+        inputFactory('author-name', 'Author name', authorName, 'text', "Author's name ...",
+            onChangeFactory(v => setAuthorName(v))),
+        inputFactory('sna-entries', 'Personal ranking (Lower bound)', SNAEntries, 'number', 'Lower bound ...',
+            onChangeFactory(v => setSNAEntries(parseInt(v)))),
+        inputFactory('sna-entries-out-of', 'Personal ranking (Upper bound)', SNAEntriesOutOf, 'number', 'Upper bound ...',
+            onChangeFactory(v => setSNAEntriesOutOf(parseInt(v)))),
+        inputFactory('snst-entries', 'Special topic ranking (Lower bound)', SNSTEntries, 'number', 'Lower bound ...',
+            onChangeFactory(v => setSNSTEntries(parseInt(v)))),
+        inputFactory('snst-entries-out-of', 'Special topic ranking (Upper bound)', SNSTEntriesOutOf, 'number', 'Upper bound ...',
+            onChangeFactory(v => setSNSTEntriesOutOf(parseInt(v)))),
+        inputFactory('avg-score', 'Avg. score', avgScore, 'number', 'Average score ...',
+            onChangeFactory(v => setAvgScore(v ? parseFloat(v) : 0))),
+        inputFactory('avg-score-delta', 'Avg. score delta', avgScoreDelta, 'number', 'Average score delta ...',
+            onChangeFactory(v => setAvgScoreDelta(v ? parseFloat(v) : 0))),
         inputFactory('scores', 'Scores', score, 'number', 'Score of all contestants ...',
-            onChangeFactory(v => setScore(parseFloat(v)))),
+            onChangeFactory(v => setScore(v ? parseFloat(v) : 0))),
         inputFactory('avatar-scale', 'Avatar scale', avatarScale, 'number', 'Avatar scale factor ...',
             onChangeFactory(v => setAvatarScale(parseFloat(v)))),
         inputFactory('author-avatar-scale', 'Author avatar scale', authorAvatarScale, 'number', 'Author avatar scale factor ...',

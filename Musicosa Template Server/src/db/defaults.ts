@@ -51,10 +51,10 @@ export const defaultEntryStats: EntryStats = {
 
 export const defaultTemplate: Template = {
     entry: defaultEntryId,
-    avatarScale: 0.425,
+    avatarScale: 0.45,
     authorAvatarScale: 0.6,
     videoBoxWidthPx: 1200,
     videoBoxHeightPx: 676,
-    videoBoxPositionTopPx: 86,
-    videoBoxPositionLeftPx: 720,
+    videoBoxPositionTopPx: 28,
+    videoBoxPositionLeftPx: 692
 }
