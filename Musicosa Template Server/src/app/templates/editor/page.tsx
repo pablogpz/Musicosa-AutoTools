@@ -3,7 +3,7 @@ import React from 'react'
 import settingsRepository from '@/db/repository/settings'
 import { DEFAULT_DISPLAY_DECIMAL_DIGITS, DEFAULT_FRAME_HEIGHT, DEFAULT_FRAME_WIDTH } from '@/app/defaults'
 
-import TemplateEditor from '@/app/templates/components/TemplateEditor'
+import TemplateEditor from '@/app/templates/components/7th-edition/TemplateEditor'
 
 export default async function Page() {
     const widthSetting = await settingsRepository.getSettingByKey<number>('frame.width_px')
