@@ -6,17 +6,15 @@ import { entries, entriesStats } from '@/db/schema'
 import templateFactory from '@/app/templates/components/Template/templateFactory'
 import FrameContainer from '@/app/components/FrameContainer'
 
-export default async function Page(
-    {
-        searchParams
-    }: {
-        searchParams: { [key: string]: string | string[] | undefined }
-    }) {
+export default async function Page({ searchParams }: {
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
+    const { q } = await searchParams
 
-    if (!searchParams["q"] || typeof searchParams["q"] !== "string" || isNaN(Number(searchParams["q"])))
+    if (!q || typeof q !== "string" || isNaN(Number(q)))
         notFound()
 
-    const requestedSequenceNumber = parseInt(searchParams["q"])
+    const requestedSequenceNumber = parseInt(q)
 
     const entryIdSubquery = db
         .select({ entryId: entriesStats.entry })

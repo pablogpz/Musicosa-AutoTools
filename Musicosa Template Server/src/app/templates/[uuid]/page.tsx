@@ -14,8 +14,10 @@ export async function generateStaticParams(): Promise<Params[]> {
     return allEntriesUUIDs.map(result => ({ uuid: result.uuid }))
 }
 
-export default async function Page({ params }: { params: Params }) {
-    const TemplateComponent = await templateFactory(params.uuid)
+export default async function Page({ params }: { params: Promise<Params> }) {
+    const { uuid } = await params
+
+    const TemplateComponent = await templateFactory(uuid)
 
     if (!TemplateComponent)
         notFound()
