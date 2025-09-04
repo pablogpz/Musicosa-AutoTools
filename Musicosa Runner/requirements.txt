@@ -1,6 +1,7 @@
-peewee==3.17.6
-validators==0.34.0
-playwright==1.47.0
-yt-dlp==2025.1.26
-typed-ffmpeg==2.0.0
+peewee==3.18.2
+validators==0.35.0
+playwright==1.55.0
+yt-dlp==2025.8.27
+typed-ffmpeg==3.6
+ffmpeg-normalize==1.33.1
 openpyxl==3.1.5

@@ -1,16 +1,22 @@
 import os
 from os import path
+from typing import get_args
 
 from common.type_definitions import StageException
+from stage_6_final_video_bits_gen.logic.generate_final_videos import generate_awards_final_videos
 from stage_6_final_video_bits_gen.logic.generate_video_bits import generate_all_video_bits
-from stage_6_final_video_bits_gen.type_definitions import NominationVideoOptions, StageSixOutput
+from stage_6_final_video_bits_gen.type_definitions import NominationVideoOptions, StageSixOutput, TransitionOptions, \
+    TransitionType
 
 
 def execute(artifacts_folder: str,
             video_bits_folder: str,
             nominations_video_options: list[NominationVideoOptions],
             overwrite: bool,
-            quiet_ffmpeg: bool) -> StageSixOutput:
+            stitch_final_video: bool,
+            transition_options: TransitionOptions,
+            quiet_ffmpeg: bool,
+            quiet_ffmpeg_final_video: bool) -> StageSixOutput:
     if not artifacts_folder:
         raise StageException("No artifacts folder provided")
 
@@ -23,6 +29,15 @@ def execute(artifacts_folder: str,
     if not path.isdir(video_bits_folder):
         os.makedirs(video_bits_folder)
 
+    if transition_options.presentation_duration <= 0:
+        raise StageException(
+            f"presentation_duration ({transition_options.presentation_duration}) must be a positive integer")
+    if transition_options.transition_duration <= 0:
+        raise StageException(
+            f"transition_duration ({transition_options.transition_duration}) must be a positive integer")
+    if transition_options.type not in get_args(TransitionType):
+        raise StageException(f"transition_type ({transition_options.type}) must be one of [{get_args(TransitionType)}]")
+
     if nominations_video_options is None:
         raise StageException("No video options provided")
 
@@ -33,6 +48,16 @@ def execute(artifacts_folder: str,
                                 quiet_ffmpeg=quiet_ffmpeg,
                                 nominations_video_options=nominations_video_options))
 
+    awards_final_video_paths = None
+
+    if stitch_final_video:
+        awards_final_video_paths = generate_awards_final_videos(artifacts_folder=artifacts_folder,
+                                                                video_bits_folder=video_bits_folder,
+                                                                quiet_ffmpeg=quiet_ffmpeg_final_video,
+                                                                vid_opts=nominations_video_options,
+                                                                transition_options=transition_options)
+
     return StageSixOutput(generated_video_bits_files=generated,
                           nominations_missing_sources=missing_sources,
-                          failed_video_bits=failed_to_generate)
+                          failed_video_bits=failed_to_generate,
+                          final_videos=awards_final_video_paths)

@@ -38,11 +38,20 @@ FROM contestants c
          JOIN stats_contestants sc ON c.id = sc.contestant
 ORDER BY sc.avg_received_score DESC;
 
--- Medias de propias notas en entradas propias (Autofelación)
+-- Medias de propias notas en entradas propias
 SELECT a.name, avg(cge.score) AS data
 FROM entries e
          JOIN contestants a ON e.author = a.id
          JOIN contestant_grades_entries cge ON e.id = cge.entry
+WHERE e.author = cge.contestant
+GROUP BY e.author
+ORDER BY data DESC;
+-- Medias de propias notas en entradas propias menos la media otorgada (Autofelación [ver. Cáster])
+SELECT a.name, avg(cge.score) - sc.avg_given_score AS data
+FROM entries e
+         JOIN contestants a ON e.author = a.id
+         JOIN contestant_grades_entries cge ON e.id = cge.entry
+         JOIN stats_contestants sc on a.id = sc.contestant
 WHERE e.author = cge.contestant
 GROUP BY e.author
 ORDER BY data DESC;

@@ -4,28 +4,25 @@ import { and, eq } from 'drizzle-orm'
 import db from '@/db/database'
 import { nominations, nominationStats } from '@/db/schema'
 import templateFactory from '@/app/templates/components/Template/templateFactory'
-import TemplateContainer from '@/app/templates/components/TemplateContainer'
+import FrameContainer from '@/app/components/FrameContainer'
 
-export default async function Page(
-    {
-        searchParams
-    }: {
-        searchParams: { [key: string]: string | string[] | undefined }
-    }) {
+export default async function Page({ searchParams }: {
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
+    const { award, q } = await searchParams
 
-    if (!searchParams["award"] || typeof searchParams["award"] !== "string")
+    if (!award || typeof award !== "string")
         notFound()
-    if (!searchParams["q"] || typeof searchParams["q"] !== "string" || isNaN(Number(searchParams["q"])))
+    if (!q || typeof q !== "string" || isNaN(Number(q)))
         notFound()
 
-    const requestedAward = searchParams["award"]
-    const requestedSequenceNumber = parseInt(searchParams["q"])
+    const requestedSequenceNumber = parseInt(q)
 
     const nominationsIdSubquery = db
         .select({ nominationId: nominations.id })
         .from(nominations)
         .innerJoin(nominationStats, eq(nominationStats.nomination, nominations.id))
-        .where(and(eq(nominations.award, requestedAward), eq(nominationStats.rankingSequence, requestedSequenceNumber)))
+        .where(and(eq(nominations.award, award), eq(nominationStats.rankingSequence, requestedSequenceNumber)))
         .as("sq")
     const template = await db
         .select({ nominationId: nominations.id })
@@ -38,9 +35,9 @@ export default async function Page(
     const TemplateComponent = await templateFactory(template[0].nominationId)
 
     return TemplateComponent && (
-        <TemplateContainer>
+        <FrameContainer>
             <TemplateComponent/>
-        </TemplateContainer>
+        </FrameContainer>
     )
 }
 

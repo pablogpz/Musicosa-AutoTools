@@ -15,5 +15,5 @@ class StageThreeInput:
 
 @dataclass
 class StageThreeOutput:
-    templates_settings: list[Setting] | None
+    frame_settings: list[Setting] | None
     templates: list[Template] | None

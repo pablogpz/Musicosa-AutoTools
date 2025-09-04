@@ -3,6 +3,7 @@ from os import path
 
 import ffmpeg
 from ffmpeg.exceptions import FFMpegError
+from ffmpeg_normalize import FFmpegNormalize, FFmpegNormalizeError
 from math import ceil
 
 from common.constants import TEMPLATE_IMG_FORMAT, VIDEO_FORMAT
@@ -41,7 +42,7 @@ def generate_video_bit(videoclip_path: str, vid_opts: NominationVideoOptions, te
                                           force_original_aspect_ratio="decrease")
                                    .pad(width=ceil(vid_opts.width / 2) * 2, height=ceil(vid_opts.height / 2) * 2,
                                         x="(ow-iw)/2", y="(oh-ih)/2",
-                                        color="Black")
+                                        color="black")
                                    .setsar(sar=1))
 
         output_video_bit_stream = template_stream.overlay(scaled_videoclip_stream, x=vid_opts.position_left,
@@ -54,6 +55,15 @@ def generate_video_bit(videoclip_path: str, vid_opts: NominationVideoOptions, te
                  vcodec="libx264",
                  b="6000k")
          .run(overwrite_output=True, quiet=quiet_ffmpeg))
+
+        normalizer = FFmpegNormalize(normalization_type="ebu", target_level=-18, loudness_range_target=12,
+                                     audio_codec="aac", sample_rate=48000,
+                                     video_codec="copy")
+        normalizer.add_media_file(video_bit_path, video_bit_path)
+        try:
+            normalizer.run_normalization()
+        except FFmpegNormalizeError as err:
+            print(f"[WARNING] Error normalising audio track of video bit ({video_bit_path}): {err}")
     except FFMpegError as err:
         print(f"[GENERATION FAILED] {vid_opts.template_friendly_name}: {err}")
         raise

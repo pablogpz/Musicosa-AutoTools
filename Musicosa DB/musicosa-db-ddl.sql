@@ -30,9 +30,10 @@ VALUES ('validation', 'score_max_value', '10.0', 'real');
 INSERT INTO settings (group_key, setting, value, type)
 VALUES ('ranking', 'significant_decimal_digits', '3', 'integer');
 INSERT INTO settings (group_key, setting, value, type)
-VALUES ('templates', 'total_width_px', '1920', 'integer');
+VALUES ('frame', 'width_px', '1920', 'integer');
 INSERT INTO settings (group_key, setting, value, type)
-VALUES ('templates', 'total_height_px', '1080', 'integer');
+VALUES ('frame', 'height_px', '1080', 'integer');
+--FIXME: To be filled
 INSERT INTO settings (group_key, setting, value, type)
 VALUES ('templates', 'display_decimal_digits', '3', 'integer');
 

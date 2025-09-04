@@ -11,8 +11,12 @@ import {
     defaultNominationStats,
     defaultTemplate
 } from '@/db/defaults'
-import { defaultResolvedCastVote, defaultResolvedMember } from '@/app/templates/common/withTemplateProps/defaults'
-import BaseTemplateContainer from '@/app/templates/components/TemplateContainer/BaseTemplateContainer'
+import {
+    defaultResolvedCastVote,
+    defaultResolvedMember,
+    defaultTemplateSettingsProps
+} from '@/app/templates/common/withTemplateProps/defaults'
+import BaseFrameContainer from '@/app/components/FrameContainer/BaseFrameContainer'
 import { Template, TemplateProps } from '@/app/templates/components/Template'
 
 function onChangeFactory(onChange: (value: string) => void): ChangeEventHandler<HTMLInputElement> {
@@ -83,6 +87,8 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
                 formattedScore: formatNumberToDecimalPrecision(score, displayDecimalDigits)
             }
         })),
+        scoreMinValue: defaultTemplateSettingsProps.scoreMinValue,
+        scoreMaxValue: defaultTemplateSettingsProps.scoreMaxValue
     }
 
     const templateParamInputs = [
@@ -112,9 +118,9 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
 
     return (
         <>
-            <BaseTemplateContainer width={templateWidth} height={templateHeight}>
+            <BaseFrameContainer width={templateWidth} height={templateHeight}>
                 <Template {...templateProps} />
-            </BaseTemplateContainer>
+            </BaseFrameContainer>
             <div className="flex items-center mt-7 select-none" style={{ width: templateWidth }}>
                 <div className="flex flex-col justify-center mx-5 h-fit select-none">
                     <h1 className="text-2xl font-bold select-none">CONTROLS</h1>

@@ -9,7 +9,7 @@ from common.model.models import Setting
 class SettingsGroups(Enum):
     VALIDATION = "validation"
     RANKING = "ranking"
-    TEMPLATES = "templates"
+    FRAME = "frame"
 
 
 class ValidationSettingsNames(Enum):
@@ -21,17 +21,17 @@ class RankingSettingsNames(Enum):
     SIGNIFICANT_DECIMAL_DIGITS = "significant_decimal_digits"
 
 
-class TemplateSettingsNames(Enum):
-    TOTAL_WIDTH_PX = "total_width_px"
-    TOTAL_HEIGHT_PX = "total_height_px"
+class FrameSettingsNames(Enum):
+    WIDTH_PX = "width_px"
+    HEIGHT_PX = "height_px"
 
 
 type SettingsKeys = Literal[
     "validation.score_min_value",
     "validation.score_max_value",
     "ranking.significant_decimal_digits",
-    "templates.total_width_px",
-    "templates.total_height_px",
+    "frame.width_px",
+    "frame.height_px"
 ]
 
 

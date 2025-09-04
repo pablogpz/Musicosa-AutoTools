@@ -30,7 +30,7 @@ export type ResolvedNominationStats = NominationStats & { formattedAvgScore: str
 
 export type ResolvedAvatar = Omit<Avatar, 'imageFilename'> & { resolvedImageFilename: string }
 
-export type ResolvedCastVote = CastVote & { formattedScore: string }
+export type ResolvedCastVote = Omit<CastVote, 'member' | 'nomination'> & { formattedScore: string }
 
 export type ResolvedMember = Omit<Member, 'avatar'> & { avatar: ResolvedAvatar, vote: ResolvedCastVote }
 
@@ -89,6 +89,10 @@ export const resolveTemplateProps = async (templateUUID: string): Promise<Resolv
 
     // Data independent from template uuid
 
+    const displayDecimalDigitsSetting: TypedSetting<number> | undefined =
+        await settingsRepository.getSettingByKey('templates.display_decimal_digits')
+    const displayDecimalDigits = displayDecimalDigitsSetting?.value ?? DEFAULT_DISPLAY_DECIMAL_DIGITS
+
     const allMembers = await membersRepository.getMembers()
     const avatars = await avatarsRepository.getAvatars()
 
@@ -121,10 +125,6 @@ export const resolveTemplateProps = async (templateUUID: string): Promise<Resolv
         .select()
         .from(castVotes)
         .where(eq(castVotes.nomination, templateUUID))
-
-    const displayDecimalDigitsSetting: TypedSetting<number> | undefined =
-        await settingsRepository.getSettingByKey('templates.display_decimal_digits')
-    const displayDecimalDigits = displayDecimalDigitsSetting?.value ?? DEFAULT_DISPLAY_DECIMAL_DIGITS
 
     const members = allMembers
         .map(m => resolveMember(m,

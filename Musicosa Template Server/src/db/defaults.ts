@@ -39,11 +39,11 @@ export const defaultNomination: Nomination = {
 
 export const defaultTemplate: Template = {
     nomination: defaultNominationId,
-    avatarScale: 0.425,
+    avatarScale: 0.45,
     videoBoxWidthPx: 1200,
-    videoBoxHeightPx: 675,
-    videoBoxPositionTopPx: 86,
-    videoBoxPositionLeftPx: 720,
+    videoBoxHeightPx: 676,
+    videoBoxPositionTopPx: 59,
+    videoBoxPositionLeftPx: 658
 }
 
 export const defaultCastVote: CastVote = {

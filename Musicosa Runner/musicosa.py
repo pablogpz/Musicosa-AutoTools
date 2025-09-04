@@ -5,7 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from logging import error
 from os import path
-from typing import Literal, Never, Protocol, Any
+from typing import Literal, Never, Protocol, Any, cast
 
 from peewee import PeeweeException
 
@@ -34,7 +34,7 @@ from stage_5_videoclips_acquisition.type_definitions import StageFiveOutput, Sta
 from stage_6_final_video_bits_gen.execute import execute as execute_stage_6
 from stage_6_final_video_bits_gen.stage_input import load_video_options_from_db
 from stage_6_final_video_bits_gen.type_definitions import StageSixOutput, \
-    StageSixInput
+    StageSixInput, TransitionOptions, TransitionType
 
 # STAGE IDs
 
@@ -54,18 +54,25 @@ DEFAULT_CONFIG_FILE = "musicosa.config.toml"
 # Global defaults
 DEFAULT_ARTIFACTS_FOLDER = "artifacts"
 DEFAULT_START_FROM_STAGE: Stages = STAGE_ONE
+DEFAULT_STITCH_FINAL_VIDEO_FLAG = False
 # Stage 1 defaults
 DEFAULT_AWARD_FORMS_FOLDER = "award_forms"
 # Stage 4 defaults
 DEFAULT_TEMPLATES_API_URL = "http://localhost:3000/templates"
+DEFAULT_PRESENTATIONS_API_URL = "http://localhost:3000/presentations"
 DEFAULT_GENERATION_RETRY_ATTEMPTS = 3
 DEFAULT_OVERWRITE_TEMPLATES = True
+DEFAULT_OVERWRITE_PRESENTATIONS = True
 # Stage 5 defaults
 DEFAULT_STAGE_5_QUIET_FFMPEG = True
 # Stage 6 defaults
 DEFAULT_VIDEO_BITS_FOLDER = f"{DEFAULT_ARTIFACTS_FOLDER}/video_bits"
 DEFAULT_OVERWRITE_VIDEO_BITS = True
+DEFAULT_PRESENTATION_DURATION = 5
+DEFAULT_TRANSITION_DURATION = 3
+DEFAULT_TRANSITION_TYPE = "fade"
 DEFAULT_STAGE_6_QUIET_FFMPEG = True
+DEFAULT_QUIET_FFMPEG_FINAL_VIDEO = True
 
 
 # Config dataclasses
@@ -84,18 +91,30 @@ class StageOneConfig:
 
 @dataclass
 class StageFourConfig:
-    api_url: str = DEFAULT_TEMPLATES_API_URL
+    templates_api_url: str = DEFAULT_TEMPLATES_API_URL
+    presentations_api_url: str = DEFAULT_PRESENTATIONS_API_URL
     gen_retry_attempts: int = DEFAULT_GENERATION_RETRY_ATTEMPTS
     overwrite_templates: bool = DEFAULT_OVERWRITE_TEMPLATES
+    overwrite_presentations: bool = DEFAULT_OVERWRITE_PRESENTATIONS
 
-    def __init__(self, api_url: str = DEFAULT_TEMPLATES_API_URL,
+    def __init__(self, templates_api_url: str = DEFAULT_TEMPLATES_API_URL,
+                 presentations_api_url: str = DEFAULT_PRESENTATIONS_API_URL,
                  gen_retry_attempts: int = DEFAULT_GENERATION_RETRY_ATTEMPTS,
-                 overwrite_templates: bool = DEFAULT_OVERWRITE_TEMPLATES):
-        api_url = api_url.strip()
+                 overwrite_templates: bool = DEFAULT_OVERWRITE_TEMPLATES,
+                 overwrite_presentations: bool = DEFAULT_OVERWRITE_PRESENTATIONS):
+        templates_api_url = templates_api_url.strip()
 
-        self.api_url = api_url.removesuffix("/") if api_url.endswith("/") else api_url
+        self.templates_api_url = templates_api_url.removesuffix("/") if templates_api_url.endswith("/") \
+            else templates_api_url
+
+        presentations_api_url = presentations_api_url.strip()
+
+        self.presentations_api_url = presentations_api_url.removesuffix("/") if presentations_api_url.endswith("/") \
+            else presentations_api_url
+
         self.gen_retry_attempts = gen_retry_attempts
         self.overwrite_templates = overwrite_templates
+        self.overwrite_presentations = overwrite_presentations
 
 
 @dataclass
@@ -110,23 +129,36 @@ class StageFiveConfig:
 class StageSixConfig:
     video_bits_folder: str = DEFAULT_VIDEO_BITS_FOLDER
     overwrite_video_bits: bool = DEFAULT_OVERWRITE_VIDEO_BITS
+    presentation_duration: int = DEFAULT_PRESENTATION_DURATION
+    transition_duration: int = DEFAULT_TRANSITION_DURATION
+    transition_type: str = DEFAULT_TRANSITION_TYPE
     quiet_ffmpeg: bool = DEFAULT_STAGE_6_QUIET_FFMPEG
+    quiet_ffmpeg_final_video: bool = DEFAULT_QUIET_FFMPEG_FINAL_VIDEO
 
     def __init__(self, video_bits_folder: str = DEFAULT_VIDEO_BITS_FOLDER,
                  overwrite_video_bits: bool = DEFAULT_OVERWRITE_VIDEO_BITS,
-                 quiet_ffmpeg: bool = DEFAULT_STAGE_6_QUIET_FFMPEG):
+                 presentation_duration: int = DEFAULT_PRESENTATION_DURATION,
+                 transition_duration: int = DEFAULT_TRANSITION_DURATION,
+                 transition_type: str = DEFAULT_TRANSITION_TYPE,
+                 quiet_ffmpeg: bool = DEFAULT_STAGE_6_QUIET_FFMPEG,
+                 quiet_ffmpeg_final_video: bool = DEFAULT_QUIET_FFMPEG_FINAL_VIDEO):
         video_bits_folder = video_bits_folder.strip()
 
         self.video_bits_folder = video_bits_folder.removesuffix("/") if video_bits_folder.endswith("/") \
             else video_bits_folder
         self.overwrite_video_bits = overwrite_video_bits
+        self.presentation_duration = presentation_duration
+        self.transition_duration = transition_duration
+        self.transition_type = transition_type.strip()
         self.quiet_ffmpeg = quiet_ffmpeg
+        self.quiet_ffmpeg_final_video = quiet_ffmpeg_final_video
 
 
 @dataclass
 class Config:
     start_from: Stages = DEFAULT_START_FROM_STAGE
     artifacts_folder: str = DEFAULT_ARTIFACTS_FOLDER
+    stitch_final_video: bool = DEFAULT_STITCH_FINAL_VIDEO_FLAG
     stage_1: StageOneConfig = field(default_factory=StageOneConfig)
     stage_4: StageFourConfig = field(default_factory=StageFourConfig)
     stage_5: StageFiveConfig = field(default_factory=StageFiveConfig)
@@ -134,12 +166,14 @@ class Config:
 
     def __init__(self, start_from: Stages = DEFAULT_START_FROM_STAGE,
                  artifacts_folder: str = DEFAULT_ARTIFACTS_FOLDER,
+                 stitch_final_video: bool = DEFAULT_STITCH_FINAL_VIDEO_FLAG,
                  stage_1: StageOneConfig = StageOneConfig(),
                  stage_4: StageFourConfig = StageFourConfig(),
                  stage_5: StageFiveConfig = StageFiveConfig(),
                  stage_6: StageSixConfig = StageSixConfig()):
         self.start_from = start_from
         self.artifacts_folder = artifacts_folder.strip()
+        self.stitch_final_video = stitch_final_video
         self.stage_1 = stage_1
         self.stage_4 = stage_4
         self.stage_5 = stage_5
@@ -161,6 +195,7 @@ def load_config(toml_config_file: str = DEFAULT_CONFIG_FILE) -> Config:
     try:
         return Config(start_from=config_dict["start_from"],
                       artifacts_folder=config_dict["artifacts_folder"],
+                      stitch_final_video=config_dict["stitch_final_video"],
                       stage_1=StageOneConfig(**config_dict["stage_1"]),
                       stage_4=StageFourConfig(**config_dict["stage_4"]),
                       stage_5=StageFiveConfig(**config_dict["stage_5"]),
@@ -544,8 +579,7 @@ if __name__ == '__main__':
         print("")
         print("[STAGE 3 SUMMARY | Templates Pre-Generation]")
         print("")
-        print(
-            f"  # Templates general settings set: {len(result.templates_settings) if result.templates_settings else 0}")
+        print(f"  # Frame settings set: {len(result.frame_settings) if result.frame_settings else 0}")
         print(f"  # Entry templates fulfilled: {len(result.templates) if result.templates else 0}")
 
         print("")
@@ -561,8 +595,8 @@ if __name__ == '__main__':
 
         # Update pipeline state
 
-        if stage_3_result.templates_settings:
-            setting_models.extend(stage_3_result.templates_settings)
+        if stage_3_result.frame_settings:
+            setting_models.extend(stage_3_result.frame_settings)
 
         if stage_3_result.templates:
             template_models.extend(stage_3_result.templates)
@@ -594,20 +628,24 @@ if __name__ == '__main__':
 
     @retry_or_reconfig(err_header="[Stage 4 | Input collection ERROR]", config_file=config_file)
     def stage_4_collect_input(*, config: Config) -> StageFourInput:
-        return StageFourInput(templates_api_url=config.stage_4.api_url,
+        return StageFourInput(templates_api_url=config.stage_4.templates_api_url,
+                              presentations_api_url=config.stage_4.presentations_api_url,
                               artifacts_folder=config.artifacts_folder,
-                              templates=load_templates_from_db(),
+                              templates=load_templates_from_db(config.stitch_final_video),
                               retry_attempts=config.stage_4.gen_retry_attempts,
-                              overwrite=config.stage_4.overwrite_templates)
+                              overwrite_templates=config.stage_4.overwrite_templates,
+                              overwrite_presentations=config.stage_4.overwrite_presentations)
 
 
     @stage_gate(err_header="[Stage 4 | Execution ERROR]", config_file=config_file, reload_input=stage_4_collect_input)
     def stage_4_do_execute(*, config: Config, stage_input: StageFourInput) -> StageFourOutput:
-        result = execute_stage_4(templates_api_url=config.stage_4.api_url,
+        result = execute_stage_4(templates_api_url=config.stage_4.templates_api_url,
+                                 presentations_api_url=config.stage_4.presentations_api_url,
                                  artifacts_folder=config.artifacts_folder,
                                  templates=stage_input.templates,
                                  retry_attempts=config.stage_4.gen_retry_attempts,
-                                 overwrite=config.stage_4.overwrite_templates)
+                                 overwrite_templates=config.stage_4.overwrite_templates,
+                                 overwrite_presentations=config.stage_4.overwrite_presentations)
 
         print("")
         print("[STAGE 4 SUMMARY | Templates Generation]")
@@ -667,7 +705,13 @@ if __name__ == '__main__':
                              video_bits_folder=config.stage_6.video_bits_folder,
                              nominations_video_options=load_video_options_from_db(),
                              overwrite=config.stage_6.overwrite_video_bits,
-                             quiet_ffmpeg=config.stage_6.quiet_ffmpeg)
+                             stitch_final_video=config.stitch_final_video,
+                             transition_options=TransitionOptions(config.stage_6.presentation_duration,
+                                                                  config.stage_6.transition_duration,
+                                                                  cast(TransitionType,
+                                                                       config.stage_6.transition_type)),
+                             quiet_ffmpeg=config.stage_6.quiet_ffmpeg,
+                             quiet_ffmpeg_final_video=config.stage_6.quiet_ffmpeg_final_video)
 
 
     @stage_gate(err_header="[Stage 6 | Execution ERROR]", config_file=config_file, reload_input=stage_6_collect_input)
@@ -676,7 +720,13 @@ if __name__ == '__main__':
                                  video_bits_folder=config.stage_6.video_bits_folder,
                                  nominations_video_options=stage_input.nominations_video_options,
                                  overwrite=config.stage_6.overwrite_video_bits,
-                                 quiet_ffmpeg=config.stage_6.quiet_ffmpeg)
+                                 stitch_final_video=config.stitch_final_video,
+                                 transition_options=TransitionOptions(config.stage_6.presentation_duration,
+                                                                      config.stage_6.transition_duration,
+                                                                      cast(TransitionType,
+                                                                           config.stage_6.transition_type)),
+                                 quiet_ffmpeg=config.stage_6.quiet_ffmpeg,
+                                 quiet_ffmpeg_final_video=config.stage_6.quiet_ffmpeg_final_video)
 
         print("")
         print("[STAGE 6 SUMMARY | Final Video Bits Generation]")
@@ -691,6 +741,9 @@ if __name__ == '__main__':
         if result.failed_video_bits:
             print(f"  Failed video bits: ['{"', '".join(result.failed_video_bits)}']")
         print("")
+
+        if config.stitch_final_video:
+            print(f"  Final videos: '{result.final_videos}'")
 
         return result
 
