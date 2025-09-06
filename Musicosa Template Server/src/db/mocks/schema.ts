@@ -1,5 +1,6 @@
 import { Chance } from 'chance'
 
+
 import {
     Avatar,
     Award,
@@ -11,9 +12,10 @@ import {
     NominationStats,
     Setting,
     Template,
-    VideoOptions,
     Videoclip,
+    VideoOptions
 } from '@/db/models'
+
 
 const chance = new Chance()
 
@@ -140,5 +142,5 @@ export const mockNominationStats = (partial?: Partial<NominationStats>): Nominat
     rankingSequence: partial?.rankingSequence ?? chance.natural({ min: 1, max: 100 }),
 })
 
-export const mockNominationsStats = (n: number, partial?: Partial<NominationStats>): NominationStats[] =>
+export const mockNominationsStatsCollection = (n: number, partial?: Partial<NominationStats>): NominationStats[] =>
     Array.from({ length: n }, () => mockNominationStats(partial))

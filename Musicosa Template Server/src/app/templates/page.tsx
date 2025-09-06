@@ -29,7 +29,7 @@ export default async function Page({
         .from(nominations)
         .innerJoin(nominationsIdSubquery, eq(nominations.id, nominationsIdSubquery.nominationId))
 
-    if (!template.length) notFound()
+    if (template.length == 0) notFound()
 
     const TemplateComponent = await templateFactory(template[0].nominationId)
 
