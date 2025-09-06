@@ -1,6 +1,4 @@
-import FrameContainer from './FrameContainer'
-
-export default FrameContainer
-
+export { default } from './FrameContainer'
 export * from './FrameContainer'
+
 export * from './BaseFrameContainer'

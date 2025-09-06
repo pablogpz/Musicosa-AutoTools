@@ -1,9 +1,9 @@
-import React, { PropsWithChildren } from 'react'
+import { PropsWithChildren } from 'react'
 
-import settingsRepository from '@/db/repository/settings'
 import { DEFAULT_FRAME_HEIGHT, DEFAULT_FRAME_WIDTH } from '@/app/defaults'
+import settingsRepository from '@/db/repositories/settings'
 
-import BaseFrameContainer from './BaseFrameContainer'
+import { BaseFrameContainer } from './BaseFrameContainer'
 
 export default async function FrameContainer({ children }: PropsWithChildren) {
     const widthSetting = await settingsRepository.getSettingByKey<number>('frame.width_px')
@@ -13,7 +13,10 @@ export default async function FrameContainer({ children }: PropsWithChildren) {
     const height = heightSetting?.value ?? DEFAULT_FRAME_HEIGHT
 
     return (
-        <BaseFrameContainer width={width} height={height}>
+        <BaseFrameContainer
+            width={width}
+            height={height}
+        >
             {children}
         </BaseFrameContainer>
     )

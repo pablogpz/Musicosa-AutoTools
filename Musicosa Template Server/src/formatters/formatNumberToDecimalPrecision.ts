@@ -4,8 +4,8 @@ export default function formatNumberToDecimalPrecision(n: number, decimalDigits:
     if (decimalDigits < 0)
         throw new TypeError('"decimalDigits" argument must be a positive integer')
 
-    if (Number.isInteger(n)) return `${n.toString()}${DECIMAL_SEPARATOR}${''.padEnd(decimalDigits, '0')}`
+    if (Number.isInteger(n)) return n.toString()
 
     const [integerPart, decimalPart] = n.toString().split('.')
-    return `${integerPart}${DECIMAL_SEPARATOR}${decimalPart.substring(0, decimalDigits).padEnd(decimalDigits, '0')}`
+    return `${integerPart}${DECIMAL_SEPARATOR}${((decimalPart ?? '').substring(0, decimalDigits))}`
 }

@@ -1,4 +1,8 @@
-import { Avatar, Award, Member, Nomination, NominationStats, CastVote, Template } from '@/db/schema'
+import { Avatar, Award, CastVote, Member, Nomination, NominationStats, Template } from '@/db/models'
+
+
+
+
 
 export const defaultAvatarId = 0
 
