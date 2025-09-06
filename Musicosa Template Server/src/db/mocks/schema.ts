@@ -1,6 +1,5 @@
 import { Chance } from 'chance'
 
-
 import {
     Avatar,
     Award,
@@ -12,10 +11,9 @@ import {
     NominationStats,
     Setting,
     Template,
+    VideoOptions,
     Videoclip,
-    VideoOptions
 } from '@/db/models'
-
 
 const chance = new Chance()
 

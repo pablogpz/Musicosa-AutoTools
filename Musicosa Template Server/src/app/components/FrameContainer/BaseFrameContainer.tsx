@@ -1,9 +1,5 @@
 import { PropsWithChildren } from 'react'
 
-
-
-
-
 export interface BaseFrameContainerProps extends PropsWithChildren {
     width: number
     height: number

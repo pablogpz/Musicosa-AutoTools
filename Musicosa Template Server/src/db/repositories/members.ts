@@ -8,7 +8,7 @@ export interface MembersRepository {
 
 let membersCache: Member[] = []
 
-const getMembers = async () => {
+const getMembers = async (): Promise<Member[]> => {
     const query = db.select().from(members)
 
     if (process.env.NODE_ENV === 'development') return query

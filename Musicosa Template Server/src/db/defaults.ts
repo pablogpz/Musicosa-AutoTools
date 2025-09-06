@@ -1,9 +1,5 @@
 import { Avatar, Award, CastVote, Member, Nomination, NominationStats, Template } from '@/db/models'
 
-
-
-
-
 export const defaultAvatarId = 0
 
 export const defaultAvatar: Avatar = {
@@ -13,7 +9,7 @@ export const defaultAvatar: Avatar = {
     scoreBoxPositionTop: 17.5,
     scoreBoxPositionLeft: 81,
     scoreBoxFontScale: 0.175,
-    scoreBoxFontColor: 'black'
+    scoreBoxFontColor: 'black',
 }
 
 export const defaultMemberId = '00000000-0000-0000-0000-000000000000'
@@ -29,7 +25,7 @@ export const defaultAwardDesignation = 'El Killer, no tu Abuela'
 
 export const defaultAward: Award = {
     slug: defaultAwardSlug,
-    designation: defaultAwardDesignation
+    designation: defaultAwardDesignation,
 }
 
 export const defaultNominationId = '00000000-0000-0000-0000-100000000000'
@@ -38,7 +34,7 @@ export const defaultNomination: Nomination = {
     id: defaultNominationId,
     gameTitle: 'Título del juego',
     nominee: 'Nominado',
-    award: defaultAwardSlug
+    award: defaultAwardSlug,
 }
 
 export const defaultTemplate: Template = {
@@ -47,7 +43,7 @@ export const defaultTemplate: Template = {
     videoBoxWidthPx: 1200,
     videoBoxHeightPx: 676,
     videoBoxPositionTopPx: 59,
-    videoBoxPositionLeftPx: 658
+    videoBoxPositionLeftPx: 658,
 }
 
 export const defaultCastVote: CastVote = {

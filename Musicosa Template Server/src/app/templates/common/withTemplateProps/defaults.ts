@@ -10,16 +10,16 @@ export const defaultTemplateSettingsProps: TemplateSettingsProps = {
 
 export const defaultResolvedAvatar: ResolvedAvatar = {
     ...defaultAvatar,
-    resolvedImageFilename: defaultAvatar.imageFilename
+    resolvedImageFilename: defaultAvatar.imageFilename,
 }
 
 export const defaultResolvedCastVote: ResolvedCastVote = {
     ...defaultCastVote,
-    formattedScore: defaultCastVote.score.toString()
+    formattedScore: defaultCastVote.score.toString(),
 }
 
 export const defaultResolvedMember: ResolvedMember = {
     ...defaultMember,
     avatar: defaultResolvedAvatar,
-    vote: defaultResolvedCastVote
+    vote: defaultResolvedCastVote,
 }
