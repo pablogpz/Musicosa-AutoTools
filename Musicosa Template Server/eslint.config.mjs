@@ -1,4 +1,4 @@
-import nextPlugin from "@next/eslint-plugin-next"
+import nextPlugin from '@next/eslint-plugin-next'
 import reactPlugin from 'eslint-plugin-react'
 import reactHooks from 'eslint-plugin-react-hooks'
 import { defineConfig } from 'eslint/config'

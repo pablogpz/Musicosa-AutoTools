@@ -10,24 +10,24 @@ export const defaultTemplateSettingsProps: TemplateSettingsProps = {
 
 export const defaultResolvedAvatar: ResolvedAvatar = {
     ...defaultAvatar,
-    resolvedImageFilename: defaultAvatar.imageFilename
+    resolvedImageFilename: defaultAvatar.imageFilename,
 }
 
 export const defaultResolvedScoring: ResolvedScoring = {
     ...defaultScoring,
-    formattedScore: defaultScoring.score.toString()
+    formattedScore: defaultScoring.score.toString(),
 }
 
 export const defaultResolvedAuthor: ResolvedContestant = {
     ...defaultAuthor,
     avatar: defaultResolvedAvatar,
-    scoring: defaultResolvedScoring
+    scoring: defaultResolvedScoring,
 }
 
 export const defaultResolvedContestant: ResolvedContestant = {
     ...defaultContestant,
     avatar: defaultResolvedAvatar,
-    scoring: defaultResolvedScoring
+    scoring: defaultResolvedScoring,
 }
 
 export const defaultSequenceNumberInAuthorEntries: ResolvedTemplateProps['sequenceNumberInAuthorEntries'] = [1, 2]

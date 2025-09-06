@@ -9,7 +9,7 @@ export const defaultAvatar: Avatar = {
     scoreBoxPositionTop: 17.5,
     scoreBoxPositionLeft: 81,
     scoreBoxFontScale: 0.175,
-    scoreBoxFontColor: 'black'
+    scoreBoxFontColor: 'black',
 }
 
 export const defaultContestantId = '00000000-0000-0000-0000-000000000000'
@@ -26,14 +26,14 @@ export const defaultAuthor: Contestant = {
     avatar: defaultAvatarId,
 }
 
-export const defaultEntryId = "00000000-0000-0000-0000-100000000000"
+export const defaultEntryId = '00000000-0000-0000-0000-100000000000'
 
 export const defaultEntry: Entry = {
     id: defaultEntryId,
     author: defaultAuthor.id,
     title: 'Título de la entrada - Obra',
     videoUrl: 'https://www.youtube.com/watch?v=CVyPO_tR540',
-    specialTopic: 'INFANCIA'
+    specialTopic: 'INFANCIA',
 }
 
 export const defaultScoring: Scoring = {
@@ -56,5 +56,5 @@ export const defaultTemplate: Template = {
     videoBoxWidthPx: 1200,
     videoBoxHeightPx: 676,
     videoBoxPositionTopPx: 28,
-    videoBoxPositionLeftPx: 692
+    videoBoxPositionLeftPx: 692,
 }

@@ -1,4 +1,5 @@
 import { InferSelectModel } from 'drizzle-orm'
+
 import {
     avatars,
     contestants,
@@ -10,7 +11,7 @@ import {
     settings,
     specialEntryTopics,
     templates,
-    videoOptions
+    videoOptions,
 } from '@/db/schema'
 
 export type MetadataFields = 'edition' | 'topic' | 'organiser' | 'start_date'
@@ -26,19 +27,22 @@ export type SettingValueType = number | string | boolean | null
 export type SettingValueTypeSpec = 'integer' | 'real' | 'boolean' | 'string'
 export const SETTING_KEY_SEPARATOR = '.'
 export type SettingKeys =
-    `${Extract<SettingGroupKeys, 'validation'>}${typeof SETTING_KEY_SEPARATOR}${ValidationSettingNames}` |
-    `${Extract<SettingGroupKeys, 'frame'>}${typeof SETTING_KEY_SEPARATOR}${FrameSettingNames}` |
-    `${Extract<SettingGroupKeys, 'templates'>}${typeof SETTING_KEY_SEPARATOR}${TemplatesSettingNames}` |
-    `${Extract<SettingGroupKeys, 'ranking'>}${typeof SETTING_KEY_SEPARATOR}${RankingSettingNames}`
-export type Setting = InferSelectModel<typeof settings> & (
-    { groupKey: Extract<SettingGroupKeys, 'validation'>, setting: ValidationSettingNames } |
-    { groupKey: Extract<SettingGroupKeys, 'frame'>, setting: FrameSettingNames } |
-    { groupKey: Extract<SettingGroupKeys, 'templates'>, setting: TemplatesSettingNames } |
-    { groupKey: Extract<SettingGroupKeys, 'ranking'>, setting: RankingSettingNames }
-    ) & (
-    { type: 'integer' | 'real', value: number | null } |
-    { type: 'boolean', value: boolean | null } |
-    { type: 'string', value: string | null })
+    | `${Extract<SettingGroupKeys, 'validation'>}${typeof SETTING_KEY_SEPARATOR}${ValidationSettingNames}`
+    | `${Extract<SettingGroupKeys, 'frame'>}${typeof SETTING_KEY_SEPARATOR}${FrameSettingNames}`
+    | `${Extract<SettingGroupKeys, 'templates'>}${typeof SETTING_KEY_SEPARATOR}${TemplatesSettingNames}`
+    | `${Extract<SettingGroupKeys, 'ranking'>}${typeof SETTING_KEY_SEPARATOR}${RankingSettingNames}`
+export type Setting = InferSelectModel<typeof settings> &
+    (
+        | { groupKey: Extract<SettingGroupKeys, 'validation'>; setting: ValidationSettingNames }
+        | { groupKey: Extract<SettingGroupKeys, 'frame'>; setting: FrameSettingNames }
+        | { groupKey: Extract<SettingGroupKeys, 'templates'>; setting: TemplatesSettingNames }
+        | { groupKey: Extract<SettingGroupKeys, 'ranking'>; setting: RankingSettingNames }
+    ) &
+    (
+        | { type: 'integer' | 'real'; value: number | null }
+        | { type: 'boolean'; value: boolean | null }
+        | { type: 'string'; value: string | null }
+    )
 export type TypedSetting<T extends SettingValueType> = Omit<Setting, 'type'> & { value: T | null }
 
 export type Avatar = InferSelectModel<typeof avatars>
