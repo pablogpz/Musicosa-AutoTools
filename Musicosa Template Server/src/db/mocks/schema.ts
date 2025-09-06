@@ -1,4 +1,5 @@
 import { Chance } from 'chance'
+
 import {
     Avatar,
     Contestant,
@@ -6,19 +7,20 @@ import {
     Entry,
     EntryStats,
     Metadata,
+    MetadataFields,
     Scoring,
     Setting,
     SpecialEntryTopic,
     Template,
     VideoOptions
-} from '@/db/schema'
-import { MetadataFields } from '@/db/metadata'
+} from '@/db/models'
 
 const chance = new Chance()
 
+const metadataFieldNames: MetadataFields[] = ['edition', 'topic', 'organiser', 'start_date']
 export const mockMetadata = (partial?: Partial<Metadata>): Metadata => ({
     field: partial?.field ??
-        chance.pickone(Object.values(MetadataFields)),
+        chance.pickone(metadataFieldNames),
     value: partial?.value ??
         chance.word()
 })
@@ -79,13 +81,15 @@ export const mockContestant = (partial?: Partial<Contestant>): Contestant => ({
 export const mockContestants = (n: number, partial?: Partial<Contestant>): Contestant[] =>
     Array.from({ length: n }, () => mockContestant(partial))
 
-export const mockSpecialEntryTopic = (partial?: Partial<SpecialEntryTopic>): SpecialEntryTopic => ({
-    designation: partial?.designation ??
-        chance.word().toUpperCase()
-})
+export const mockSpecialEntryTopic =
+    (partial?: Partial<SpecialEntryTopic>): SpecialEntryTopic => ({
+        designation: partial?.designation ??
+            chance.word().toUpperCase()
+    })
 
-export const mockSpecialEntryTopics = (n: number, partial?: Partial<SpecialEntryTopic>): SpecialEntryTopic[] =>
-    Array.from({ length: n }, () => mockSpecialEntryTopic(partial))
+export const mockSpecialEntryTopics =
+    (n: number, partial?: Partial<SpecialEntryTopic>): SpecialEntryTopic[] =>
+        Array.from({ length: n }, () => mockSpecialEntryTopic(partial))
 
 export const mockEntry = (partial?: Partial<Entry>): Entry => ({
     id: partial?.id ??
@@ -97,7 +101,7 @@ export const mockEntry = (partial?: Partial<Entry>): Entry => ({
     videoUrl: partial?.videoUrl ??
         chance.url(),
     specialTopic: partial?.specialTopic ??
-        chance.natural({ min: 1, max: 10 }) == 1 ? chance.word().toUpperCase() : null
+    chance.natural({ min: 1, max: 10 }) == 1 ? chance.word().toUpperCase() : null
 })
 
 export const mockEntries = (n: number, partial?: Partial<Entry>): Entry[] =>
@@ -139,25 +143,32 @@ export const mockVideoOption = (partial?: Partial<VideoOptions>): VideoOptions =
     entry: partial?.entry ??
         chance.guid({ version: 4 }),
     timestampStart: partial?.timestampStart ??
-        `${chance.pad(chance.natural({ min: 0, max: 59 }), 2)}:${chance.pad(chance.natural({ min: 0, max: 59 }), 2)}`,
+        `${chance.pad(
+            chance.natural({ min: 0, max: 59 }), 2)}:${chance.pad(chance.natural({ min: 0, max: 59 }),
+            2)}`,
     timestampEnd: partial?.timestampEnd ??
-        `${chance.pad(chance.natural({ min: 0, max: 59 }), 2)}:${chance.pad(chance.natural({ min: 0, max: 59 }), 2)}`,
+        `${chance.pad(
+            chance.natural({ min: 0, max: 59 }), 2)}:${chance.pad(chance.natural({ min: 0, max: 59 }),
+            2)}`,
 })
 
-export const mockVideoOptionsCollection = (n: number, partial?: Partial<VideoOptions>): VideoOptions[] =>
-    Array.from({ length: n }, () => mockVideoOption(partial))
+export const mockVideoOptionsCollection =
+    (n: number, partial?: Partial<VideoOptions>): VideoOptions[] =>
+        Array.from({ length: n }, () => mockVideoOption(partial))
 
-export const mockContestantStats = (partial?: Partial<ContestantStats>): ContestantStats => ({
-    contestant: partial?.contestant ??
-        chance.guid({ version: 4 }),
-    avgGivenScore: partial?.avgGivenScore ??
-        chance.floating({ min: 0, max: 10 }),
-    avgReceivedScore: partial?.avgReceivedScore ??
-        chance.floating({ min: 0, max: 10 })
-})
+export const mockContestantStats =
+    (partial?: Partial<ContestantStats>): ContestantStats => ({
+        contestant: partial?.contestant ??
+            chance.guid({ version: 4 }),
+        avgGivenScore: partial?.avgGivenScore ??
+            chance.floating({ min: 0, max: 10 }),
+        avgReceivedScore: partial?.avgReceivedScore ??
+            chance.floating({ min: 0, max: 10 })
+    })
 
-export const mockContestantsStats = (n: number, partial?: Partial<ContestantStats>): ContestantStats[] =>
-    Array.from({ length: n }, () => mockContestantStats(partial))
+export const mockContestantsStats =
+    (n: number, partial?: Partial<ContestantStats>): ContestantStats[] =>
+        Array.from({ length: n }, () => mockContestantStats(partial))
 
 export const mockEntryStats = (partial?: Partial<EntryStats>): EntryStats => ({
     entry: partial?.entry ??

@@ -1,3 +1,7 @@
 # IntelliJ project files
 .idea
 *.iml
+
+# Dev and testing databases
+*.dev.sqlite
+*.test.sqlite

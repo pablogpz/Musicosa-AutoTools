@@ -1,27 +1,19 @@
 import { integer, primaryKey, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
-import { InferSelectModel } from 'drizzle-orm'
+
+import { MetadataFields, SettingGroupKeys, SettingNames, SettingValueType, SettingValueTypeSpec } from '@/db/models'
 
 export const metadata = sqliteTable('metadata', {
-    field: text('field').primaryKey(),
+    field: text('field').$type<MetadataFields>().primaryKey(),
     value: text('value').notNull()
 })
-export type Metadata = InferSelectModel<typeof metadata>
 
 export const settings = sqliteTable('settings', {
-    groupKey: text('group_key').notNull(),
-    setting: text('setting').notNull(),
+    groupKey: text('group_key').$type<SettingGroupKeys>().notNull(),
+    setting: text('setting').$type<SettingNames>().notNull(),
     value: text('value').$type<SettingValueType>(),
-    type: text('type').notNull().$type<SettingValueTypeSpec>().default('string')
-}, (table) => ({
-    pk: primaryKey({ columns: [table.groupKey, table.setting] })
-}))
-export type SettingValueType = number | string | boolean
-export type SettingValueTypeSpec = 'integer' | 'real' | 'string' | 'boolean'
-export type Setting = InferSelectModel<typeof settings> & (
-    { type: 'integer' | 'real', value: number | null } |
-    { type: 'boolean', value: boolean | null } |
-    { type: 'string', value: string | null })
-export type TypedSetting<T extends SettingValueType> = Omit<Setting, 'type'> & { value: T | null }
+    type: text('type').notNull().$type<SettingValueTypeSpec>().notNull().default('string')
+}, (table) => [
+    primaryKey({ columns: [table.groupKey, table.setting] })])
 
 export const avatars = sqliteTable('avatars', {
     id: integer('id').primaryKey({ autoIncrement: true }),
@@ -32,19 +24,16 @@ export const avatars = sqliteTable('avatars', {
     scoreBoxFontScale: real('score_box_font_scale').notNull(),
     scoreBoxFontColor: text('score_box_font_color').notNull()
 })
-export type Avatar = InferSelectModel<typeof avatars>
 
 export const contestants = sqliteTable('contestants', {
     id: text('id').primaryKey(),
     name: text('name').notNull().unique(),
     avatar: integer('avatar').references(() => avatars.id)
 })
-export type Contestant = InferSelectModel<typeof contestants>
 
 export const specialEntryTopics = sqliteTable('special_entry_topics', {
     designation: text('designation').primaryKey()
 })
-export type SpecialEntryTopic = InferSelectModel<typeof specialEntryTopics>
 
 export const entries = sqliteTable('entries', {
     id: text('id').primaryKey(),
@@ -53,7 +42,6 @@ export const entries = sqliteTable('entries', {
     videoUrl: text('video_url').notNull(),
     specialTopic: text('special_topic').references(() => specialEntryTopics.designation)
 })
-export type Entry = InferSelectModel<typeof entries>
 
 export const templates = sqliteTable('templates', {
     entry: text('entry').references(() => entries.id).primaryKey(),
@@ -64,30 +52,25 @@ export const templates = sqliteTable('templates', {
     videoBoxPositionTopPx: integer('video_box_position_top_px').notNull(),
     videoBoxPositionLeftPx: integer('video_box_position_left_px').notNull(),
 })
-export type Template = InferSelectModel<typeof templates>
 
 export const videoOptions = sqliteTable('video_options', {
     entry: text('entry').references(() => entries.id).primaryKey(),
     timestampStart: text('timestamp_start').notNull(),
     timestampEnd: text('timestamp_end').notNull(),
 })
-export type VideoOptions = InferSelectModel<typeof videoOptions>
 
 export const scoring = sqliteTable('contestant_grades_entries', {
     contestant: text('contestant').references(() => contestants.id),
     entry: text('entry').references(() => entries.id).notNull(),
     score: real('score').notNull()
-}, (table) => ({
-    pk: primaryKey({ columns: [table.contestant, table.entry] })
-}))
-export type Scoring = InferSelectModel<typeof scoring>
+}, (table) =>
+    [primaryKey({ columns: [table.contestant, table.entry] })])
 
 export const contestantsStats = sqliteTable('stats_contestants', {
     contestant: text('contestant').references(() => contestants.id).primaryKey(),
     avgGivenScore: real('avg_given_score'),
     avgReceivedScore: real('avg_received_score'),
 })
-export type ContestantStats = InferSelectModel<typeof contestantsStats>
 
 export const entriesStats = sqliteTable('stats_entries', {
     entry: text('entry').references(() => entries.id).primaryKey(),
@@ -95,4 +78,3 @@ export const entriesStats = sqliteTable('stats_entries', {
     rankingPlace: integer('ranking_place'),
     rankingSequence: integer('ranking_sequence').unique(),
 })
-export type EntryStats = InferSelectModel<typeof entriesStats>

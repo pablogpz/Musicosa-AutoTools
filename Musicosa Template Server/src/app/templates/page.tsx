@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm'
 
 import db from '@/db/database'
 import { entries, entriesStats } from '@/db/schema'
-import templateFactory from '@/app/templates/components/Template/templateFactory'
+import { templateFactory } from '@/app/templates/components/Template'
 import FrameContainer from '@/app/components/FrameContainer'
 
 export default async function Page({ searchParams }: {

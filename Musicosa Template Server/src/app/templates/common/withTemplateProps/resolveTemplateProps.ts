@@ -5,25 +5,14 @@ import { eq } from 'drizzle-orm'
 import formatNumberToDecimalPrecision from '@/formatters/formatNumberToDecimalPrecision'
 
 import db from '@/db/database'
-import {
-    Avatar,
-    Contestant,
-    entries,
-    entriesStats,
-    Entry,
-    EntryStats,
-    Scoring,
-    scoring,
-    Template,
-    templates,
-    TypedSetting
-} from '@/db/schema'
+import { entries, entriesStats, scoring, templates } from '@/db/schema'
 import { defaultAuthor, defaultAvatar, defaultScoring } from '@/db/defaults'
-import contestantsRepository from '@/db/repository/contestants'
-import avatarsRepository from '@/db/repository/avatars'
-import settingsRepository from '@/db/repository/settings'
-import entriesRepository from '@/db/repository/entries'
+import contestantsRepository from '@/db/repositories/contestants'
+import avatarsRepository from '@/db/repositories/avatars'
+import settingsRepository from '@/db/repositories/settings'
+import entriesRepository from '@/db/repositories/entries'
 import { DEFAULT_DISPLAY_DECIMAL_DIGITS } from '@/app/defaults'
+import { Avatar, Contestant, Entry, EntryStats, Scoring, Template } from '@/db/models'
 
 export type ResolvedEntryStats = EntryStats & { formattedAvgScore: string }
 
@@ -78,7 +67,7 @@ function resolveContestant(baseContestant: Contestant, avatar: Avatar, scoring: 
     } satisfies ResolvedContestant
 }
 
-export const resolveTemplateProps = async (templateUUID: string): Promise<ResolvedTemplateProps | undefined> => {
+export async function resolveTemplateProps(templateId: string): Promise<ResolvedTemplateProps | undefined> {
     const templateResult = await db
         .select({
             avatarScale: templates.avatarScale,
@@ -87,20 +76,19 @@ export const resolveTemplateProps = async (templateUUID: string): Promise<Resolv
             videoBoxHeightPx: templates.videoBoxHeightPx
         })
         .from(templates)
-        .where(eq(templates.entry, templateUUID))
-
+        .where(eq(templates.entry, templateId))
     if (templateResult.length === 0) return undefined
 
-    // Data independent from template uuid
+    // Data independent from template id
 
-    const displayDecimalDigitsSetting: TypedSetting<number> | undefined =
-        await settingsRepository.getSettingByKey('templates.display_decimal_digits')
+    const displayDecimalDigitsSetting =
+        await settingsRepository.getSettingByKey<number>('templates.display_decimal_digits')
     const displayDecimalDigits = displayDecimalDigitsSetting?.value ?? DEFAULT_DISPLAY_DECIMAL_DIGITS
 
     const allContestants = await contestantsRepository.getContestants()
     const avatars = await avatarsRepository.getAvatars()
 
-    // Data dependent on template uuid
+    // Data dependent on template id
 
     const template = templateResult[0]
     const entry = await (db
@@ -110,7 +98,7 @@ export const resolveTemplateProps = async (templateUUID: string): Promise<Resolv
             specialTopic: entries.specialTopic
         })
         .from(entries)
-        .where(eq(entries.id, templateUUID)))
+        .where(eq(entries.id, templateId)))
         .then(results => results[0])
     const entryStats = await (db
         .select({
@@ -118,11 +106,11 @@ export const resolveTemplateProps = async (templateUUID: string): Promise<Resolv
             avgScore: entriesStats.avgScore
         })
         .from(entriesStats)
-        .where(eq(entriesStats.entry, templateUUID)))
+        .where(eq(entriesStats.entry, templateId)))
         .then(results => results[0])
-    const scoringEntries = await db.select().from(scoring).where(eq(scoring.entry, templateUUID))
+    const scoringEntries = await db.select().from(scoring).where(eq(scoring.entry, templateId))
 
-    const avgScoreDelta = await entriesRepository.getAvgScoreDeltaWithPreviousEntry(templateUUID)
+    const avgScoreDelta = await entriesRepository.getAvgScoreDeltaFromPreviousEntry(templateId)
     if (avgScoreDelta === undefined) return undefined
 
     const author =
@@ -133,11 +121,11 @@ export const resolveTemplateProps = async (templateUUID: string): Promise<Resolv
         scoringEntries.find(scoring => scoring.contestant === author.id) ?? defaultScoring
 
     const sequenceNumberInAuthorEntries =
-        await entriesRepository.getEntrySequenceNumberInAuthorEntries(templateUUID)
+        await entriesRepository.getSequenceNumberInAuthorEntries(templateId)
     if (!sequenceNumberInAuthorEntries) return undefined
 
     const sequenceNumberInSpecialTopic =
-        await entriesRepository.getEntrySequenceNumberInSpecialTopic(templateUUID)
+        await entriesRepository.getSequenceNumberInSpecialTopic(templateId)
 
     const contestants = allContestants
         .filter(contestant => contestant.id !== entry.author)

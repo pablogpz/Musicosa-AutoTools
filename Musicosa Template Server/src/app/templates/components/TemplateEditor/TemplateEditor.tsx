@@ -5,7 +5,7 @@ import React, { ChangeEvent, ChangeEventHandler, HTMLInputTypeAttribute, useStat
 import formatNumberToDecimalPrecision from '@/formatters/formatNumberToDecimalPrecision'
 
 import { defaultAuthor, defaultEntry, defaultEntryStats, defaultScoring, defaultTemplate } from '@/db/defaults'
-import BaseFrameContainer from '@/app/components/FrameContainer/BaseFrameContainer'
+import { BaseFrameContainer } from '@/app/components/FrameContainer/BaseFrameContainer'
 import {
     defaultAvgScoreDelta,
     defaultResolvedAuthor,
@@ -14,8 +14,7 @@ import {
     defaultSequenceNumberInSpecialTopic,
     defaultTemplateSettingsProps
 } from '@/app/templates/common/withTemplateProps/defaults'
-import { ResolvedContestant } from '@/app/templates/common/withTemplateProps'
-import { Template, TemplateProps } from '@/app/templates/components/Template'
+import Template, { TemplateProps } from '@/app/templates/components/Template/Template'
 
 function onChangeFactory(onChange: (value: string) => void): ChangeEventHandler<HTMLInputElement> {
     return (e: ChangeEvent<HTMLInputElement>): void => {
@@ -78,16 +77,6 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
         formattedScore: formatNumberToDecimalPrecision(score, displayDecimalDigits)
     }
 
-    const author: ResolvedContestant = {
-        ...defaultResolvedAuthor,
-        scoring: { ...scoringDefaults }
-    }
-
-    const baseContestant: ResolvedContestant = {
-        ...defaultResolvedContestant,
-        scoring: { ...scoringDefaults }
-    }
-
     const templateProps: TemplateProps = {
         title,
         specialTopic,
@@ -98,10 +87,16 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
         authorAvatarScale,
         videoBoxWidthPx,
         videoBoxHeightPx,
-        author,
+        author: {
+            ...defaultResolvedAuthor,
+            scoring: { ...scoringDefaults }
+        },
         sequenceNumberInAuthorEntries: [SNAEntries, SNAEntriesOutOf],
         sequenceNumberInSpecialTopic: [SNSTEntries, SNSTEntriesOutOf],
-        contestants: Array.from({ length: contestantCount - 1 }, () => baseContestant),
+        contestants: Array.from({ length: contestantCount - 1 }, () => ({
+            ...defaultResolvedContestant,
+            scoring: { ...scoringDefaults }
+        })),
         scoreMinValue: defaultTemplateSettingsProps.scoreMinValue,
         scoreMaxValue: defaultTemplateSettingsProps.scoreMaxValue,
     }

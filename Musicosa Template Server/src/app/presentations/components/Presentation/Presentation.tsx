@@ -4,10 +4,10 @@ import { ResolvedPresentationProps } from '@/app/presentations/common/withPresen
 
 export type PresentationProps = ResolvedPresentationProps
 
-export function Presentation({ rankingPlace }: PresentationProps) {
+export default function Presentation({ rankingPlace }: PresentationProps) {
     return (
         <div className="flex flex-row size-full justify-center items-center bg-black">
-            <p className="text-[30rem] font-black text-white">{rankingPlace}</p>
+            <p className="text-[30rem] mb-16 font-black text-white">{rankingPlace}</p>
         </div>
     )
 }

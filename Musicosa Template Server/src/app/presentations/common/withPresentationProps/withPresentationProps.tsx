@@ -4,9 +4,9 @@ import { ResolvedPresentationProps, resolvePresentationProps } from './resolvePr
 
 export default async function withPresentationProps<P extends object>(
     Component: React.ComponentType<P & ResolvedPresentationProps>,
-    entryUUID: string,
+    entryId: string,
 ): Promise<React.ComponentType<P> | undefined> {
-    const presentationProps = await resolvePresentationProps(entryUUID)
+    const presentationProps = await resolvePresentationProps(entryId)
 
     if (!presentationProps) return undefined
     return (props: P) => <Component {...presentationProps} {...props}/>

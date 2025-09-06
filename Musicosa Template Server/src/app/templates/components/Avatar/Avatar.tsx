@@ -1,4 +1,5 @@
 import { Caveat } from 'next/font/google'
+
 import { ResolvedAvatar } from '@/app/templates/common/withTemplateProps'
 
 export interface AvatarProps {
@@ -40,6 +41,7 @@ export default function Avatar({ avatar, avatarScale = 1, formattedScore, scoreC
 
     return (
         <div className="relative inline-block" style={avatarContainerStyleProps}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className="h-full w-auto" src={`/avatars/${resolvedImageFilename}`} alt="avatar image"/>
             <p className='absolute translate-x-[-50%] translate-y-[-50%] text-[1em]' style={scoreBoxStyleProps}>
                 {formattedScore}

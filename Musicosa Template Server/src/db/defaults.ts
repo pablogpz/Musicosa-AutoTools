@@ -1,4 +1,4 @@
-import { Avatar, Contestant, Entry, EntryStats, Scoring, Template } from '@/db/schema'
+import { Avatar, Contestant, Entry, EntryStats, Scoring, Template } from '@/db/models'
 
 export const defaultAvatarId = 0
 

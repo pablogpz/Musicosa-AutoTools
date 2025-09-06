@@ -4,8 +4,8 @@ import React, { ChangeEvent, ChangeEventHandler, HTMLInputTypeAttribute, useStat
 
 import { defaultEntryStats } from '@/db/defaults'
 
-import { Presentation, PresentationProps } from '@/app/presentations/components/Presentation'
-import BaseFrameContainer from '@/app/components/FrameContainer/BaseFrameContainer'
+import { BaseFrameContainer } from '@/app/components/FrameContainer/BaseFrameContainer'
+import Presentation, { PresentationProps } from '@/app/presentations/components/Presentation/Presentation'
 
 function onChangeFactory(onChange: (value: string) => void): ChangeEventHandler<HTMLInputElement> {
     return (e: ChangeEvent<HTMLInputElement>): void => {

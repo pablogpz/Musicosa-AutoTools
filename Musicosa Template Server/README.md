@@ -1,23 +1,24 @@
 # Musicosa Template Server
+
 **Author:** Juan Pablo García Plaza Pérez (@pablogpz)
 
-# Overview
+# Description
 
-This project serves as a Musicosa Template Model editor and renderer for automatic generation purposes
+This web server is a template editor and renderer for generating template images to be used by the Musicosa processing
+pipeline.
 
-- The editor is available at `/templates/editor`
-- The renderer endpoint is available at `/templates/[uuid]`. Alternative endpoint to query templates by 
-ranking sequence available at `/templates?q=[rankingSequence]`
-- An additional mock data generator endpoint is available at `/api/templates/seed-with-mock-data`
+- The web editors are available at:
+    - Entry templates -> `/templates/editor`
+    - Presentation templates -> `/presentations/editor`
+- The endpoint for rendering templates is available at `/[templates|presentations]/[uuid]`.
+    - Instead of using UUIDs, templates can be queried by ranking sequence at
+      `/[templates|presentations]?q=[rankingSequence]`
+    -
 
-To improve response times it is recommended to run the build step and start the server in production to trigger SSG
-of the available templates in Musicosa DB
+### Setup
 
-### Environment
-See `.env.example` to provide the mandatory env vars
+See `.env.example` to provide the mandatory environment variables.
 
 ## License
 
-This project is licensed under the MIT License. See the `LICENSE` file for details.
-
-© 2024 pablogpz
+This project is licensed under the MIT License. See the root `LICENSE` file for details.

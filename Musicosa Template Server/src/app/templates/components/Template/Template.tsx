@@ -17,7 +17,7 @@ const open_sans = Open_Sans({
 
 // SAMPLE TEMPLATE
 
-export function Template(
+export default function Template(
     {
         title,
         specialTopic,
@@ -36,34 +36,6 @@ export function Template(
         scoreMaxValue,
     }: TemplateProps) {
 
-    const [songTitle, workTitle] = getTitleBits(title)
-    const [sequence, sequenceOutOf] = sequenceNumberInAuthorEntries
-
-    let specialTopicSequence, specialTopicSequenceOutOf
-    if (specialTopic && sequenceNumberInSpecialTopic)
-        [specialTopicSequence, specialTopicSequenceOutOf] = sequenceNumberInSpecialTopic
-
-    const sortedContestantsByScore = contestants
-        .sort((a, b) => a.scoring.score - b.scoring.score)
-    const lowestScoreGroup = sortedContestantsByScore
-        .slice(0, sortedContestantsByScore.findLastIndex(contestant =>
-            contestant.scoring.score === sortedContestantsByScore[0].scoring.score) + 1)
-        .sort(() => Math.random() - 0.5)
-    const highestScoreGroup = sortedContestantsByScore
-        .slice(lowestScoreGroup.length)
-        .slice(sortedContestantsByScore.slice(lowestScoreGroup.length)
-            .findIndex(contestant =>
-                contestant.scoring.score === sortedContestantsByScore.at(-1)?.scoring.score))
-        .sort(() => Math.random() - 0.5)
-    const middleScoreGroup = sortedContestantsByScore
-        .slice(lowestScoreGroup.length, sortedContestantsByScore.length - highestScoreGroup.length)
-
-    const formattedAvgScoreDelta = formatNumberToDecimalPrecision(avgScoreDelta, 4)
-
-    function innerLinearInterpolateScoreColor(score: number): string {
-        return linearInterpolateScoreColor(score, scoreMinValue, scoreMaxValue)
-    }
-
     const rankingPlaceComponent =
         <p className={`${rankingPlace! >= 100 ?
             'text-4xl' : rankingPlace! >= 10 ?
@@ -72,6 +44,10 @@ export function Template(
             ${open_sans.className} font-black`}>
             {rankingPlace}
         </p>
+
+    let specialTopicSequence, specialTopicSequenceOutOf
+    if (specialTopic && sequenceNumberInSpecialTopic)
+        [specialTopicSequence, specialTopicSequenceOutOf] = sequenceNumberInSpecialTopic
 
     const specialTopicPillComponent = specialTopic &&
         <p className={`text-2xl ${open_sans.className} font-thin p-2 mt-4 mr-7 bg-white rounded`}>
@@ -83,6 +59,12 @@ export function Template(
                 {specialTopicSequenceOutOf! - specialTopicSequence! + 1}º
             </span>
         </p>
+
+    const [sequence, sequenceOutOf] = sequenceNumberInAuthorEntries
+
+    function innerLinearInterpolateScoreColor(score: number): string {
+        return linearInterpolateScoreColor(score, scoreMinValue, scoreMaxValue)
+    }
 
     const authorDetailsComponent =
         <div>
@@ -101,6 +83,8 @@ export function Template(
             </p>
         </div>
 
+    const formattedAvgScoreDelta = formatNumberToDecimalPrecision(avgScoreDelta, 4)
+
     const avgScorePillComponent =
         <div className="flex flex-col justify-center items-center p-5 bg-white rounded-[2em]">
             <p className={`text-7xl text-center ${open_sans.className} font-bold`}>
@@ -110,6 +94,21 @@ export function Template(
                 (+{formattedAvgScoreDelta})
             </p>
         </div>
+
+    const sortedContestantsByScore = contestants
+        .sort((a, b) => a.scoring.score - b.scoring.score)
+    const lowestScoreGroup = sortedContestantsByScore
+        .slice(0, sortedContestantsByScore.findLastIndex(contestant =>
+            contestant.scoring.score === sortedContestantsByScore[0].scoring.score) + 1)
+        .sort(() => Math.random() - 0.5)
+    const highestScoreGroup = sortedContestantsByScore
+        .slice(lowestScoreGroup.length)
+        .slice(sortedContestantsByScore.slice(lowestScoreGroup.length)
+            .findIndex(contestant =>
+                contestant.scoring.score === sortedContestantsByScore.at(-1)?.scoring.score))
+        .sort(() => Math.random() - 0.5)
+    const middleScoreGroup = sortedContestantsByScore
+        .slice(lowestScoreGroup.length, sortedContestantsByScore.length - highestScoreGroup.length)
 
     const tieBadge = <p className="size-fit mt-0.5 text-xl font-semibold py-0.5 px-1 bg-white rounded">EMPATE</p>
 
@@ -146,6 +145,8 @@ export function Template(
                 </div>
             )}
         </>
+
+    const [songTitle, workTitle] = getTitleBits(title)
 
     return (
         <div className="grid grid-cols-[1fr_2fr] grid-rows-[4fr_2fr] size-full bg-black p-7 overflow-clip">
@@ -202,11 +203,11 @@ function getTitleBits(title: string): [string, string] {
 type Color = { r: number, g: number, b: number }
 type CSS_RGB_Color = string
 
-const lowestGradeColor: Color = { r: 255, g: 0, b: 0 }
-const highestGradeColor: Color = { r: 0, g: 230, b: 0 }
-
 function linearInterpolateScoreColor(score: number, min: number, max: number): CSS_RGB_Color {
     const normalizedScore = (score - min) / (max - min)
+
+    const lowestGradeColor: Color = { r: 255, g: 0, b: 0 } // Red
+    const highestGradeColor: Color = { r: 0, g: 230, b: 0 } // Eye-friendly Green
 
     const interpolatedColor: Color = {
         r: lowestGradeColor.r * (1 - normalizedScore) + highestGradeColor.r * normalizedScore,

@@ -5,7 +5,7 @@ export interface BaseFrameContainerProps extends PropsWithChildren {
     height: number,
 }
 
-export default function BaseFrameContainer({ width, height, children }: BaseFrameContainerProps) {
+export function BaseFrameContainer({ width, height, children }: BaseFrameContainerProps) {
     return (
         <div className="m-0 p-0 bg-white" style={{ width, height }}>
             {children}

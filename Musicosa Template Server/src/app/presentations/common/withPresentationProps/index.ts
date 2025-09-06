@@ -1,5 +1,4 @@
-import withPresentationProps from './withPresentationProps'
-
-export default withPresentationProps
+export { default } from './withPresentationProps'
+export * from './withPresentationProps'
 
 export * from './resolvePresentationProps'

@@ -1,10 +1,11 @@
 # Musicosa Analytics
+
 **Author:** Juan Pablo García Plaza Pérez (@pablogpz)
 
-Módulo de cálculo estadístico para generar estadísticas que acompañen al vídeo final.
+## Description
+
+Analytics module for generating statistics about a Musicosa edition.
 
 ## License
 
-This project is licensed under the MIT License. See the `LICENSE` file for details.
-
-© 2024 pablogpz
+This project is licensed under the MIT License. See the root `LICENSE` file for details.

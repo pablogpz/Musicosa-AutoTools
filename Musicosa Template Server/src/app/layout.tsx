@@ -1,12 +1,11 @@
 import React, { PropsWithChildren } from 'react'
 
-import { MetadataFields } from '@/db/metadata'
-import metadataRepository from '@/db/repository/metadata'
+import metadataRepository from '@/db/repositories/metadata'
 
 import './globals.css'
 
 export default async function RootLayout({ children }: PropsWithChildren) {
-    const editionMetadata = await metadataRepository.getMetadataByField(MetadataFields.edition)
+    const editionMetadata = await metadataRepository.getMetadataByField('edition')
 
     return (
         <html lang="es">
@@ -16,7 +15,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
             <title>{`Musicosa ${(editionMetadata?.value)}`}</title>
         </head>
         <body>
-            {children}
+        {children}
         </body>
         </html>
     )

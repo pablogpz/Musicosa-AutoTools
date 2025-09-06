@@ -1,6 +1,6 @@
 import React from 'react'
 
-import settingsRepository from '@/db/repository/settings'
+import settingsRepository from '@/db/repositories/settings'
 import { DEFAULT_FRAME_HEIGHT, DEFAULT_FRAME_WIDTH } from '@/app/defaults'
 
 import PresentationEditor from '@/app/presentations/components/PresentationEditor'

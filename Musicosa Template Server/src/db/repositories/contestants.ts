@@ -1,5 +1,6 @@
 import db from '@/db/database'
-import { Contestant, contestants } from '@/db/schema'
+import { contestants } from '@/db/schema'
+import { Contestant } from '@/db/models'
 
 export interface ContestantsRepository {
     getContestants: () => Promise<Contestant[]>
@@ -7,19 +8,19 @@ export interface ContestantsRepository {
 
 let contestantsCache: Contestant[] = []
 
-const getContestants = async () => {
-    const databaseQuery = db.select().from(contestants)
+const getContestants = async (): Promise<Contestant[]> => {
+    const query = db.select().from(contestants)
 
     if (process.env.NODE_ENV === "development")
-        return databaseQuery
+        return query
 
     if (contestantsCache.length === 0) {
-        const allContestants = await databaseQuery
-        if (allContestants)
-            contestantsCache = allContestants
+        const result = await query
+        if (result)
+            contestantsCache = result
     }
 
-    return contestantsCache.map(v => ({...v})) // Careful: Shallow copy
+    return structuredClone(contestantsCache)
 }
 
 const contestantsRepository: ContestantsRepository = { getContestants }

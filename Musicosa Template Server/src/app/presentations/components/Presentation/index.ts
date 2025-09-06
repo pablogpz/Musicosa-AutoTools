@@ -1,5 +1,4 @@
-import { Presentation } from './Presentation'
-
-export default Presentation
-
+export { default } from './Presentation'
 export * from './Presentation'
+
+export * from './presentationFactory'

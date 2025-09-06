@@ -1,23 +1,23 @@
 import { notFound } from 'next/navigation'
 
 import db from '@/db/database'
-import { entries } from '@/db/schema'
+import { templates } from '@/db/schema'
 
-import templateFactory from '@/app/templates/components/Template/templateFactory'
+import { templateFactory } from '@/app/templates/components/Template'
 import FrameContainer from '@/app/components/FrameContainer'
 
-type Params = { uuid: string }
+type Params = { templateId: string }
 
 export async function generateStaticParams(): Promise<Params[]> {
-    const allEntriesUUIDs = await db.select({ uuid: entries.id }).from(entries)
+    const templateIDs = await db.select({ id: templates.entry }).from(templates)
 
-    return allEntriesUUIDs.map(result => ({ uuid: result.uuid }))
+    return templateIDs.map(result => ({ templateId: result.id }))
 }
 
 export default async function Page({ params }: { params: Promise<Params> }) {
-    const { uuid } = await params
+    const { templateId } = await params
 
-    const TemplateComponent = await templateFactory(uuid)
+    const TemplateComponent = await templateFactory(templateId)
 
     if (!TemplateComponent)
         notFound()

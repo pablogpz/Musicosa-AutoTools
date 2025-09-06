@@ -30,8 +30,8 @@ const withPositionMeasurement =
                     left: Math.round(measuredRect.left + window.scrollX)
                 }))
 
-                console.log(
-                    `[${displayName}] position in viewport { top: ${measuredPosition.left}px, left: ${measuredPosition.top}px }`);
+                console.log(`[${displayName}] position in viewport ` +
+                    `{ top: ${measuredPosition.left}px, left: ${measuredPosition.top}px }`);
             }, [props.widthPx, props.heightPx]);
 
             return (
@@ -47,7 +47,8 @@ type VideoPlaceholderProps = PositionMeasurementProps & FlexibleContainer
 function BaseVideoPlaceholder({ widthPx, heightPx, positionTopPx, positionLeftPx }: VideoPlaceholderProps) {
     return (
         <div
-            className='w-full h-full flex items-center justify-center bg-[repeating-linear-gradient(45deg,_black_0px,_black_10px,_yellow_10px,_yellow_20px)]'
+            className='w-full h-full flex items-center justify-center
+             bg-[repeating-linear-gradient(45deg,_black_0px,_black_10px,_yellow_10px,_yellow_20px)]'
             style={{ width: `${widthPx}px`, height: `${heightPx}px` }}>
             <p className='font-bold text-lg p-5 bg-white w-fit'>
                 {`(top: ${positionTopPx}px), (left: ${positionLeftPx}px)`}
