@@ -1,5 +1,3 @@
-import React from 'react'
-
 import { ResolvedPresentationProps } from '@/app/presentations/common/withPresentationProps'
 
 export type PresentationProps = ResolvedPresentationProps

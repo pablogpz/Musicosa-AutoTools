@@ -1,5 +1,3 @@
-import React from 'react'
-
 import { Open_Sans } from 'next/font/google'
 
 import formatNumberToDecimalPrecision from '@/formatters/formatNumberToDecimalPrecision'

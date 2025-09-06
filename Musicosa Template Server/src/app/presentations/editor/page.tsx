@@ -1,5 +1,3 @@
-import React from 'react'
-
 import settingsRepository from '@/db/repositories/settings'
 import { DEFAULT_FRAME_HEIGHT, DEFAULT_FRAME_WIDTH } from '@/app/defaults'
 
