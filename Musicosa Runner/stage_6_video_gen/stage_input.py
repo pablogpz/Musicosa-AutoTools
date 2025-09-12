@@ -1,7 +1,7 @@
 from peewee import JOIN
 
 from common.model.models import Entry, EntryStats, VideoOptions, Template
-from stage_6_final_video_bits_gen.type_definitions import EntryVideoOptions, Timestamp
+from stage_6_video_gen.types import EntryVideoOptions, Timestamp
 
 
 def load_entries_video_options_from_db() -> list[EntryVideoOptions]:

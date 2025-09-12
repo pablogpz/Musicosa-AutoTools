@@ -1,7 +1,7 @@
 from peewee import JOIN
 
 from common.model.models import Contestant, Entry, Avatar, EntryStats, Template, VideoOptions
-from stage_3_templates_pre_gen.type_definitions import Musicosa
+from stage_3_templates_pre_gen.types import Musicosa
 
 
 def load_available_avatars_from_db() -> list[Avatar]:

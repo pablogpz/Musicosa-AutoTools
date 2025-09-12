@@ -2,7 +2,7 @@ import argparse
 
 from peewee import PeeweeException
 
-from common.type_definitions import StageException
+from common.types import StageException
 from stage_5_videoclips_acquisition.defaults import DEFAULT_ARTIFACTS_FOLDER, DEFAULT_QUIET_FFMPEG
 from stage_5_videoclips_acquisition.execute import execute
 from stage_5_videoclips_acquisition.stage_input import load_entries_from_db

@@ -3,22 +3,6 @@ from datetime import time
 from common.constants import VIDEO_TIMESTAMP_SEPARATOR
 
 
-def time_str_zfill(time_str: str) -> str | None:
-    time_bits = time_str.split(":")
-
-    if not (len(time_bits) == 2 or len(time_bits) == 3):
-        return None
-
-    if len(time_bits) == 2:
-        time_bits.insert(0, "00")
-        time_bits[1] = time_bits[1].zfill(2)
-    else:
-        time_bits[0] = time_bits[0].zfill(2)
-        time_bits[1] = time_bits[1].zfill(2)
-
-    return ":".join(time_bits)
-
-
 def validate_time_str(time_str: str) -> bool:
     timestamp_bits = time_str.split(":")
 
@@ -59,6 +43,22 @@ def parse_time(time_str: str) -> time | None:
         return None
 
     return time.fromisoformat(time_str_zfill(time_str))
+
+
+def time_str_zfill(time_str: str) -> str | None:
+    time_bits = time_str.split(":")
+
+    if not (len(time_bits) == 2 or len(time_bits) == 3):
+        return None
+
+    if len(time_bits) == 2:
+        time_bits.insert(0, "00")
+        time_bits[1] = time_bits[1].zfill(2)
+    else:
+        time_bits[0] = time_bits[0].zfill(2)
+        time_bits[1] = time_bits[1].zfill(2)
+
+    return ":".join(time_bits)
 
 
 def time_to_seconds(time_value: time) -> int:

@@ -1,10 +1,10 @@
 from functools import reduce
 
 from common.model.settings import get_setting_by_key
-from stage_2_sub_processing.type_definitions import Musicosa, Contestant, ContestantStats, EntryStats, Score, Entry
+from stage_2_ranking.types import Musicosa, Contestant, ContestantStats, EntryStats, Score, Entry
 
 
-def process_musicosa(musicosa: Musicosa) -> tuple[list[ContestantStats], list[EntryStats]]:
+def musicosa_ranking(musicosa: Musicosa) -> tuple[list[ContestantStats], list[EntryStats]]:
     significant_decimal_digits = get_setting_by_key("ranking.significant_decimal_digits").value
 
     # Entries average score -> For calculating avg. contestant received scores

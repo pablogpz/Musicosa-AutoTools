@@ -4,10 +4,10 @@ from typing import get_args
 
 from common.constants import VIDEO_FORMAT
 from common.model.settings import is_setting_set
-from common.type_definitions import StageException
-from stage_6_final_video_bits_gen.logic.generate_final_video import generate_final_video
-from stage_6_final_video_bits_gen.logic.generate_video_bits import generate_all_video_bits
-from stage_6_final_video_bits_gen.type_definitions import EntryVideoOptions, StageSixOutput, TransitionOptions, \
+from common.types import StageException
+from stage_6_video_gen.logic.generate_final_video import generate_final_video
+from stage_6_video_gen.logic.generate_video_bits import generate_all_video_bits
+from stage_6_video_gen.types import EntryVideoOptions, StageSixOutput, TransitionOptions, \
     TransitionType
 
 

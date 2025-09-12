@@ -1,7 +1,7 @@
-from typing import Iterable
+from typing import Iterable, Any
 
 
-def bulk_pack(collection: Iterable) -> list[dict[any, any]]:
+def bulk_pack(collection: Iterable) -> list[dict[Any, Any]]:
     """
     Create a collection of ORM entities in the format of the input of a Peewee bulk operation
     :param collection: Collection of ORM entities

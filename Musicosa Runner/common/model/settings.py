@@ -6,7 +6,7 @@ from peewee import PeeweeException
 from common.model.models import Setting
 
 
-class SettingsGroups(Enum):
+class SettingGroupKeys(Enum):
     GLOBAL = "globals"
     VALIDATION = "validation"
     RANKING = "ranking"
@@ -14,31 +14,31 @@ class SettingsGroups(Enum):
     GENERATION = "generation"
 
 
-class GlobalSettingsNames(Enum):
+class GlobalSettingNames(Enum):
     ROUNDS_COUNT = "rounds_count"
 
 
-class ValidationSettingsNames(Enum):
+class ValidationSettingNames(Enum):
     SCORE_MIN_VALUE = "score_min_value"
     SCORE_MAX_VALUE = "score_max_value"
     ENTRY_VIDEO_TIMESTAMP_DURATION = "entry_video_duration_seconds"
 
 
-class RankingSettingsNames(Enum):
+class RankingSettingNames(Enum):
     SIGNIFICANT_DECIMAL_DIGITS = "significant_decimal_digits"
 
 
-class FrameSettingsNames(Enum):
+class FrameSettingNames(Enum):
     WIDTH_PX = "width_px"
     HEIGHT_PX = "height_px"
 
 
-class GenerationSettingsNames(Enum):
+class GenerationSettingNames(Enum):
     VIDEOCLIPS_OVERRIDE_TOP_N_DURATION = "videoclips_override_top_n_duration"
     VIDEOCLIPS_OVERRIDE_DURATION_SECONDS = "videoclips_override_duration_up_to_x_seconds"
 
 
-type SettingsKeys = Literal[
+type SettingKeys = Literal[
     "globals.rounds_count",
     "validation.score_min_value",
     "validation.score_max_value",
@@ -51,7 +51,7 @@ type SettingsKeys = Literal[
 ]
 
 
-def get_setting_by_key(key: SettingsKeys) -> Setting | None:
+def get_setting_by_key(key: SettingKeys) -> Setting | None:
     key_bits = key.split(".")
 
     if len(key_bits) != 2:
@@ -68,7 +68,7 @@ def get_setting_by_key(key: SettingsKeys) -> Setting | None:
     return setting_entity.to_domain()
 
 
-def is_setting_set(key: SettingsKeys) -> bool:
+def is_setting_set(key: SettingKeys) -> bool:
     setting = get_setting_by_key(key)
 
     return setting is not None and setting.value is not None

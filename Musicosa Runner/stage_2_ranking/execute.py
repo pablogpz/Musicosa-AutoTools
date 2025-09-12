@@ -1,7 +1,7 @@
 from common.model.settings import is_setting_set
-from common.type_definitions import StageException
-from stage_2_sub_processing.logic.processing import process_musicosa
-from stage_2_sub_processing.type_definitions import StageTwoOutput, Musicosa
+from common.types import StageException
+from stage_2_ranking.logic.ranking import musicosa_ranking
+from stage_2_ranking.types import StageTwoOutput, Musicosa
 
 
 def execute(musicosa: Musicosa) -> StageTwoOutput:
@@ -11,6 +11,6 @@ def execute(musicosa: Musicosa) -> StageTwoOutput:
     if not musicosa:
         raise StageException("Musicosa data is empty")
 
-    contestants_stats, entries_stats = process_musicosa(musicosa=musicosa)
+    contestants_stats, entries_stats = musicosa_ranking(musicosa=musicosa)
 
     return StageTwoOutput(contestants_stats=contestants_stats, entries_stats=entries_stats)

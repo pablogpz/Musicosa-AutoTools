@@ -1,9 +1,9 @@
 from common.model.settings import is_setting_set
-from common.type_definitions import StageException
+from common.types import StageException
 from stage_3_templates_pre_gen.logic.fulfill_musicosa import generate_unfulfilled_avatar_pairings, \
     generate_unfulfilled_frame_settings, generate_unfulfilled_templates, generate_unfulfilled_video_options, \
     generate_unfulfilled_generation_settings
-from stage_3_templates_pre_gen.type_definitions import StageThreeOutput, Musicosa
+from stage_3_templates_pre_gen.types import StageThreeOutput, Musicosa
 
 
 def execute(musicosa: Musicosa) -> StageThreeOutput:

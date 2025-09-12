@@ -8,11 +8,11 @@ from ffmpeg.exceptions import FFMpegError
 from ffmpeg.filters import xfade, amix, concat
 
 from common.constants import VIDEO_FORMAT, PRESENTATION_FILE_SUFFIX, TEMPLATE_IMG_FORMAT
-from common.type_definitions import StageException
+from common.types import StageException
 from naming.slugify import slugify
-from stage_6_final_video_bits_gen.constants import VIDEO_FPS, FADE_DURATION, ENTRIES_PER_FRAGMENT
-from stage_6_final_video_bits_gen.logic.video_helpers import get_video_duration_seconds
-from stage_6_final_video_bits_gen.type_definitions import EntryVideoOptions, TransitionOptions
+from stage_6_video_gen.constants import VIDEO_FPS, FADE_DURATION, ENTRIES_PER_FRAGMENT
+from stage_6_video_gen.logic.video_helpers import get_video_duration_seconds
+from stage_6_video_gen.types import EntryVideoOptions, TransitionOptions
 
 
 def generate_final_video(artifacts_folder: str,

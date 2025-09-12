@@ -17,29 +17,29 @@ from common.model.models import Contestant, Avatar, Entry, Scoring, VideoOptions
     EntryStats, Metadata, SpecialEntryTopic
 from common.naming.identifiers import generate_contestant_uuid5, generate_entry_uuid5
 from common.time.time_utils import parse_time
-from common.type_definitions import TemplateType
-from stage_1_sub_validation.execute import execute as execute_stage_1
-from stage_1_sub_validation.stage_input import get_submissions_from_forms_folder, get_submission_entry_valid_titles, \
+from common.types import TemplateType
+from stage_1_validation.execute import execute as execute_stage_1
+from stage_1_validation.stage_input import get_submissions_from_forms_folder, get_submission_entry_valid_titles, \
     get_special_entry_topics_from_db
-from stage_1_sub_validation.type_definitions import StageOneOutput, StageOneInput
-from stage_2_sub_processing.execute import execute as execute_stage_2
-from stage_2_sub_processing.stage_input import load_musicosa_from_db as load_s2_musicosa_from_db
-from stage_2_sub_processing.type_definitions import Musicosa as S2Musicosa, Contestant as S2Contestant, \
+from stage_1_validation.types import StageOneOutput, StageOneInput
+from stage_2_ranking.execute import execute as execute_stage_2
+from stage_2_ranking.stage_input import load_musicosa_from_db as load_s2_musicosa_from_db
+from stage_2_ranking.types import Musicosa as S2Musicosa, Contestant as S2Contestant, \
     Entry as S2Entry, Score as S2Score, StageTwoOutput, StageTwoInput
 from stage_3_templates_pre_gen.execute import execute as execute_stage_3
 from stage_3_templates_pre_gen.stage_input import load_musicosa_from_db as load_s3_musicosa_from_db, \
     load_available_avatars_from_db
-from stage_3_templates_pre_gen.type_definitions import Musicosa as S3Musicosa, StageThreeOutput, AvatarPairing, \
+from stage_3_templates_pre_gen.types import Musicosa as S3Musicosa, StageThreeOutput, AvatarPairing, \
     StageThreeInput
 from stage_4_templates_gen.execute import execute as execute_stage_4
 from stage_4_templates_gen.stage_input import load_templates_from_db
-from stage_4_templates_gen.type_definitions import StageFourOutput, StageFourInput, Template as S4Template
+from stage_4_templates_gen.types import StageFourOutput, StageFourInput, Template as S4Template
 from stage_5_videoclips_acquisition.execute import execute as execute_stage_5
 from stage_5_videoclips_acquisition.stage_input import load_entries_from_db
-from stage_5_videoclips_acquisition.type_definitions import StageFiveOutput, StageFiveInput
-from stage_6_final_video_bits_gen.execute import execute as execute_stage_6
-from stage_6_final_video_bits_gen.stage_input import load_entries_video_options_from_db
-from stage_6_final_video_bits_gen.type_definitions import EntryVideoOptions, Timestamp, StageSixOutput, StageSixInput, \
+from stage_5_videoclips_acquisition.types import StageFiveOutput, StageFiveInput
+from stage_6_video_gen.execute import execute as execute_stage_6
+from stage_6_video_gen.stage_input import load_entries_video_options_from_db
+from stage_6_video_gen.types import EntryVideoOptions, Timestamp, StageSixOutput, StageSixInput, \
     TransitionOptions, TransitionType
 
 # STAGE IDs
@@ -582,7 +582,7 @@ if __name__ == '__main__':
         result = execute_stage_2(musicosa=musicosa)
 
         print("")
-        print("[STAGE 2 SUMMARY | Submissions Processing]")
+        print("[STAGE 2 SUMMARY | Musicosa Ranking]")
         print(f"  # Contestants loaded: {len(musicosa.contestants)}")
         print(f"  # Entries loaded: {len(musicosa.entries)}")
         print("")
@@ -887,7 +887,7 @@ if __name__ == '__main__':
                                  quiet_ffmpeg_final_video=config.stage_6.quiet_ffmpeg_final_video)
 
         print("")
-        print("[STAGE 6 SUMMARY | Final Video Bits Generation]")
+        print("[STAGE 6 SUMMARY | Video Generation]")
         print(f"  # Loaded entries: {len(stage_input.entries_video_options)}")
         print("")
         if result.entries_missing_sources:

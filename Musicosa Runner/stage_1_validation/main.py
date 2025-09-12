@@ -8,10 +8,10 @@ from common.db.peewee_helpers import bulk_pack
 from common.model.models import Entry, Scoring, VideoOptions, Contestant, SpecialEntryTopic
 from common.naming.identifiers import generate_contestant_uuid5, generate_entry_uuid5
 from common.time.time_utils import parse_time
-from common.type_definitions import StageException
-from stage_1_sub_validation.defaults import DEFAULT_CSV_FORMS_FOLDER, DEFAULT_VALID_TITLES_FILE
-from stage_1_sub_validation.execute import execute
-from stage_1_sub_validation.stage_input import get_submissions_from_forms_folder, get_submission_entry_valid_titles, \
+from common.types import StageException
+from stage_1_validation.defaults import DEFAULT_CSV_FORMS_FOLDER, DEFAULT_VALID_TITLES_FILE
+from stage_1_validation.execute import execute
+from stage_1_validation.stage_input import get_submissions_from_forms_folder, get_submission_entry_valid_titles, \
     get_special_entry_topics_from_db
 
 if __name__ == "__main__":

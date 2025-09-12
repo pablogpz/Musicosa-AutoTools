@@ -4,8 +4,8 @@ from common.constants import VIDEO_TIMESTAMP_SEPARATOR
 from common.model.models import SpecialEntryTopic
 from common.model.settings import get_setting_by_key
 from common.time.time_utils import validate_time_str, parse_time, seconds_between
-from stage_1_sub_validation.logic.validation_helpers import find_duplicates
-from stage_1_sub_validation.type_definitions import ContestantSubmissionEntry, ContestantSubmission
+from stage_1_validation.logic.validation_helpers import find_duplicates
+from stage_1_validation.types import ContestantSubmissionEntry, ContestantSubmission
 
 
 def validate_title(title: str) -> str | None:
@@ -18,13 +18,6 @@ def validate_title(title: str) -> str | None:
 def validate_score(score: float, min_score: float, max_score: float) -> str | None:
     if not isinstance(score, float) or not (min_score <= score <= max_score):
         return f"Invalid score ({score})"
-
-    return None
-
-
-def validate_is_author(is_author: bool) -> str | None:
-    if not isinstance(is_author, bool):
-        return "'is_author' is not a boolean"
 
     return None
 
@@ -102,7 +95,6 @@ def validate_contestant_submission_entry(entry: ContestantSubmissionEntry,
 
     validation_errors.append(validate_title(title))
     validation_errors.append(validate_score(score, min_score, max_score))
-    validation_errors.append(validate_is_author(is_author))
 
     if is_author and video_url:
         validation_errors.append(validate_video_url(video_url))

@@ -1,9 +1,9 @@
 from common.db.database import db
 from common.db.peewee_helpers import bulk_pack
 from common.model.models import Contestant, Entry, ContestantStats, EntryStats
-from common.type_definitions import StageException
-from stage_2_sub_processing.execute import execute
-from stage_2_sub_processing.stage_input import load_musicosa_from_db
+from common.types import StageException
+from stage_2_ranking.execute import execute
+from stage_2_ranking.stage_input import load_musicosa_from_db
 
 if __name__ == "__main__":
 
@@ -58,7 +58,7 @@ if __name__ == "__main__":
     # Execution feedback
 
     print("")
-    print("[STAGE 2 SUMMARY | Submissions Processing]")
+    print("[STAGE 2 SUMMARY | Musicosa Ranking]")
     print(f"  # Contestants loaded: {len(musicosa.contestants)}")
     print(f"  # Entries loaded: {len(musicosa.entries)}")
     print("")

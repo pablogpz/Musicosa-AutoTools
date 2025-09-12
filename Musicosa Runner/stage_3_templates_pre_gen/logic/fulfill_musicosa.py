@@ -1,17 +1,17 @@
 import re
 from os.path import basename
 
-from common.constants import VIDEO_TIMESTAMP_SEPARATOR, VIDEO_DURATION_OVERRIDE_FULL_DURATION_VALUE
+from common.constants import VIDEO_TIMESTAMP_SEPARATOR, VIDEOCLIPS_OVERRIDE_DURATION_FULL_LENGTH
 from common.input.better_input import better_input
 from common.model.models import Avatar, Setting, Contestant, Template, Entry, VideoOptions
-from common.model.settings import get_setting_by_key, SettingsGroups, FrameSettingsNames, GenerationSettingsNames, \
+from common.model.settings import get_setting_by_key, SettingGroupKeys, FrameSettingNames, GenerationSettingNames, \
     is_setting_set
 from common.time.time_utils import parse_time, validate_video_timestamp_str, time_str_zfill
-from stage_3_templates_pre_gen.constants import AVATAR_SUPPORTED_FORMATS
+from stage_3_templates_pre_gen.constants import AVATAR_IMG_SUPPORTED_FORMATS
 from stage_3_templates_pre_gen.logic.fulfill_helpers import get_missing_sequence_numbers, \
     parse_sequence_selection_of_kvstore, \
     format_sequence_numbers, validate_sequence_selection
-from stage_3_templates_pre_gen.type_definitions import AvatarPairing
+from stage_3_templates_pre_gen.types import AvatarPairing
 
 
 def generate_unfulfilled_avatar_pairings(unfulfilled_contestants: list[Contestant],
@@ -57,8 +57,8 @@ def generate_unfulfilled_avatar_pairings(unfulfilled_contestants: list[Contestan
         if choice == "n":
             filename = better_input(
                 "Avatar filename",
-                lambda x: basename(x.lower()).rsplit(".", 1)[-1] in AVATAR_SUPPORTED_FORMATS,
-                f"Invalid avatar format (must be one of '{"', '".join(AVATAR_SUPPORTED_FORMATS)}')",
+                lambda x: basename(x.lower()).rsplit(".", 1)[-1] in AVATAR_IMG_SUPPORTED_FORMATS,
+                f"Invalid avatar format (must be one of '{"', '".join(AVATAR_IMG_SUPPORTED_FORMATS)}')",
                 default=last_filename,
                 indentation_level=2)
             last_filename = filename
@@ -126,8 +126,8 @@ def generate_unfulfilled_frame_settings() -> list[Setting] | None:
                                    lambda x: f"Invalid width '{x}' (Must be a positive number)",
                                    indentation_level=4)
 
-        frame_settings.append(Setting(group_key=SettingsGroups.FRAME.value,
-                                      setting=FrameSettingsNames.WIDTH_PX.value,
+        frame_settings.append(Setting(group_key=SettingGroupKeys.FRAME.value,
+                                      setting=FrameSettingNames.WIDTH_PX.value,
                                       value=int(total_width),
                                       type="integer"))
     else:
@@ -140,8 +140,8 @@ def generate_unfulfilled_frame_settings() -> list[Setting] | None:
                                     lambda x: f"Invalid height '{x}' (Must be a positive number)",
                                     indentation_level=4)
 
-        frame_settings.append(Setting(group_key=SettingsGroups.FRAME.value,
-                                      setting=FrameSettingsNames.HEIGHT_PX.value,
+        frame_settings.append(Setting(group_key=SettingGroupKeys.FRAME.value,
+                                      setting=FrameSettingNames.HEIGHT_PX.value,
                                       value=int(total_height),
                                       type="integer"))
     else:
@@ -264,8 +264,8 @@ def generate_unfulfilled_generation_settings() -> list[Setting] | None:
                                                  lambda x: f"Invalid value '{x}' (Must be 0 or a positive number)",
                                                  indentation_level=4)
 
-        generation_settings.append(Setting(group_key=SettingsGroups.GENERATION.value,
-                                           setting=GenerationSettingsNames.VIDEOCLIPS_OVERRIDE_TOP_N_DURATION.value,
+        generation_settings.append(Setting(group_key=SettingGroupKeys.GENERATION.value,
+                                           setting=GenerationSettingNames.VIDEOCLIPS_OVERRIDE_TOP_N_DURATION.value,
                                            value=int(override_top_n_videoclips),
                                            type="integer"))
     else:
@@ -274,16 +274,16 @@ def generate_unfulfilled_generation_settings() -> list[Setting] | None:
     if not is_setting_set("generation.videoclips_override_duration_up_to_x_seconds"):
         print("  Duration override value not set...")
         override_duration_value = better_input(f"Duration override (seconds) of top-N videoclips"
-                                               f" ({VIDEO_DURATION_OVERRIDE_FULL_DURATION_VALUE}=full duration)",
+                                               f" ({VIDEOCLIPS_OVERRIDE_DURATION_FULL_LENGTH}=full duration)",
                                                lambda x: (x.isdigit() and int(x) > 0) or
-                                                         x == str(VIDEO_DURATION_OVERRIDE_FULL_DURATION_VALUE),
+                                                         x == str(VIDEOCLIPS_OVERRIDE_DURATION_FULL_LENGTH),
                                                lambda x: f"Invalid duration '{x}' "
-                                                         f"(Must be {VIDEO_DURATION_OVERRIDE_FULL_DURATION_VALUE} "
+                                                         f"(Must be {VIDEOCLIPS_OVERRIDE_DURATION_FULL_LENGTH} "
                                                          f"or a positive number)",
                                                indentation_level=4)
 
-        generation_settings.append(Setting(group_key=SettingsGroups.GENERATION.value,
-                                           setting=GenerationSettingsNames.VIDEOCLIPS_OVERRIDE_DURATION_SECONDS.value,
+        generation_settings.append(Setting(group_key=SettingGroupKeys.GENERATION.value,
+                                           setting=GenerationSettingNames.VIDEOCLIPS_OVERRIDE_DURATION_SECONDS.value,
                                            value=int(override_duration_value),
                                            type="integer"))
     else:

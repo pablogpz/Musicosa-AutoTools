@@ -1,7 +1,7 @@
 from common.db.database import db
 from common.db.peewee_helpers import bulk_pack
 from common.model.models import Avatar, Contestant, Setting, Template, VideoOptions
-from common.type_definitions import StageException
+from common.types import StageException
 from stage_3_templates_pre_gen.execute import execute
 from stage_3_templates_pre_gen.stage_input import load_musicosa_from_db
 

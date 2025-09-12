@@ -1,1 +1,1 @@
-AVATAR_SUPPORTED_FORMATS = ["jpg", "jpeg", "png"]
+AVATAR_IMG_SUPPORTED_FORMATS = ["jpg", "jpeg", "png"]

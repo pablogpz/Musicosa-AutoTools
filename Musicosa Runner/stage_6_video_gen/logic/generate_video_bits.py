@@ -5,13 +5,13 @@ from ffmpeg.exceptions import FFMpegError
 from ffmpeg_normalize import FFmpegNormalize, FFmpegNormalizeError
 from math import ceil
 
-from common.constants import VIDEO_DURATION_OVERRIDE_FULL_DURATION_VALUE, TEMPLATE_IMG_FORMAT, VIDEO_FORMAT
+from common.constants import VIDEOCLIPS_OVERRIDE_DURATION_FULL_LENGTH, TEMPLATE_IMG_FORMAT, VIDEO_FORMAT
 from common.model.settings import get_setting_by_key
 from common.naming.slugify import slugify
 from common.time.time_utils import parse_time, time_to_seconds
-from stage_6_final_video_bits_gen.constants import VIDEO_FPS
-from stage_6_final_video_bits_gen.logic.video_helpers import get_video_duration_seconds
-from stage_6_final_video_bits_gen.type_definitions import EntryVideoOptions
+from stage_6_video_gen.constants import VIDEO_FPS
+from stage_6_video_gen.logic.video_helpers import get_video_duration_seconds
+from stage_6_video_gen.types import EntryVideoOptions
 
 
 def generate_all_video_bits(
@@ -66,7 +66,7 @@ def generate_video_bit(videoclip_path: str, vid_opts: EntryVideoOptions, templat
     # Top video bits duration override and check if the timestamps are within the videoclip duration
 
     if vid_opts.sequence_number <= override_top_n:
-        if override_duration_value == VIDEO_DURATION_OVERRIDE_FULL_DURATION_VALUE:
+        if override_duration_value == VIDEOCLIPS_OVERRIDE_DURATION_FULL_LENGTH:
             ffmpeg_time_code_args = {}
         elif videoclip_duration < override_duration_value:
             print("  [WARNING] Top videoclip duration is less than the override duration value. "
