@@ -1,38 +1,22 @@
-from enum import Enum
-from typing import Literal
-
 from peewee import PeeweeException
 
-from common.model.models import Setting
+from common.model.models import Setting, SettingKeys
+from model.models import SettingType, SettingValueType
 
 
-class SettingGroupKeys(Enum):
-    VALIDATION = "validation"
-    RANKING = "ranking"
-    FRAME = "frame"
+def parse_setting_value(type_str: SettingType, value: str) -> SettingValueType:
+    if not value or not value.strip():
+        parsed_value = None
+    elif type_str == "integer":
+        parsed_value = int(value)
+    elif type_str == "real":
+        parsed_value = float(value)
+    elif type_str == "boolean":
+        parsed_value = value.lower() == "true"
+    else:
+        parsed_value = value
 
-
-class ValidationSettingNames(Enum):
-    SCORE_MIN_VALUE = "score_min_value"
-    SCORE_MAX_VALUE = "score_max_value"
-
-
-class RankingSettingNames(Enum):
-    SIGNIFICANT_DECIMAL_DIGITS = "significant_decimal_digits"
-
-
-class FrameSettingNames(Enum):
-    WIDTH_PX = "width_px"
-    HEIGHT_PX = "height_px"
-
-
-type SettingKeys = Literal[
-    "validation.score_min_value",
-    "validation.score_max_value",
-    "ranking.significant_decimal_digits",
-    "frame.width_px",
-    "frame.height_px"
-]
+    return parsed_value
 
 
 def get_setting_by_key(key: SettingKeys) -> Setting | None:

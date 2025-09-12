@@ -12,8 +12,41 @@ from common.constants import VIDEO_FORMAT, PRESENTATION_FILE_SUFFIX, TEMPLATE_IM
 from common.types import StageException
 from naming.slugify import slugify
 from stage_6_video_gen.constants import VIDEO_FPS, FADE_DURATION, NOMINATIONS_PER_FRAGMENT
-from stage_6_video_gen.logic.video_helpers import get_video_duration_seconds
+from stage_6_video_gen.logic.helpers import get_video_duration_seconds
 from stage_6_video_gen.types import NominationVideoOptions, TransitionOptions
+
+
+def generate_awards_final_videos(artifacts_folder: str,
+                                 video_bits_folder: str,
+                                 quiet_ffmpeg: bool,
+                                 vid_opts: list[NominationVideoOptions],
+                                 transition_options: TransitionOptions) -> list[str]:
+    opts_by_award: dict[str, list[NominationVideoOptions]] = defaultdict(list)
+    for opt in vid_opts:
+        opts_by_award[opt.award].append(opt)
+
+    awards_final_video_paths: list[str] = []
+
+    for award, award_vid_opts in opts_by_award.items():
+        existing_video_bits = [f"{video_bits_folder}/{award}/{opt.sequence_number}.{VIDEO_FORMAT}"
+                               for opt in award_vid_opts
+                               if path.isfile(f"{video_bits_folder}/{award}/{opt.sequence_number}.{VIDEO_FORMAT}")]
+
+        if len(award_vid_opts) != len(existing_video_bits):
+            print(f"[SKIPPING AWARD FINAL VIDEO GENERATION][{award}] There are "
+                  f"{len(award_vid_opts) - len(existing_video_bits)}"
+                  f" missing video bits")
+            continue
+
+        awards_final_video_paths.append(
+            generate_final_video(artifacts_folder=artifacts_folder,
+                                 video_bits_folder=f"{video_bits_folder}/{award}",
+                                 quiet_ffmpeg=quiet_ffmpeg,
+                                 vid_opts=award_vid_opts,
+                                 award_slug=award,
+                                 transition_options=transition_options))
+
+    return awards_final_video_paths
 
 
 def generate_final_video(artifacts_folder: str,
@@ -157,36 +190,3 @@ def generate_final_video(artifacts_folder: str,
                 os.remove(fragment_file)
 
     return final_video_path
-
-
-def generate_awards_final_videos(artifacts_folder: str,
-                                 video_bits_folder: str,
-                                 quiet_ffmpeg: bool,
-                                 vid_opts: list[NominationVideoOptions],
-                                 transition_options: TransitionOptions) -> list[str]:
-    opts_by_award: dict[str, list[NominationVideoOptions]] = defaultdict(list)
-    for opt in vid_opts:
-        opts_by_award[opt.award].append(opt)
-
-    awards_final_video_paths: list[str] = []
-
-    for award, award_vid_opts in opts_by_award.items():
-        existing_video_bits = [f"{video_bits_folder}/{award}/{opt.sequence_number}.{VIDEO_FORMAT}"
-                               for opt in award_vid_opts
-                               if path.isfile(f"{video_bits_folder}/{award}/{opt.sequence_number}.{VIDEO_FORMAT}")]
-
-        if len(award_vid_opts) != len(existing_video_bits):
-            print(f"[SKIPPING AWARD FINAL VIDEO GENERATION][{award}] There are "
-                  f"{len(award_vid_opts) - len(existing_video_bits)}"
-                  f" missing video bits")
-            continue
-
-        awards_final_video_paths.append(
-            generate_final_video(artifacts_folder=artifacts_folder,
-                                 video_bits_folder=f"{video_bits_folder}/{award}",
-                                 quiet_ffmpeg=quiet_ffmpeg,
-                                 vid_opts=award_vid_opts,
-                                 award_slug=award,
-                                 transition_options=transition_options))
-
-    return awards_final_video_paths

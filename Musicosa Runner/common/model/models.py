@@ -6,7 +6,8 @@ from typing import Literal
 from peewee import Model, TextField, CompositeKey, AutoField, FloatField, ForeignKeyField, IntegerField
 
 from common.db.database import db
-from common.time.time_utils import parse_time
+from common.model.settings import parse_setting_value
+from common.time.utils import parse_time
 
 
 @dataclass
@@ -63,6 +64,35 @@ class Setting:
 
     def to_orm(self) -> ORM:
         return Setting.ORM(group_key=self.group_key, setting=self.setting, type=self.type, value=str(self.value))
+
+
+class SettingGroupKeys(Enum):
+    VALIDATION = "validation"
+    RANKING = "ranking"
+    FRAME = "frame"
+
+
+class ValidationSettingNames(Enum):
+    SCORE_MIN_VALUE = "score_min_value"
+    SCORE_MAX_VALUE = "score_max_value"
+
+
+class RankingSettingNames(Enum):
+    SIGNIFICANT_DECIMAL_DIGITS = "significant_decimal_digits"
+
+
+class FrameSettingNames(Enum):
+    WIDTH_PX = "width_px"
+    HEIGHT_PX = "height_px"
+
+
+type SettingKeys = Literal[
+    "validation.score_min_value",
+    "validation.score_max_value",
+    "ranking.significant_decimal_digits",
+    "frame.width_px",
+    "frame.height_px",
+]
 
 
 @dataclass
@@ -329,20 +359,3 @@ class NominationStats:
         return NominationStats.ORM(nomination=self.nomination.to_orm(), avg_score=self.avg_score,
                                    ranking_place=self.ranking_place,
                                    ranking_sequence=self.ranking_sequence)
-
-
-# MODEL PARSERS
-
-def parse_setting_value(type_str: SettingType, value: str) -> SettingValueType:
-    if not value or not value.strip():
-        parsed_value = None
-    elif type_str == "integer":
-        parsed_value = int(value)
-    elif type_str == "real":
-        parsed_value = float(value)
-    elif type_str == "boolean":
-        parsed_value = value.lower() == "true"
-    else:
-        parsed_value = value
-
-    return parsed_value

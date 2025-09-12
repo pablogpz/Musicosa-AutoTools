@@ -8,9 +8,9 @@ from math import ceil
 
 from common.constants import TEMPLATE_IMG_FORMAT, VIDEO_FORMAT
 from common.naming.slugify import slugify
-from common.time.time_utils import parse_time, time_to_seconds
+from common.time.utils import parse_time, time_to_seconds
 from stage_6_video_gen.constants import VIDEO_FPS
-from stage_6_video_gen.logic.video_helpers import get_video_duration_seconds
+from stage_6_video_gen.logic.helpers import get_video_duration_seconds
 from stage_6_video_gen.types import NominationVideoOptions
 
 

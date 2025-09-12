@@ -1,9 +1,9 @@
 import re
 
 from common.input.better_input import better_input
-from common.model.models import Setting, Template, Nomination
-from common.model.settings import SettingGroupKeys, FrameSettingNames, is_setting_set
-from stage_3_templates_pre_gen.logic.fulfill_helpers import get_missing_sequence_numbers, \
+from common.model.models import Setting, Template, Nomination, SettingGroupKeys, FrameSettingNames
+from common.model.settings import is_setting_set
+from stage_3_templates_pre_gen.logic.helpers import get_missing_sequence_numbers, \
     parse_sequence_selection_of_kvstore, \
     format_sequence_numbers, validate_sequence_selection
 
