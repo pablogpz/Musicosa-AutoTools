@@ -1,54 +1,22 @@
-from enum import Enum
-from typing import Literal
-
 from peewee import PeeweeException
 
-from common.model.models import Setting
+from common.model.models import Setting, SettingKeys
+from model.models import SettingType, SettingValueType
 
 
-class SettingGroupKeys(Enum):
-    GLOBAL = "globals"
-    VALIDATION = "validation"
-    RANKING = "ranking"
-    FRAME = "frame"
-    GENERATION = "generation"
+def parse_setting_value(type_str: SettingType, value: str) -> SettingValueType:
+    if not value or not value.strip():
+        parsed_value = None
+    elif type_str == "integer":
+        parsed_value = int(value)
+    elif type_str == "real":
+        parsed_value = float(value)
+    elif type_str == "boolean":
+        parsed_value = value.lower() == "true"
+    else:
+        parsed_value = value
 
-
-class GlobalSettingNames(Enum):
-    ROUNDS_COUNT = "rounds_count"
-
-
-class ValidationSettingNames(Enum):
-    SCORE_MIN_VALUE = "score_min_value"
-    SCORE_MAX_VALUE = "score_max_value"
-    ENTRY_VIDEO_TIMESTAMP_DURATION = "entry_video_duration_seconds"
-
-
-class RankingSettingNames(Enum):
-    SIGNIFICANT_DECIMAL_DIGITS = "significant_decimal_digits"
-
-
-class FrameSettingNames(Enum):
-    WIDTH_PX = "width_px"
-    HEIGHT_PX = "height_px"
-
-
-class GenerationSettingNames(Enum):
-    VIDEOCLIPS_OVERRIDE_TOP_N_DURATION = "videoclips_override_top_n_duration"
-    VIDEOCLIPS_OVERRIDE_DURATION_SECONDS = "videoclips_override_duration_up_to_x_seconds"
-
-
-type SettingKeys = Literal[
-    "globals.rounds_count",
-    "validation.score_min_value",
-    "validation.score_max_value",
-    "validation.entry_video_duration_seconds",
-    "ranking.significant_decimal_digits",
-    "frame.width_px",
-    "frame.height_px",
-    "generation.videoclips_override_top_n_duration",
-    "generation.videoclips_override_duration_up_to_x_seconds"
-]
+    return parsed_value
 
 
 def get_setting_by_key(key: SettingKeys) -> Setting | None:

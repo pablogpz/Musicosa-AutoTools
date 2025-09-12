@@ -16,7 +16,7 @@ from common.input.better_input import better_input
 from common.model.models import Contestant, Avatar, Entry, Scoring, VideoOptions, Template, Setting, ContestantStats, \
     EntryStats, Metadata, SpecialEntryTopic
 from common.naming.identifiers import generate_contestant_uuid5, generate_entry_uuid5
-from common.time.time_utils import parse_time
+from common.time.utils import parse_time
 from common.types import TemplateType
 from stage_1_validation.execute import execute as execute_stage_1
 from stage_1_validation.stage_input import get_submissions_from_forms_folder, get_submission_entry_valid_titles, \

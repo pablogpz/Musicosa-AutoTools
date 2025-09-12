@@ -3,8 +3,8 @@ from validators import url as validate_url, ValidationError
 from common.constants import VIDEO_TIMESTAMP_SEPARATOR
 from common.model.models import SpecialEntryTopic
 from common.model.settings import get_setting_by_key
-from common.time.time_utils import validate_time_str, parse_time, seconds_between
-from stage_1_validation.logic.validation_helpers import find_duplicates
+from common.time.utils import validate_time_str, parse_time, seconds_between
+from stage_1_validation.logic.helpers import find_duplicates
 from stage_1_validation.types import ContestantSubmissionEntry, ContestantSubmission
 
 

@@ -11,7 +11,7 @@ from common.constants import VIDEO_FORMAT, PRESENTATION_FILE_SUFFIX, TEMPLATE_IM
 from common.types import StageException
 from naming.slugify import slugify
 from stage_6_video_gen.constants import VIDEO_FPS, FADE_DURATION, ENTRIES_PER_FRAGMENT
-from stage_6_video_gen.logic.video_helpers import get_video_duration_seconds
+from stage_6_video_gen.logic.helpers import get_video_duration_seconds
 from stage_6_video_gen.types import EntryVideoOptions, TransitionOptions
 
 
