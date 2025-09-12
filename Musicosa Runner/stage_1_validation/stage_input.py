@@ -1,7 +1,7 @@
 from common.model.models import Award, Member
-from common.type_definitions import StageException
-from stage_1_sub_validation.logic.form_parsing.csv import parse_award_forms_csv_folder
-from stage_1_sub_validation.type_definitions import AwardForm
+from common.types import StageException
+from stage_1_validation.logic.parsing.csv import parse_award_forms_csv_folder
+from stage_1_validation.types import AwardForm
 
 
 def parse_award_forms_folder(forms_folder: str) -> list[AwardForm]:

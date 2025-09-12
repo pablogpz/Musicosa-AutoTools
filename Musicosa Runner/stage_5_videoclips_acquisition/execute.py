@@ -2,9 +2,9 @@ import os
 from os import path
 
 from common.model.models import Videoclip
-from common.type_definitions import StageException
+from common.types import StageException
 from stage_5_videoclips_acquisition.logic.download_videoclips import download_all_videoclips
-from stage_5_videoclips_acquisition.type_definitions import StageFiveOutput
+from stage_5_videoclips_acquisition.types import StageFiveOutput
 
 
 def execute(artifacts_folder: str, quiet_ffmpeg: bool, videoclips: list[Videoclip]) -> StageFiveOutput:

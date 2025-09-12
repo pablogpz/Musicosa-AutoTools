@@ -1,10 +1,10 @@
 import os
 from os.path import basename
 
-from common.type_definitions import StageException
-from stage_1_sub_validation.constants import CSV_SEPARATOR, CSV_MEMBER_NAME_HEADER, CSV_UNUSED_HEADERS
-from stage_1_sub_validation.logic.form_parsing.utils import parse_score_str, unquote
-from stage_1_sub_validation.type_definitions import AwardForm, MemberSubmission, CastVote
+from common.types import StageException
+from stage_1_validation.constants import CSV_SEPARATOR, CSV_MEMBER_NAME_HEADER, CSV_UNUSED_HEADERS
+from stage_1_validation.logic.parsing.utils import parse_score_str, unquote
+from stage_1_validation.types import AwardForm, MemberSubmission, CastVote
 
 
 def parse_member_submission(submission_values: dict[str, str]) -> MemberSubmission:

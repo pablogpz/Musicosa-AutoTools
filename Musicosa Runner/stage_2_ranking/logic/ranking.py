@@ -2,17 +2,18 @@ from functools import reduce
 from random import randint
 
 from common.model.settings import get_setting_by_key
-from stage_2_sub_processing.type_definitions import TFA, Award, Nomination, NominationStats
+from stage_2_ranking.types import TFA, Award, Nomination, NominationStats
 
 
-def calculate_nomination_avg_score(nomination: Nomination, significant_decimal_digits: int) -> float:
-    if len(nomination.votes) == 0:
-        print(f"[WARNING] Nomination '{nomination.id}' has no votes")
-        return 0
+def process_tfa(tfa: TFA) -> list[NominationStats]:
+    nomination_stats: list[NominationStats] = []
 
-    return round(
-        reduce(lambda acc, vote: acc + vote, nomination.votes, 0) / len(nomination.votes),
-        significant_decimal_digits)
+    significant_decimal_digits = get_setting_by_key("ranking.significant_decimal_digits").value
+
+    for award in tfa.awards:
+        nomination_stats.extend(process_tfa_award(award, significant_decimal_digits))
+
+    return nomination_stats
 
 
 def process_tfa_award(award: Award, significant_decimal_digits: int) -> list[NominationStats]:
@@ -57,12 +58,11 @@ def process_tfa_award(award: Award, significant_decimal_digits: int) -> list[Nom
     return all_nominations_stats
 
 
-def process_tfa(tfa: TFA) -> list[NominationStats]:
-    nomination_stats: list[NominationStats] = []
+def calculate_nomination_avg_score(nomination: Nomination, significant_decimal_digits: int) -> float:
+    if len(nomination.votes) == 0:
+        print(f"[WARNING] Nomination '{nomination.id}' has no votes")
+        return 0
 
-    significant_decimal_digits = get_setting_by_key("ranking.significant_decimal_digits").value
-
-    for award in tfa.awards:
-        nomination_stats.extend(process_tfa_award(award, significant_decimal_digits))
-
-    return nomination_stats
+    return round(
+        reduce(lambda acc, vote: acc + vote, nomination.votes, 0) / len(nomination.votes),
+        significant_decimal_digits)

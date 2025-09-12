@@ -2,10 +2,10 @@ import os
 from os import path
 from typing import get_args
 
-from common.type_definitions import StageException
-from stage_6_final_video_bits_gen.logic.generate_final_videos import generate_awards_final_videos
-from stage_6_final_video_bits_gen.logic.generate_video_bits import generate_all_video_bits
-from stage_6_final_video_bits_gen.type_definitions import NominationVideoOptions, StageSixOutput, TransitionOptions, \
+from common.types import StageException
+from stage_6_video_gen.logic.generate_final_videos import generate_awards_final_videos
+from stage_6_video_gen.logic.generate_video_bits import generate_all_video_bits
+from stage_6_video_gen.types import NominationVideoOptions, StageSixOutput, TransitionOptions, \
     TransitionType
 
 

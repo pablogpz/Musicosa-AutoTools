@@ -3,7 +3,7 @@ import argparse
 from peewee import PeeweeException
 from validators import url as validate_url, ValidationError
 
-from common.type_definitions import StageException
+from common.types import StageException
 from stage_4_templates_gen.defaults import DEFAULT_TEMPLATES_API_URL, DEFAULT_ARTIFACTS_FOLDER, \
     DEFAULT_GENERATION_RETRY_ATTEMPTS, DEFAULT_OVERWRITE_TEMPLATES, DEFAULT_PRESENTATIONS_API_URL, \
     DEFAULT_OVERWRITE_PRESENTATIONS, DEFAULT_GENERATE_PRESENTATIONS

@@ -1,5 +1,5 @@
 from common.model.models import Award, Nomination, CastVote
-from stage_2_sub_processing.type_definitions import TFA, Award as S2Award, Nomination as S2Nomination
+from stage_2_ranking.types import TFA, Award as S2Award, Nomination as S2Nomination
 
 
 def load_tfa_from_db() -> TFA:

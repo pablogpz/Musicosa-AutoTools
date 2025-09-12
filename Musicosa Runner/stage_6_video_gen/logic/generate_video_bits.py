@@ -9,9 +9,9 @@ from math import ceil
 from common.constants import TEMPLATE_IMG_FORMAT, VIDEO_FORMAT
 from common.naming.slugify import slugify
 from common.time.time_utils import parse_time, time_to_seconds
-from stage_6_final_video_bits_gen.constants import VIDEO_FPS
-from stage_6_final_video_bits_gen.logic.video_helpers import get_video_duration_seconds
-from stage_6_final_video_bits_gen.type_definitions import NominationVideoOptions
+from stage_6_video_gen.constants import VIDEO_FPS
+from stage_6_video_gen.logic.video_helpers import get_video_duration_seconds
+from stage_6_video_gen.types import NominationVideoOptions
 
 
 def generate_video_bit(videoclip_path: str, vid_opts: NominationVideoOptions, template_path: str, video_bit_path: str,

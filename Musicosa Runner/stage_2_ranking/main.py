@@ -1,8 +1,8 @@
 from common.db.database import db
 from common.model.models import NominationStats
-from common.type_definitions import StageException
-from stage_2_sub_processing.execute import execute
-from stage_2_sub_processing.stage_input import load_tfa_from_db
+from common.types import StageException
+from stage_2_ranking.execute import execute
+from stage_2_ranking.stage_input import load_tfa_from_db
 
 if __name__ == "__main__":
 
@@ -42,7 +42,7 @@ if __name__ == "__main__":
     # Execution feedback
 
     print("")
-    print("[STAGE 2 SUMMARY | Awards Processing]")
+    print("[STAGE 2 SUMMARY | TFA Ranking]")
     print(f"  # Awards loaded: {len(tfa.awards)}")
     print("")
     print(f"  # Ranked nominations: {len(result.nomination_stats)}")

@@ -5,10 +5,10 @@ from peewee import PeeweeException
 from common.db.database import db
 from common.model.models import CastVote
 from common.naming.identifiers import generate_member_uuid5, generate_nomination_uuid5_from_nomination_str
-from common.type_definitions import StageException
-from stage_1_sub_validation.defaults import DEFAULT_AWARD_FORMS_FOLDER
-from stage_1_sub_validation.execute import execute
-from stage_1_sub_validation.stage_input import parse_award_forms_folder, get_valid_award_slugs, get_awards_count, \
+from common.types import StageException
+from stage_1_validation.defaults import DEFAULT_AWARD_FORMS_FOLDER
+from stage_1_validation.execute import execute
+from stage_1_validation.stage_input import parse_award_forms_folder, get_valid_award_slugs, get_awards_count, \
     get_members_count
 
 if __name__ == "__main__":

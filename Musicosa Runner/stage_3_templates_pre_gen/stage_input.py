@@ -1,7 +1,7 @@
 from peewee import JOIN
 
 from common.model.models import Nomination, NominationStats, Template
-from stage_3_templates_pre_gen.type_definitions import TFA
+from stage_3_templates_pre_gen.types import TFA
 
 
 def load_nominations_index_of_unfulfilled_templates_from_db() -> dict[int, Nomination]:

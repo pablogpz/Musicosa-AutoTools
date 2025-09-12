@@ -6,9 +6,9 @@ from playwright.sync_api import Response, sync_playwright
 from common.constants import TEMPLATE_IMG_FORMAT, PRESENTATION_FILE_SUFFIX
 from common.model.settings import get_setting_by_key
 from common.naming.slugify import slugify
-from common.type_definitions import TemplateType
+from common.types import TemplateType
 from stage_4_templates_gen.defaults import DEFAULT_OVERWRITE_TEMPLATES, DEFAULT_OVERWRITE_PRESENTATIONS
-from stage_4_templates_gen.type_definitions import Template
+from stage_4_templates_gen.types import Template
 
 
 def generate_all_templates(templates_api_url: str,

@@ -1,7 +1,7 @@
 from common.model.settings import is_setting_set
-from common.type_definitions import StageException
-from stage_1_sub_validation.logic.validation import validate_award_form_collection
-from stage_1_sub_validation.type_definitions import StageOneOutput, AwardForm
+from common.types import StageException
+from stage_1_validation.logic.validation import validate_award_form_collection
+from stage_1_validation.types import StageOneOutput, AwardForm
 
 
 def execute(award_forms: list[AwardForm],

@@ -2,7 +2,7 @@ import re
 
 from common.input.better_input import better_input
 from common.model.models import Setting, Template, Nomination
-from common.model.settings import SettingsGroups, FrameSettingsNames, is_setting_set
+from common.model.settings import SettingGroupKeys, FrameSettingNames, is_setting_set
 from stage_3_templates_pre_gen.logic.fulfill_helpers import get_missing_sequence_numbers, \
     parse_sequence_selection_of_kvstore, \
     format_sequence_numbers, validate_sequence_selection
@@ -22,8 +22,8 @@ def generate_unfulfilled_frame_settings() -> list[Setting] | None:
                                    lambda x: f"Invalid width '{x}' (Must be a positive number)",
                                    indentation_level=4)
 
-        frame_settings.append(Setting(group_key=SettingsGroups.FRAME.value,
-                                      setting=FrameSettingsNames.WIDTH_PX.value,
+        frame_settings.append(Setting(group_key=SettingGroupKeys.FRAME.value,
+                                      setting=FrameSettingNames.WIDTH_PX.value,
                                       value=int(total_width),
                                       type="integer"))
     else:
@@ -36,8 +36,8 @@ def generate_unfulfilled_frame_settings() -> list[Setting] | None:
                                     lambda x: f"Invalid height '{x}' (Must be a positive number)",
                                     indentation_level=4)
 
-        frame_settings.append(Setting(group_key=SettingsGroups.FRAME.value,
-                                      setting=FrameSettingsNames.HEIGHT_PX.value,
+        frame_settings.append(Setting(group_key=SettingGroupKeys.FRAME.value,
+                                      setting=FrameSettingNames.HEIGHT_PX.value,
                                       value=int(total_height),
                                       type="integer"))
     else:

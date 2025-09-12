@@ -15,25 +15,25 @@ from common.input.better_input import better_input
 from common.model.models import Template, Setting, Metadata, NominationStats, \
     CastVote
 from common.naming.identifiers import generate_member_uuid5, generate_nomination_uuid5_from_nomination_str
-from stage_1_sub_validation.execute import execute as execute_stage_1
-from stage_1_sub_validation.stage_input import parse_award_forms_folder, get_awards_count, get_members_count, \
+from stage_1_validation.execute import execute as execute_stage_1
+from stage_1_validation.stage_input import parse_award_forms_folder, get_awards_count, get_members_count, \
     get_valid_award_slugs
-from stage_1_sub_validation.type_definitions import StageOneOutput, StageOneInput
-from stage_2_sub_processing.execute import execute as execute_stage_2
-from stage_2_sub_processing.stage_input import load_tfa_from_db as load_s2_tfa_from_db
-from stage_2_sub_processing.type_definitions import StageTwoOutput, StageTwoInput
+from stage_1_validation.types import StageOneOutput, StageOneInput
+from stage_2_ranking.execute import execute as execute_stage_2
+from stage_2_ranking.stage_input import load_tfa_from_db as load_s2_tfa_from_db
+from stage_2_ranking.types import StageTwoOutput, StageTwoInput
 from stage_3_templates_pre_gen.execute import execute as execute_stage_3
 from stage_3_templates_pre_gen.stage_input import load_tfa_from_db as load_s3_tfa_from_db
-from stage_3_templates_pre_gen.type_definitions import StageThreeOutput, StageThreeInput
+from stage_3_templates_pre_gen.types import StageThreeOutput, StageThreeInput
 from stage_4_templates_gen.execute import execute as execute_stage_4
 from stage_4_templates_gen.stage_input import load_templates_from_db
-from stage_4_templates_gen.type_definitions import StageFourOutput, StageFourInput
+from stage_4_templates_gen.types import StageFourOutput, StageFourInput
 from stage_5_videoclips_acquisition.execute import execute as execute_stage_5
 from stage_5_videoclips_acquisition.stage_input import load_videoclips_from_db
-from stage_5_videoclips_acquisition.type_definitions import StageFiveOutput, StageFiveInput
-from stage_6_final_video_bits_gen.execute import execute as execute_stage_6
-from stage_6_final_video_bits_gen.stage_input import load_video_options_from_db
-from stage_6_final_video_bits_gen.type_definitions import StageSixOutput, \
+from stage_5_videoclips_acquisition.types import StageFiveOutput, StageFiveInput
+from stage_6_video_gen.execute import execute as execute_stage_6
+from stage_6_video_gen.stage_input import load_video_options_from_db
+from stage_6_video_gen.types import StageSixOutput, \
     StageSixInput, TransitionOptions, TransitionType
 
 # STAGE IDs
@@ -525,7 +525,7 @@ if __name__ == '__main__':
         result = execute_stage_2(tfa=tfa)
 
         print("")
-        print("[STAGE 2 SUMMARY | Awards Processing]")
+        print("[STAGE 2 SUMMARY | TFA Ranking]")
         print(f"  # Awards loaded: {len(tfa.awards)}")
         print("")
         print(f"  # Ranked nominations: {len(result.nomination_stats)}")
@@ -729,7 +729,7 @@ if __name__ == '__main__':
                                  quiet_ffmpeg_final_video=config.stage_6.quiet_ffmpeg_final_video)
 
         print("")
-        print("[STAGE 6 SUMMARY | Final Video Bits Generation]")
+        print("[STAGE 6 SUMMARY | Video Generation]")
         print(f"  # Loaded nominations: {len(stage_input.nominations_video_options)}")
         print("")
 

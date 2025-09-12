@@ -1,7 +1,7 @@
 from common.model.settings import is_setting_set
-from common.type_definitions import StageException
-from stage_2_sub_processing.logic.processing import process_tfa
-from stage_2_sub_processing.type_definitions import TFA, StageTwoOutput
+from common.types import StageException
+from stage_2_ranking.logic.ranking import process_tfa
+from stage_2_ranking.types import TFA, StageTwoOutput
 
 
 def execute(tfa: TFA) -> StageTwoOutput:

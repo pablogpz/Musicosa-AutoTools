@@ -1,5 +1,5 @@
 from common.model.settings import get_setting_by_key
-from stage_1_sub_validation.type_definitions import AwardForm, MemberSubmission
+from stage_1_validation.types import AwardForm, MemberSubmission
 
 
 def validate_score(score: float, min_score: float, max_score: float) -> str | None:
