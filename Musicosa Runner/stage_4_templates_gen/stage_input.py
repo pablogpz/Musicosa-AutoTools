@@ -5,6 +5,7 @@ from stage_4_templates_gen.defaults import DEFAULT_GENERATE_PRESENTATIONS
 
 
 def load_templates_from_db(generate_presentations: bool = DEFAULT_GENERATE_PRESENTATIONS) -> list[S4Template]:
+    # noinspection PyTypeChecker
     return [S4Template(template.entry.id,
                        template.entry.title,
                        TemplateType.ENTRY if not generate_presentations else (

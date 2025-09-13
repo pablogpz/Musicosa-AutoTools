@@ -20,4 +20,4 @@ def execute(artifacts_folder: str, quiet_ffmpeg: bool, entries: list[Entry]) -> 
     acquired, failed_to_acquire = download_all_videoclips(entries=entries, artifacts_folder=artifacts_folder,
                                                           quiet_ffmpeg=quiet_ffmpeg)
 
-    return StageFiveOutput(acquired_videoclips=acquired, failed_to_acquire=failed_to_acquire)
+    return StageFiveOutput(acquired_videoclip_titles=acquired, failed_videoclip_titles=failed_to_acquire)

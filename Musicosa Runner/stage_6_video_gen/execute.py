@@ -86,7 +86,7 @@ def execute(artifacts_folder: str,
                                                     vid_opts=entries_video_options,
                                                     transition_options=transition_options)
 
-    return StageSixOutput(generated_video_bits_files=generated,
+    return StageSixOutput(generated_video_bit_files=generated,
                           entries_missing_sources=missing_sources,
                           failed_video_bits=failed_to_generate,
-                          final_video=final_video_path)
+                          final_video_file=final_video_path)

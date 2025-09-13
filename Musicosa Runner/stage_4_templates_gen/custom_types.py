@@ -1,15 +1,14 @@
 from dataclasses import dataclass
 
 from common.custom_types import TemplateType
-from stage_4_templates_gen.defaults import DEFAULT_OVERWRITE_TEMPLATES, \
-    DEFAULT_OVERWRITE_PRESENTATIONS
+from stage_4_templates_gen.defaults import DEFAULT_OVERWRITE_TEMPLATES, DEFAULT_OVERWRITE_PRESENTATIONS
 
 
 @dataclass
 class Template:
     uuid: str
     entry_title: str
-    template_targets: TemplateType
+    types: TemplateType
 
 
 @dataclass
@@ -25,5 +24,5 @@ class StageFourInput:
 
 @dataclass
 class StageFourOutput:
-    generated_templates: list[str] | None
-    failed_templates_uuids: list[str] | None
+    generated_template_titles: list[str] | None
+    failed_template_uuids: list[str] | None

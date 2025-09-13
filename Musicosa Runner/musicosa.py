@@ -52,7 +52,7 @@ STAGE_FOUR: Literal[4] = 4
 STAGE_FIVE: Literal[5] = 5
 STAGE_SIX: Literal[6] = 6
 
-type Stages = Literal[1, 2, 3, 4, 5, 6]
+type Stage = Literal[1, 2, 3, 4, 5, 6]
 
 # MUSICOSA CONFIG DEFAULTS
 
@@ -60,7 +60,7 @@ DEFAULT_CONFIG_FILE = "musicosa.config.toml"
 
 # Global defaults
 DEFAULT_ARTIFACTS_FOLDER = "artifacts"
-DEFAULT_START_FROM_STAGE: Stages = STAGE_ONE
+DEFAULT_START_FROM_STAGE: Stage = STAGE_ONE
 DEFAULT_STITCH_FINAL_VIDEO_FLAG = False
 # Stage 1 defaults
 DEFAULT_CSV_FORMS_FOLDER = "forms_folder"
@@ -171,7 +171,7 @@ class StageSixConfig:
 
 @dataclass
 class Config:
-    start_from: Stages = DEFAULT_START_FROM_STAGE
+    start_from: Stage = DEFAULT_START_FROM_STAGE
     artifacts_folder: str = DEFAULT_ARTIFACTS_FOLDER
     stitch_final_video: bool = DEFAULT_STITCH_FINAL_VIDEO_FLAG
     stage_1: StageOneConfig = field(default_factory=StageOneConfig)
@@ -179,7 +179,7 @@ class Config:
     stage_5: StageFiveConfig = field(default_factory=StageFiveConfig)
     stage_6: StageSixConfig = field(default_factory=StageSixConfig)
 
-    def __init__(self, start_from: Stages = DEFAULT_START_FROM_STAGE,
+    def __init__(self, start_from: Stage = DEFAULT_START_FROM_STAGE,
                  artifacts_folder: str = DEFAULT_ARTIFACTS_FOLDER,
                  stitch_final_video: bool = DEFAULT_STITCH_FINAL_VIDEO_FLAG,
                  stage_1: StageOneConfig = StageOneConfig(),
@@ -228,11 +228,11 @@ RELOAD_DATA: Literal["rd"] = "rd"
 RELOAD_CONFIG_AND_DATA: Literal["re"] = "re"
 ABORT: Literal["a"] = "a"
 
-type FlowControls = Literal["c", "r", "rc", "rd", "re", "a"]
+type FlowControl = Literal["c", "r", "rc", "rd", "re", "a"]
 
 ERROR_CONTROLS = {RETRY, RELOAD_CONFIG, RELOAD_DATA, RELOAD_CONFIG_AND_DATA, ABORT}
 
-FLOW_GATE_MESSAGES: dict[FlowControls, str] = {
+FLOW_GATE_MESSAGES: dict[FlowControl, str] = {
     CONTINUE_ON_SUCCESS: "continue",
     RETRY: "retry",
     RELOAD_CONFIG: "reload config, then retry",
@@ -244,12 +244,12 @@ FLOW_GATE_MESSAGES: dict[FlowControls, str] = {
 
 class StageInputCollector[T](Protocol):
     def __call__(self, *, config: Config) -> T:
-        ...
+        pass
 
 
 class StageExecutor[SI, SO](Protocol):
     def __call__(self, *, config: Config, stage_input: SI) -> SO:
-        ...
+        pass
 
 
 type ControlGateSurrogate[SI, SO] = StageInputCollector[SI] | StageExecutor[SI, SO]
@@ -260,7 +260,7 @@ def flow_control_gate[SI, SO](
         f_args: tuple[Any, ...],
         f_kwargs: dict[str, ...],
         /, *,
-        controls: set[FlowControls],
+        controls: set[FlowControl],
         err_header: str | None = None,
         config_file: str = DEFAULT_CONFIG_FILE,
         reload_input: StageInputCollector | None = None
@@ -303,7 +303,7 @@ def flow_control_gate[SI, SO](
                       f"  {'\n  '.join([f"[{k}] {v}" for k, v in FLOW_GATE_MESSAGES.items() if k in controls])}"
                       f"\n")
 
-    def handle_common_controls(choice: str, enabled_controls: set[FlowControls]) -> None | Never:
+    def handle_common_controls(choice: str, enabled_controls: set[FlowControl]) -> None | Never:
         if choice in enabled_controls:
             if choice == RETRY:
                 pass
@@ -346,7 +346,7 @@ def flow_control_gate[SI, SO](
 
 
 def custom_gate[SI, SO](
-        controls: set[FlowControls],
+        controls: set[FlowControl],
         err_header: str | None = None,
         config_file: str = DEFAULT_CONFIG_FILE,
         reload_input: StageInputCollector | None = None
@@ -469,7 +469,7 @@ if __name__ == '__main__':
     print(f"  Organiser: {musicosa_organiser}")
 
 
-    # Stage 1
+    # STAGE 1
 
     @retry_or_reconfig(err_header="[Stage 1 | Input collection ERROR]", config_file=config_file)
     def stage_1_collect_input(*, config: Config) -> StageOneInput:
@@ -528,6 +528,7 @@ if __name__ == '__main__':
             new_contestant = Contestant(id=generate_contestant_uuid5(sub.name).hex, name=sub.name, avatar=None)
             for entry in sub.entries:
                 if entry.is_author:
+                    # noinspection PyTypeChecker
                     special_topic = SpecialEntryTopic(designation=entry.special_topic) if entry.special_topic else None
                     new_entry = Entry(id=generate_entry_uuid5(entry.title).hex,
                                       title=entry.title,
@@ -554,7 +555,7 @@ if __name__ == '__main__':
                                               score=entry.score))
 
 
-    # Stage 2
+    # STAGE 2
 
     @retry(err_header="[Stage 2 | Input collection ERROR]")
     def stage_2_collect_input(*, config: Config) -> StageTwoInput:
@@ -616,7 +617,7 @@ if __name__ == '__main__':
              for stat in stage_2_result.entries_stats])
 
 
-    # Stage 3
+    # STAGE 3
 
     @retry(err_header="[Stage 3 | Input collection ERROR]")
     def stage_3_collect_input(*, config: Config) -> StageThreeInput:
@@ -686,7 +687,7 @@ if __name__ == '__main__':
         if stage_3_result.video_options:
             video_options_models.extend(stage_3_result.video_options)
 
-    # Data persistence checkpoint
+    # DATA PERSISTENCE CHECKPOINT
 
     if config.start_from <= STAGE_THREE:
 
@@ -735,7 +736,7 @@ if __name__ == '__main__':
         print("")
 
 
-    # Stage 4
+    # STAGE 4
 
     @retry_or_reconfig(err_header="[Stage 4 | Input collection ERROR]", config_file=config_file)
     def stage_4_collect_input(*, config: Config) -> StageFourInput:
@@ -748,6 +749,7 @@ if __name__ == '__main__':
                                   overwrite_templates=config.stage_4.overwrite_templates,
                                   overwrite_presentations=config.stage_4.overwrite_presentations)
 
+        # noinspection PyTypeChecker
         return StageFourInput(templates_api_url=config.stage_4.templates_api_url,
                               presentations_api_url=config.stage_4.presentations_api_url,
                               artifacts_folder=config.artifacts_folder,
@@ -776,9 +778,9 @@ if __name__ == '__main__':
         print(f"  # Templates to generate: {len(stage_input.templates)}")
         print("")
         print(f"  # Successfully generated templates: "
-              f"{len(result.generated_templates) if result.generated_templates else 0}")
-        if result.failed_templates_uuids:
-            print(f"  Failed to generate templates ['{"', '".join(result.failed_templates_uuids)}']")
+              f"{len(result.generated_template_titles) if result.generated_template_titles else 0}")
+        if result.failed_template_uuids:
+            print(f"  Failed to generate templates ['{"', '".join(result.failed_template_uuids)}']")
         print("")
 
         return result
@@ -789,7 +791,7 @@ if __name__ == '__main__':
         stage_4_result: StageFourOutput = stage_4_do_execute(config=config, stage_input=stage_4_input)
 
 
-    # Stage 5
+    # STAGE 5
 
     @retry_or_reconfig(err_header="[Stage 5 | Input collection ERROR]", config_file=config_file)
     def stage_5_collect_input(*, config: Config) -> StageFiveInput:
@@ -810,9 +812,10 @@ if __name__ == '__main__':
         print("[STAGE 5 SUMMARY | Videoclips Acquisition]")
         print(f"  # Entries: {len(stage_input.entries)}")
         print("")
-        print(f"  # Acquired videoclips: {len(result.acquired_videoclips) if result.acquired_videoclips else 0}")
-        if result.failed_to_acquire:
-            print(f"  Failed to acquire videoclips for: ['{"', '".join(result.failed_to_acquire)}']")
+        print(
+            f"  # Acquired videoclips: {len(result.acquired_videoclip_titles) if result.acquired_videoclip_titles else 0}")
+        if result.failed_videoclip_titles:
+            print(f"  Failed to acquire videoclips for: ['{"', '".join(result.failed_videoclip_titles)}']")
         print("")
 
         return result
@@ -823,7 +826,7 @@ if __name__ == '__main__':
         stage_5_result: StageFiveOutput = stage_5_do_execute(config=config, stage_input=stage_5_input)
 
 
-    # Stage 6
+    # STAGE 6
 
     @retry_or_reconfig(err_header="[Stage 6 | Input collection ERROR]", config_file=config_file)
     def stage_6_collect_input(*, config: Config) -> StageSixInput:
@@ -894,11 +897,11 @@ if __name__ == '__main__':
         if result.entries_missing_sources:
             print(f"  Entries missing source files: ['{"', '".join(result.entries_missing_sources)}']")
         print(f"  # Generated video bits: "
-              f"{len(result.generated_video_bits_files) if result.generated_video_bits_files else 0}")
+              f"{len(result.generated_video_bit_files) if result.generated_video_bit_files else 0}")
         if result.failed_video_bits:
             print(f"  Failed video bits: ['{"', '".join(result.failed_video_bits)}']")
         if config.stitch_final_video:
-            print(f"  Final video file: '{result.final_video}'")
+            print(f"  Final video file: '{result.final_video_file}'")
         print("")
 
         return result

@@ -97,8 +97,8 @@ if __name__ == "__main__":
     if result.entries_missing_sources:
         print(f"  Entries missing source files: ['{"', '".join(result.entries_missing_sources)}']")
     print(f"  # Generated video bits: "
-          f"{len(result.generated_video_bits_files) if result.generated_video_bits_files else 0}")
+          f"{len(result.generated_video_bit_files) if result.generated_video_bit_files else 0}")
     if result.failed_video_bits:
         print(f"  Failed video bits: ['{"', '".join(result.failed_video_bits)}']")
     if final_video:
-        print(f"  Final video file: '{result.final_video}'")
+        print(f"  Final video file: '{result.final_video_file}'")

@@ -32,6 +32,9 @@ def generate_final_video(artifacts_folder: str,
         timeline_cursor = 0
 
         for video_option in vid_opts:
+
+            # Check video sources
+
             presentation_file = \
                 f"{artifacts_folder}/{slugify(video_option.entry_title)}-{PRESENTATION_FILE_SUFFIX}.{TEMPLATE_IMG_FORMAT}"
             video_bit_file = f"{video_bits_folder}/{video_option.sequence_number}.{VIDEO_FORMAT}"
@@ -43,6 +46,8 @@ def generate_final_video(artifacts_folder: str,
 
             if not path.isfile(video_bit_file):
                 raise StageException(f"Video file '{video_bit_file}' missing for final video generation")
+
+            # Create timeline of video and audio streams
 
             video_bit_stream = ffmpeg.input(filename=video_bit_file)
             video_bit_duration = get_video_duration_seconds(video_bit_file)
@@ -72,6 +77,8 @@ def generate_final_video(artifacts_folder: str,
 
             timeline_cursor = start_of_audio_track + video_bit_duration
 
+        # Compile FFMpeg command
+
         fragment_path = f"{final_video_folder}/{final_video_name}.fragment-{fragment_id}.{VIDEO_FORMAT}"
 
         try:
@@ -83,7 +90,7 @@ def generate_final_video(artifacts_folder: str,
                                   b="6000k")
                           .compile(overwrite_output=True))
         except FFMpegError as err:
-            raise StageException(f"Failed to compile ffmpeg command for fragment ({fragment_id}): {err}") from err
+            raise StageException(f"Failed to compile ffmpeg command for fragment '{fragment_id}': {err}") from err
 
         filtergraph_arg_idx = ffmpeg_cmd.index("-filter_complex")
 
@@ -102,6 +109,8 @@ def generate_final_video(artifacts_folder: str,
         recompiled_cmd.extend(cmd_config_and_inputs)
         recompiled_cmd.append(f"-filter_complex_script {filtergraph_script}")
         recompiled_cmd.extend(cmd_output)
+
+        # Execute compiled FFMpeg command
 
         try:
             ffmpeg_exit_code = system(" ".join(recompiled_cmd))
@@ -132,12 +141,13 @@ def generate_final_video(artifacts_folder: str,
     final_video_path = f"{final_video_folder}/{final_video_name}.{VIDEO_FORMAT}"
 
     if len(final_video_fragments_files) == 1:
+        # If 1 fragment rename it
         if path.isfile(final_video_path):
             os.remove(final_video_path)
 
         os.rename(final_video_fragments_files[0], final_video_path)
     else:
-
+        # If multiple fragments concat them with FFMpeg 'concat' filter
         concat_list_file = f"{final_video_folder}/concat.list"
         with open(concat_list_file, "w") as f:
             f.write("\n".join([f"file '{basename(frag_file)}'" for frag_file in final_video_fragments_files]))

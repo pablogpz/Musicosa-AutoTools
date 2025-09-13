@@ -12,5 +12,5 @@ class StageFiveInput:
 
 @dataclass
 class StageFiveOutput:
-    acquired_videoclips: list[str] | None
-    failed_to_acquire: list[str] | None
+    acquired_videoclip_titles: list[str] | None
+    failed_videoclip_titles: list[str] | None

@@ -44,6 +44,7 @@ if __name__ == "__main__":
     print("[STAGE 5 SUMMARY | Videoclips Acquisition]")
     print(f"  # Entries: {len(entries)}")
     print("")
-    print(f"  # Acquired videoclips: {len(result.acquired_videoclips) if result.acquired_videoclips else 0}")
-    if result.failed_to_acquire:
-        print(f"  Failed to acquire videoclips for: ['{"', '".join(result.failed_to_acquire)}']")
+    print(
+        f"  # Acquired videoclips: {len(result.acquired_videoclip_titles) if result.acquired_videoclip_titles else 0}")
+    if result.failed_videoclip_titles:
+        print(f"  Failed to acquire videoclips for: ['{"', '".join(result.failed_videoclip_titles)}']")

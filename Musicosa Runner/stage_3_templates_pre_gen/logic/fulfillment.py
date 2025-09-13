@@ -3,10 +3,10 @@ from os.path import basename
 
 from common.constants import VIDEO_TIMESTAMP_SEPARATOR, VIDEOCLIPS_OVERRIDE_DURATION_FULL_LENGTH
 from common.input.better_input import better_input
-from common.model.models import Avatar, Setting, Contestant, Template, Entry, VideoOptions, SettingKeys
+from common.model.models import Avatar, Setting, Contestant, Template, Entry, VideoOptions, SettingKeys, \
+    SettingGroupKeys, FrameSettingNames, GenerationSettingNames
 from common.model.settings import get_setting_by_key, is_setting_set
 from common.time.utils import parse_time, validate_video_timestamp_str, time_str_zfill
-from model.models import SettingGroupKeys, FrameSettingNames, GenerationSettingNames
 from stage_3_templates_pre_gen.constants import AVATAR_IMG_SUPPORTED_FORMATS
 from stage_3_templates_pre_gen.custom_types import AvatarPairing
 from stage_3_templates_pre_gen.logic.helpers import parse_sequence_selection_of_kvstore, \

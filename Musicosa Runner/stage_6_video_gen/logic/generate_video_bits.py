@@ -10,7 +10,9 @@ from common.model.models import SettingKeys
 from common.model.settings import get_setting_by_key
 from common.naming.slugify import slugify
 from common.time.utils import parse_time, time_to_seconds
-from stage_6_video_gen.constants import VIDEO_FPS
+from stage_6_video_gen.constants import VIDEO_FPS, VIDEO_CODEC, VIDEO_BITRATE, NORMALIZATION_TYPE, \
+    NORMALIZATION_TARGET_LEVEL, NORMALIZATION_LOUDNESS_TARGET, NORMALIZATION_AUDIO_CODEC, \
+    NORMALIZATION_AUDIO_SAMPLE_RATE
 from stage_6_video_gen.custom_types import EntryVideoOptions
 from stage_6_video_gen.logic.helpers import get_video_duration_seconds
 
@@ -22,7 +24,7 @@ def generate_all_video_bits(
         quiet_ffmpeg: bool,
         entry_video_options: list[EntryVideoOptions]
 ) -> tuple[list[str] | None, list[str] | None, list[str] | None]:
-    generated_video_bits_files: list[str] = []
+    generated_video_bit_files: list[str] = []
     entries_missing_sources: list[str] = []
     failed_video_bits: list[str] = []
 
@@ -49,11 +51,11 @@ def generate_all_video_bits(
 
         try:
             generated = generate_video_bit(source_videoclip, vid_opts, source_template, video_bit_path, quiet_ffmpeg)
-            generated_video_bits_files.append(generated)
+            generated_video_bit_files.append(generated)
         except FFMpegError:
             failed_video_bits.append(vid_opts.entry_title)
 
-    return generated_video_bits_files or None, entries_missing_sources or None, failed_video_bits or None
+    return generated_video_bit_files or None, entries_missing_sources or None, failed_video_bits or None
 
 
 def generate_video_bit(videoclip_path: str, vid_opts: EntryVideoOptions, template_path: str, video_bit_path: str,
@@ -113,12 +115,15 @@ def generate_video_bit(videoclip_path: str, vid_opts: EntryVideoOptions, templat
          .output(output_video_bit_stream, videoclip_audio_stream,
                  filename=video_bit_path,
                  r=VIDEO_FPS,
-                 vcodec="libx264",
-                 b="6000k")
+                 vcodec=VIDEO_CODEC,
+                 b=VIDEO_BITRATE)
          .run(overwrite_output=True, quiet=quiet_ffmpeg))
 
-        normalizer = FFmpegNormalize(normalization_type="ebu", target_level=-18, loudness_range_target=12,
-                                     audio_codec="aac", sample_rate=48000,
+        normalizer = FFmpegNormalize(normalization_type=NORMALIZATION_TYPE,
+                                     target_level=NORMALIZATION_TARGET_LEVEL,
+                                     loudness_range_target=NORMALIZATION_LOUDNESS_TARGET,
+                                     audio_codec=NORMALIZATION_AUDIO_CODEC,
+                                     sample_rate=NORMALIZATION_AUDIO_SAMPLE_RATE,
                                      video_codec="copy")
         normalizer.add_media_file(video_bit_path, video_bit_path)
         try:

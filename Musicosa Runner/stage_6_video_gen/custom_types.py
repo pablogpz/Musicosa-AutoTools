@@ -93,7 +93,7 @@ class StageSixInput:
 
 @dataclass
 class StageSixOutput:
-    generated_video_bits_files: list[str] | None
+    generated_video_bit_files: list[str] | None
     entries_missing_sources: list[str] | None
     failed_video_bits: list[str] | None
-    final_video: str | None
+    final_video_file: str | None

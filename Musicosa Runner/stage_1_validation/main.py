@@ -61,6 +61,7 @@ if __name__ == "__main__":
     for sub in submissions:
         for entry in sub.entries:
             if entry.is_author:
+                # noinspection PyTypeChecker
                 special_topic = SpecialEntryTopic(designation=entry.special_topic) if entry.special_topic else None
                 entries_by_name[entry.title] = Entry(id=generate_entry_uuid5(entry.title).hex,
                                                      title=entry.title,

@@ -13,9 +13,10 @@ from common.naming.slugify import slugify
 
 def download_all_videoclips(entries: list[Entry], artifacts_folder: str, quiet_ffmpeg: bool) \
         -> tuple[list[str] | None, list[str] | None]:
-    acquired_videoclips: list[str] = []
-    failed_to_acquire: list[str] = []
+    acquired_videoclip_titles: list[str] = []
+    failed_videoclip_titles: list[str] = []
 
+    # TODO: Move this check to 'execute.py'
     if not (patched_ffmpeg_path := getenv("PATCHED_FFMPEG_PATH", "")):
         raise StageException("Patched ffmpeg path not set in env var 'PATCHED_FFMPEG_PATH'")
 
@@ -51,21 +52,21 @@ def download_all_videoclips(entries: list[Entry], artifacts_folder: str, quiet_f
                 error_code = ytdl.download([entry.video_url])
             except yt_dlp.DownloadError as err:
                 print(f"[DOWNLOAD FAILED] {entry.title}: {err}")
-                failed_to_acquire.append(entry.title)
+                failed_videoclip_titles.append(entry.title)
                 continue
             except FFMpegError as err:
                 print(f"[POST-PROCESS][REMUX FAILED] {entry.title}: {err}")
-                failed_to_acquire.append(entry.title)
+                failed_videoclip_titles.append(entry.title)
                 continue
 
             if not error_code:
                 print(f"[DOWNLOAD END] {entry.title}")
-                acquired_videoclips.append(entry.title)
+                acquired_videoclip_titles.append(entry.title)
             else:
                 print(f"[DOWNLOAD FAILED] {entry.title} (Error code: {error_code})")
-                failed_to_acquire.append(entry.title)
+                failed_videoclip_titles.append(entry.title)
 
-    return acquired_videoclips or None, failed_to_acquire or None
+    return acquired_videoclip_titles or None, failed_videoclip_titles or None
 
 
 class MP4RemuxPostProcessor(yt_dlp.postprocessor.PostProcessor):
