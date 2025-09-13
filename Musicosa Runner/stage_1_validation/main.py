@@ -8,8 +8,8 @@ from common.naming.identifiers import generate_member_uuid5, generate_nomination
 from common.types import StageException
 from stage_1_validation.defaults import DEFAULT_AWARD_FORMS_FOLDER
 from stage_1_validation.execute import execute
-from stage_1_validation.stage_input import parse_award_forms_folder, get_valid_award_slugs, get_awards_count, \
-    get_members_count
+from stage_1_validation.stage_input import parse_award_forms_folder, get_valid_award_slugs, get_award_count, \
+    get_member_count
 
 if __name__ == "__main__":
 
@@ -28,8 +28,8 @@ if __name__ == "__main__":
     try:
         award_forms = parse_award_forms_folder(award_forms_folder)
         valid_award_slugs = get_valid_award_slugs()
-        awards_count = get_awards_count()
-        members_count = get_members_count()
+        award_count = get_award_count()
+        member_count = get_member_count()
     except Exception as err:
         print(f"[Stage 1 | Data retrieval] {err}")
         exit(1)
@@ -37,8 +37,8 @@ if __name__ == "__main__":
     # Stage execution
 
     try:
-        result = execute(award_forms=award_forms, valid_award_slugs=valid_award_slugs, awards_count=awards_count,
-                         members_count=members_count)
+        result = execute(award_forms=award_forms, valid_award_slugs=valid_award_slugs, awards_count=award_count,
+                         members_count=member_count)
     except StageException as err:
         print(f"[Stage 1 | Execution] {err}")
         exit(1)
@@ -71,7 +71,7 @@ if __name__ == "__main__":
     print("[STAGE 1 SUMMARY | Submissions Validation]")
     print(f"  Award forms folder: '{award_forms_folder}'")
     print(f"  Valid award slugs: {valid_award_slugs}")
-    print(f"  Awards count: {awards_count}")
-    print(f"  Members count: {members_count}")
+    print(f"  Awards count: {award_count}")
+    print(f"  Members count: {member_count}")
     print("")
     print(f"  # Award forms loaded: {len(award_forms)}")

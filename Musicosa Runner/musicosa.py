@@ -12,11 +12,12 @@ from peewee import PeeweeException
 from common.db.database import db
 from common.db.peewee_helpers import bulk_pack
 from common.input.better_input import better_input
-from common.model.models import Template, Setting, Metadata, NominationStats, \
-    CastVote
+from common.model.metadata import get_metadata_by_field
+from common.model.models import Template, Setting, NominationStats, \
+    CastVote, MetadataFields
 from common.naming.identifiers import generate_member_uuid5, generate_nomination_uuid5_from_nomination_str
 from stage_1_validation.execute import execute as execute_stage_1
-from stage_1_validation.stage_input import parse_award_forms_folder, get_awards_count, get_members_count, \
+from stage_1_validation.stage_input import parse_award_forms_folder, get_award_count, get_member_count, \
     get_valid_award_slugs
 from stage_1_validation.types import StageOneOutput, StageOneInput
 from stage_2_ranking.execute import execute as execute_stage_2
@@ -312,7 +313,7 @@ def flow_control_gate[SI, SO](
             if CONTINUE_ON_SUCCESS in controls:
                 choice = better_input(on_success_msg,
                                       lambda x: x.lower() in controls,
-                                      lambda x: f"Invalid choice '{x}'")
+                                      error_message=lambda x: f"Invalid choice '{x}'")
 
                 if choice == CONTINUE_ON_SUCCESS:
                     success = True
@@ -323,7 +324,7 @@ def flow_control_gate[SI, SO](
             print(f"{f"{err_header} {err}" if err_header else err}")
             choice = better_input(on_error_msg,
                                   lambda x: x.lower() in error_controls,
-                                  lambda x: f"Invalid choice '{x}'")
+                                  error_message=lambda x: f"Invalid choice '{x}'")
 
             handle_common_controls(choice, error_controls)
 
@@ -428,7 +429,7 @@ if __name__ == '__main__':
 
     # Pipeline Execution
 
-    musicosa_edition = Metadata.ORM.get(Metadata.ORM.field == 'edition').value
+    musicosa_edition = get_metadata_by_field(MetadataFields.EDITION).value
 
     print(f"[TFA {musicosa_edition}º EDITION]")
     print(f"  Edition: {musicosa_edition}")
@@ -440,8 +441,8 @@ if __name__ == '__main__':
     def stage_1_collect_input(*, config: Config) -> StageOneInput:
         award_forms = parse_award_forms_folder(config.stage_1.award_forms_folder)
         valid_award_slugs = get_valid_award_slugs()
-        awards_count = get_awards_count()
-        members_count = get_members_count()
+        awards_count = get_award_count()
+        members_count = get_member_count()
 
         return StageOneInput(award_forms=award_forms, valid_award_slugs=valid_award_slugs, awards_count=awards_count,
                              members_count=members_count)

@@ -7,19 +7,13 @@ from stage_1_validation.logic.parsing.utils import parse_score_str, unquote
 from stage_1_validation.types import AwardForm, MemberSubmission, CastVote
 
 
-def parse_member_submission(submission_values: dict[str, str]) -> MemberSubmission:
-    member_name = submission_values[CSV_MEMBER_NAME_HEADER]
-    cast_votes: list[CastVote] = []
+def parse_award_forms_csv_folder(forms_folder: str) -> list[AwardForm]:
+    award_forms: list[AwardForm] = []
 
-    for nominee, score_str in {k: v for (k, v) in submission_values.items() if k != CSV_MEMBER_NAME_HEADER}.items():
-        try:
-            score = parse_score_str(score_str) / 100
-        except ValueError as err:
-            raise StageException(f"[{member_name}] [{nominee}] Error parsing score value '{score_str}'") from err
+    for form_file in [f for f in os.listdir(forms_folder) if f.endswith('.csv')]:
+        award_forms.append(parse_award_form_csv(f"{forms_folder}/{form_file}"))
 
-        cast_votes.append(CastVote(nominee, score))
-
-    return MemberSubmission(member_name, cast_votes)
+    return award_forms
 
 
 def parse_award_form_csv(form_file: str) -> AwardForm:
@@ -45,10 +39,16 @@ def parse_award_form_csv(form_file: str) -> AwardForm:
         return AwardForm(award_slug, submissions)
 
 
-def parse_award_forms_csv_folder(forms_folder: str) -> list[AwardForm]:
-    award_forms: list[AwardForm] = []
+def parse_member_submission(submission_values: dict[str, str]) -> MemberSubmission:
+    member_name = submission_values[CSV_MEMBER_NAME_HEADER]
+    cast_votes: list[CastVote] = []
 
-    for form_file in [f for f in os.listdir(forms_folder) if f.endswith('.csv')]:
-        award_forms.append(parse_award_form_csv(f"{forms_folder}/{form_file}"))
+    for nominee, score_str in {k: v for (k, v) in submission_values.items() if k != CSV_MEMBER_NAME_HEADER}.items():
+        try:
+            score = parse_score_str(score_str) / 100
+        except ValueError as err:
+            raise StageException(f"[{member_name}] [{nominee}] Error parsing score value '{score_str}'") from err
 
-    return award_forms
+        cast_votes.append(CastVote(nominee, score))
+
+    return MemberSubmission(member_name, cast_votes)

@@ -17,9 +17,9 @@ def get_valid_award_slugs() -> list[str]:
     return [award.to_domain().slug for award in Award.ORM.select()]
 
 
-def get_awards_count() -> int:
+def get_award_count() -> int:
     return len([r for r in Award.ORM.select()])
 
 
-def get_members_count() -> int:
+def get_member_count() -> int:
     return len([r for r in Member.ORM.select()])

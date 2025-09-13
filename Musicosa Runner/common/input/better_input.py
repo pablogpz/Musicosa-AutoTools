@@ -3,9 +3,9 @@ from typing import Callable
 
 def better_input(user_message: str,
                  validate: Callable[[str], bool] | None = None,
-                 error_message: str | Callable[[str], str] | None = None,
                  /, *,
                  default: str = "",
+                 error_message: str | Callable[[str], str] | None = None,
                  indentation_level: int = 0) -> str:
     indentation = " " * indentation_level
 
