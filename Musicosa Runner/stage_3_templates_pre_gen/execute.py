@@ -1,3 +1,4 @@
+from common.model.models import SettingKeys
 from common.model.settings import is_setting_set
 from common.types import StageException
 from stage_3_templates_pre_gen.logic.fulfillment import generate_unfulfilled_avatar_pairings, \
@@ -7,8 +8,8 @@ from stage_3_templates_pre_gen.types import StageThreeOutput, Musicosa
 
 
 def execute(musicosa: Musicosa) -> StageThreeOutput:
-    if not is_setting_set("validation.entry_video_duration_seconds"):
-        raise StageException("Setting 'entry_video_duration_seconds' not set")
+    if not is_setting_set(SettingKeys.VALIDATION_ENTRY_VIDEO_DURATION_SECONDS):
+        raise StageException(f"Setting '{SettingKeys.VALIDATION_ENTRY_VIDEO_DURATION_SECONDS}' not set")
 
     if not musicosa:
         raise StageException("Musicosa data is empty")

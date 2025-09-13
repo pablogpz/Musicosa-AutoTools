@@ -30,6 +30,7 @@ if __name__ == "__main__":
 
     contestants = [contestant.to_domain() for contestant in Contestant.ORM.select()]
     contestants_by_name = dict([(contestant.name, contestant) for contestant in contestants])
+
     entries = [entry.to_domain() for entry in Entry.ORM.select()]
     entries_by_title = dict([(entry.title, entry) for entry in entries])
 

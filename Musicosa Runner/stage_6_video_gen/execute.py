@@ -3,6 +3,7 @@ from os import path
 from typing import get_args
 
 from common.constants import VIDEO_FORMAT
+from common.model.models import SettingKeys
 from common.model.settings import is_setting_set
 from common.types import StageException
 from stage_6_video_gen.logic.generate_final_video import generate_final_video
@@ -20,14 +21,14 @@ def execute(artifacts_folder: str,
             transition_options: TransitionOptions,
             quiet_ffmpeg: bool,
             quiet_ffmpeg_final_video: bool) -> StageSixOutput:
-    if not is_setting_set("validation.entry_video_duration_seconds"):
-        raise StageException("Setting 'validation.entry_video_duration_seconds' not set")
+    if not is_setting_set(SettingKeys.VALIDATION_ENTRY_VIDEO_DURATION_SECONDS):
+        raise StageException(f"Setting '{SettingKeys.VALIDATION_ENTRY_VIDEO_DURATION_SECONDS}' not set")
 
-    if not is_setting_set("generation.videoclips_override_top_n_duration"):
-        raise StageException("Setting 'generation.videoclips_override_top_n_duration' not set")
+    if not is_setting_set(SettingKeys.GENERATION_VIDEOCLIPS_OVERRIDE_TOP_N_DURATION):
+        raise StageException(f"Setting '{SettingKeys.GENERATION_VIDEOCLIPS_OVERRIDE_TOP_N_DURATION}' not set")
 
-    if not is_setting_set("generation.videoclips_override_duration_up_to_x_seconds"):
-        raise StageException("Setting 'generation.videoclips_override_duration_up_to_x_seconds' not set")
+    if not is_setting_set(SettingKeys.GENERATION_VIDEOCLIPS_OVERRIDE_DURATION_UP_TO_X_SECONDS):
+        raise StageException(f"Setting '{SettingKeys.GENERATION_VIDEOCLIPS_OVERRIDE_DURATION_UP_TO_X_SECONDS}' not set")
 
     if not artifacts_folder:
         raise StageException("No artifacts folder provided")

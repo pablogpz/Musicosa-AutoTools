@@ -1,21 +1,44 @@
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import time
-from enum import Enum
-from typing import Literal
+from enum import StrEnum
+from typing import Literal, Any
 
-from peewee import Model, TextField, CompositeKey, AutoField, FloatField, ForeignKeyField, IntegerField
+from peewee import Model as PeeweeModel, TextField, CompositeKey, AutoField, FloatField, ForeignKeyField, IntegerField
 
 from common.db.database import db
 from common.model.settings import parse_setting_value
 from common.time.utils import parse_time
 
 
+class DomainModel(ABC):
+    @abstractmethod
+    def to_orm(self) -> Any:
+        pass
+
+
+class DatabaseModel(ABC):
+    @abstractmethod
+    def to_domain(self) -> Any:
+        pass
+
+
+class MetadataFields(StrEnum):
+    EDITION = "edition"
+    TOPIC = "topic"
+    ORGANISER = "organiser"
+    START_DATE = "start_date"
+
+
+type MetadataField = Literal["edition", "topic", "organiser", "start_date"]
+
+
 @dataclass
-class Metadata:
-    field: str
+class Metadata(DomainModel):
+    field: MetadataField
     value: str
 
-    class ORM(Model):
+    class ORM(PeeweeModel, DatabaseModel):
         field = TextField(column_name="field", primary_key=True)
         value = TextField(column_name="value")
 
@@ -31,29 +54,86 @@ class Metadata:
         return Metadata.ORM(field=self.field, value=self.value)
 
 
-class MetadataFields(Enum):
-    EDITION = "edition"
-    TOPIC = "topic"
-    ORGANISER = "organiser"
-    START_DATE = "start_date"
+class SettingValueTypes(StrEnum):
+    INTEGER = "integer"
+    REAL = "real"
+    STRING = "string"
+    BOOLEAN = "boolean"
 
 
-type SettingType = Literal["integer", "real", "string", "boolean"]
-type SettingValueType = int | float | str | bool | None
+type SettingValueType = Literal["integer", "real", "string", "boolean"]
+type SettingValueTypeSpec = int | float | str | bool | None
+
+
+class SettingGroupKeys(StrEnum):
+    GLOBAL = "global"
+    VALIDATION = "validation"
+    RANKING = "ranking"
+    FRAME = "frame"
+    GENERATION = "generation"
+
+
+class GlobalSettingNames(StrEnum):
+    ROUND_COUNT = "round_count"
+
+
+class ValidationSettingNames(StrEnum):
+    SCORE_MIN_VALUE = "score_min_value"
+    SCORE_MAX_VALUE = "score_max_value"
+    ENTRY_VIDEO_TIMESTAMP_DURATION_SECONDS = "entry_video_duration_seconds"
+
+
+class RankingSettingNames(StrEnum):
+    SIGNIFICANT_DECIMAL_DIGITS = "significant_decimal_digits"
+
+
+class FrameSettingNames(StrEnum):
+    WIDTH_PX = "width_px"
+    HEIGHT_PX = "height_px"
+
+
+class GenerationSettingNames(StrEnum):
+    VIDEOCLIPS_OVERRIDE_TOP_N_DURATION = "videoclips_override_top_n_duration"
+    VIDEOCLIPS_OVERRIDE_DURATION_SECONDS = "videoclips_override_duration_up_to_x_seconds"
+
+
+SETTING_KEY_SEPARATOR = "."
+
+
+class SettingKeys(StrEnum):
+    GLOBAL_ROUND_COUNT = \
+        f"{SettingGroupKeys.GLOBAL}{SETTING_KEY_SEPARATOR}{GlobalSettingNames.ROUND_COUNT}"
+    VALIDATION_SCORE_MIN_VALUE = \
+        f"{SettingGroupKeys.VALIDATION}{SETTING_KEY_SEPARATOR}{ValidationSettingNames.SCORE_MIN_VALUE}"
+    VALIDATION_SCORE_MAX_VALUE = \
+        f"{SettingGroupKeys.VALIDATION}{SETTING_KEY_SEPARATOR}{ValidationSettingNames.SCORE_MAX_VALUE}"
+    VALIDATION_ENTRY_VIDEO_DURATION_SECONDS = \
+        f"{SettingGroupKeys.VALIDATION}{SETTING_KEY_SEPARATOR}{ValidationSettingNames.ENTRY_VIDEO_TIMESTAMP_DURATION_SECONDS}"
+    RANKING_SIGNIFICANT_DECIMAL_DIGITS = \
+        f"{SettingGroupKeys.RANKING}{SETTING_KEY_SEPARATOR}{RankingSettingNames.SIGNIFICANT_DECIMAL_DIGITS}"
+    FRAME_WIDTH_PX = \
+        f"{SettingGroupKeys.FRAME}{SETTING_KEY_SEPARATOR}{FrameSettingNames.WIDTH_PX}"
+    FRAME_HEIGHT_PX = \
+        f"{SettingGroupKeys.FRAME}{SETTING_KEY_SEPARATOR}{FrameSettingNames.HEIGHT_PX}"
+    GENERATION_VIDEOCLIPS_OVERRIDE_TOP_N_DURATION = \
+        f"{SettingGroupKeys.GENERATION}{SETTING_KEY_SEPARATOR}{GenerationSettingNames.VIDEOCLIPS_OVERRIDE_TOP_N_DURATION}"
+    GENERATION_VIDEOCLIPS_OVERRIDE_DURATION_UP_TO_X_SECONDS = \
+        f"{SettingGroupKeys.GENERATION}{SETTING_KEY_SEPARATOR}{GenerationSettingNames.VIDEOCLIPS_OVERRIDE_DURATION_SECONDS}"
 
 
 @dataclass
-class Setting:
+class Setting(DomainModel):
     group_key: str
     setting: str
-    type: SettingType
-    value: SettingValueType
+    type: SettingValueType
+    value: SettingValueTypeSpec
 
-    class ORM(Model):
+    class ORM(PeeweeModel, DatabaseModel):
         group_key = TextField(column_name="group_key")
         setting = TextField(column_name="setting")
         value = TextField(column_name="value", null=True)
-        type = TextField(column_name="type", choices=["integer", "real", "string", "boolean"], default="string")
+        type = TextField(column_name="type", choices=[t.value for t in SettingValueTypes],
+                         default=SettingValueTypes.STRING)
 
         class Meta:
             database = db
@@ -63,59 +143,14 @@ class Setting:
         def to_domain(self) -> "Setting":
             # noinspection PyTypeChecker
             return Setting(group_key=self.group_key, setting=self.setting, type=self.type,
-                           value=parse_setting_value(type_str=self.type, value=self.value))
+                           value=parse_setting_value(value=self.value, type_str=self.type))
 
     def to_orm(self) -> ORM:
         return Setting.ORM(group_key=self.group_key, setting=self.setting, type=self.type, value=str(self.value))
 
 
-class SettingGroupKeys(Enum):
-    GLOBAL = "globals"
-    VALIDATION = "validation"
-    RANKING = "ranking"
-    FRAME = "frame"
-    GENERATION = "generation"
-
-
-class GlobalSettingNames(Enum):
-    ROUNDS_COUNT = "rounds_count"
-
-
-class ValidationSettingNames(Enum):
-    SCORE_MIN_VALUE = "score_min_value"
-    SCORE_MAX_VALUE = "score_max_value"
-    ENTRY_VIDEO_TIMESTAMP_DURATION = "entry_video_duration_seconds"
-
-
-class RankingSettingNames(Enum):
-    SIGNIFICANT_DECIMAL_DIGITS = "significant_decimal_digits"
-
-
-class FrameSettingNames(Enum):
-    WIDTH_PX = "width_px"
-    HEIGHT_PX = "height_px"
-
-
-class GenerationSettingNames(Enum):
-    VIDEOCLIPS_OVERRIDE_TOP_N_DURATION = "videoclips_override_top_n_duration"
-    VIDEOCLIPS_OVERRIDE_DURATION_SECONDS = "videoclips_override_duration_up_to_x_seconds"
-
-
-type SettingKeys = Literal[
-    "globals.rounds_count",
-    "validation.score_min_value",
-    "validation.score_max_value",
-    "validation.entry_video_duration_seconds",
-    "ranking.significant_decimal_digits",
-    "frame.width_px",
-    "frame.height_px",
-    "generation.videoclips_override_top_n_duration",
-    "generation.videoclips_override_duration_up_to_x_seconds"
-]
-
-
 @dataclass
-class Avatar:
+class Avatar(DomainModel):
     id: int
     image_filename: str
     image_height: float
@@ -124,7 +159,7 @@ class Avatar:
     score_box_font_scale: float
     score_box_font_color: str | None
 
-    class ORM(Model):
+    class ORM(PeeweeModel, DatabaseModel):
         id = AutoField(primary_key=True)
         image_filename = TextField(column_name="image_filename")
         image_height = FloatField(column_name="image_height")
@@ -175,12 +210,12 @@ class Avatar:
 
 
 @dataclass
-class Contestant:
+class Contestant(DomainModel):
     id: str
     name: str
     avatar: Avatar | None
 
-    class ORM(Model):
+    class ORM(PeeweeModel, DatabaseModel):
         id = TextField(column_name="id", primary_key=True)
         name = TextField(column_name="name", unique=True)
         avatar = ForeignKeyField(Avatar.ORM, column_name="avatar", null=True)
@@ -198,10 +233,10 @@ class Contestant:
 
 
 @dataclass
-class SpecialEntryTopic:
+class SpecialEntryTopic(DomainModel):
     designation: str
 
-    class ORM(Model):
+    class ORM(PeeweeModel, DatabaseModel):
         designation = TextField(column_name="designation", primary_key=True)
 
         class Meta:
@@ -217,14 +252,14 @@ class SpecialEntryTopic:
 
 
 @dataclass
-class Entry:
+class Entry(DomainModel):
     id: str
     title: str
     author: Contestant | None
     video_url: str
     special_topic: SpecialEntryTopic | None
 
-    class ORM(Model):
+    class ORM(PeeweeModel, DatabaseModel):
         id = TextField(column_name="id", primary_key=True)
         title = TextField(column_name="title", unique=True)
         author = ForeignKeyField(Contestant.ORM, column_name="author", null=True)
@@ -258,7 +293,7 @@ class Entry:
 
 
 @dataclass
-class Template:
+class Template(DomainModel):
     entry: Entry
     avatar_scale: float
     author_avatar_scale: float
@@ -267,7 +302,7 @@ class Template:
     video_box_position_top_px: int
     video_box_position_left_px: int
 
-    class ORM(Model):
+    class ORM(PeeweeModel, DatabaseModel):
         entry = ForeignKeyField(Entry.ORM, column_name="entry", primary_key=True)
         avatar_scale = FloatField(column_name="avatar_scale")
         author_avatar_scale = FloatField(column_name="author_avatar_scale")
@@ -301,12 +336,12 @@ class Template:
 
 
 @dataclass
-class VideoOptions:
+class VideoOptions(DomainModel):
     entry: Entry
     timestamp_start: time | None
     timestamp_end: time | None
 
-    class ORM(Model):
+    class ORM(PeeweeModel, DatabaseModel):
         entry = ForeignKeyField(Entry.ORM, column_name="entry", primary_key=True)
         timestamp_start = TextField(column_name="timestamp_start", null=True)
         timestamp_end = TextField(column_name="timestamp_end", null=True)
@@ -328,12 +363,12 @@ class VideoOptions:
 
 
 @dataclass
-class Scoring:
+class Scoring(DomainModel):
     contestant: Contestant | None
     entry: Entry
     score: float
 
-    class ORM(Model):
+    class ORM(PeeweeModel, DatabaseModel):
         contestant = ForeignKeyField(Contestant.ORM, column_name="contestant", null=True)
         entry = ForeignKeyField(Entry.ORM, column_name="entry")
         score = FloatField(column_name="score")
@@ -356,12 +391,12 @@ class Scoring:
 
 
 @dataclass
-class ContestantStats:
+class ContestantStats(DomainModel):
     contestant: Contestant
     avg_given_score: float | None
     avg_received_score: float | None
 
-    class ORM(Model):
+    class ORM(PeeweeModel, DatabaseModel):
         contestant = ForeignKeyField(Contestant.ORM, column_name="contestant", primary_key=True)
         avg_given_score = FloatField(column_name="avg_given_score", null=True)
         avg_received_score = FloatField(column_name="avg_received_score", null=True)
@@ -383,13 +418,13 @@ class ContestantStats:
 
 
 @dataclass
-class EntryStats:
+class EntryStats(DomainModel):
     entry: Entry
     avg_score: float | None
     ranking_place: int | None
     ranking_sequence: int | None
 
-    class ORM(Model):
+    class ORM(PeeweeModel, DatabaseModel):
         entry = ForeignKeyField(Entry.ORM, column_name="entry", primary_key=True)
         avg_score = FloatField(column_name="avg_score", null=True)
         ranking_place = IntegerField(column_name="ranking_place", null=True)

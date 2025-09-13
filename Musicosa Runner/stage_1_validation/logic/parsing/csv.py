@@ -7,7 +7,31 @@ from stage_1_validation.logic.parsing.utils import parse_score_str, parse_video_
 from stage_1_validation.types import ContestantSubmissionEntry, ContestantSubmission
 
 
-def parse_contestant_form_entry_csv(entry_line: str) -> ContestantSubmissionEntry:
+def parse_contestant_forms_csv_folder(forms_folder: str) -> list[ContestantSubmission]:
+    submissions: list[ContestantSubmission] = []
+    form_files = [file for file in os.listdir(forms_folder) if file.endswith('.csv')]
+
+    for form_file in form_files:
+        submissions.append(parse_contestant_form_csv(f"{forms_folder}/{form_file}"))
+
+    return submissions
+
+
+def parse_contestant_form_csv(form_file: str) -> ContestantSubmission:
+    entries: list[ContestantSubmissionEntry] = []
+    contestant_name = basename(form_file).rsplit('.', 1)[0]
+
+    with open(form_file, "r", encoding="UTF-8") as file:
+        for csv_line in file:
+            try:
+                entries.append(parse_entry_csv(csv_line))
+            except StageException as err:
+                raise StageException(f"[{contestant_name}] {err}") from err
+
+    return ContestantSubmission(name=contestant_name, entries=entries)
+
+
+def parse_entry_csv(entry_line: str) -> ContestantSubmissionEntry:
     line = entry_line.strip().split(CSV_SEPARATOR)
 
     if len(line) != CSV_FIELDS_COUNT:
@@ -43,27 +67,3 @@ def parse_contestant_form_entry_csv(entry_line: str) -> ContestantSubmissionEntr
 
     return ContestantSubmissionEntry(title=title, score=score, is_author=is_author, video_timestamp=video_timestamp,
                                      video_url=video_url, special_topic=special_topic)
-
-
-def parse_contestant_form_csv(form_file: str) -> ContestantSubmission:
-    entries: list[ContestantSubmissionEntry] = []
-    contestant_name = basename(form_file).rsplit('.', 1)[0]
-
-    with open(form_file, "r", encoding="UTF-8") as file:
-        for csv_line in file:
-            try:
-                entries.append(parse_contestant_form_entry_csv(csv_line))
-            except StageException as err:
-                raise StageException(f"[{contestant_name}] {err}") from err
-
-    return ContestantSubmission(name=contestant_name, entries=entries)
-
-
-def parse_contestant_forms_csv_folder(forms_folder: str) -> list[ContestantSubmission]:
-    submissions: list[ContestantSubmission] = []
-    form_files = [file for file in os.listdir(forms_folder) if file.endswith('.csv')]
-
-    for form_file in form_files:
-        submissions.append(parse_contestant_form_csv(f"{forms_folder}/{form_file}"))
-
-    return submissions

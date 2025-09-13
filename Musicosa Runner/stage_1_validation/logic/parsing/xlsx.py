@@ -8,6 +8,16 @@ from stage_1_validation.logic.parsing.utils import parse_score_str, parse_video_
 from stage_1_validation.types import ContestantSubmissionEntry, ContestantSubmission
 
 
+def parse_contestant_forms_xlsx_folder(forms_folder: str) -> list[ContestantSubmission]:
+    submissions: list[ContestantSubmission] = []
+    form_files = [file for file in os.listdir(forms_folder) if file.endswith('.xlsx')]
+
+    for form_file in form_files:
+        submissions.append(parse_contestant_form_xlsx(f"{forms_folder}/{form_file}"))
+
+    return submissions
+
+
 def parse_contestant_form_xlsx(form_file: str) -> ContestantSubmission:
     contestant_submission: ContestantSubmission
     submission_entries: list[ContestantSubmissionEntry] = []
@@ -60,13 +70,3 @@ def parse_contestant_form_xlsx(form_file: str) -> ContestantSubmission:
     workbook.close()
 
     return ContestantSubmission(name=contestant_name, entries=submission_entries)
-
-
-def parse_contestant_forms_xlsx_folder(forms_folder: str) -> list[ContestantSubmission]:
-    submissions: list[ContestantSubmission] = []
-    form_files = [file for file in os.listdir(forms_folder) if file.endswith('.xlsx')]
-
-    for form_file in form_files:
-        submissions.append(parse_contestant_form_xlsx(f"{forms_folder}/{form_file}"))
-
-    return submissions

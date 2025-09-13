@@ -1,4 +1,4 @@
-from common.model.models import SpecialEntryTopic
+from common.model.models import SpecialEntryTopic, SettingKeys
 from common.model.settings import is_setting_set
 from common.types import StageException
 from stage_1_validation.logic.validation import validate_contestant_submission_collection
@@ -7,17 +7,17 @@ from stage_1_validation.types import StageOneOutput, ContestantSubmission
 
 def execute(submissions: list[ContestantSubmission], valid_titles: list[str],
             special_entry_topics: list[SpecialEntryTopic] | None) -> StageOneOutput:
-    if not is_setting_set("globals.rounds_count"):
-        raise StageException("Setting 'globals.rounds_count' not set")
+    if not is_setting_set(SettingKeys.GLOBAL_ROUND_COUNT):
+        raise StageException(f"Setting '{SettingKeys.GLOBAL_ROUND_COUNT}' not set")
 
-    if not is_setting_set("validation.score_min_value"):
-        raise StageException("Setting 'validation.score_min_value' not set")
+    if not is_setting_set(SettingKeys.VALIDATION_SCORE_MIN_VALUE):
+        raise StageException(f"Setting '{SettingKeys.VALIDATION_SCORE_MIN_VALUE}' not set")
 
-    if not is_setting_set("validation.score_max_value"):
-        raise StageException("Setting 'validation.score_max_value' not set")
+    if not is_setting_set(SettingKeys.VALIDATION_SCORE_MAX_VALUE):
+        raise StageException(f"Setting '{SettingKeys.VALIDATION_SCORE_MAX_VALUE}' not set")
 
-    if not is_setting_set("validation.entry_video_duration_seconds"):
-        raise StageException("Setting 'validation.entry_video_duration_seconds' not set")
+    if not is_setting_set(SettingKeys.VALIDATION_ENTRY_VIDEO_DURATION_SECONDS):
+        raise StageException(f"Setting '{SettingKeys.VALIDATION_ENTRY_VIDEO_DURATION_SECONDS}' not set")
 
     if not valid_titles:
         raise StageException("Valid entry titles list is empty")

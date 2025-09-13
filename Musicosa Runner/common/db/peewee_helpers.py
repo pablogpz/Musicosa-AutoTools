@@ -1,5 +1,7 @@
 from typing import Iterable, Any
 
+from common.model.models import DomainModel
+
 
 def bulk_pack(collection: Iterable) -> list[dict[Any, Any]]:
     """
@@ -10,15 +12,15 @@ def bulk_pack(collection: Iterable) -> list[dict[Any, Any]]:
     bulk_data = []
 
     for item in collection:
-        if not callable(getattr(item, 'to_orm', None)):
-            raise TypeError(f"Collection contains an item '{item}' that isn't an ORM entity ('to_orm' method missing)")
+        if not isinstance(item, DomainModel):
+            raise TypeError(f"Collection contains an item ({item}) that isn't a domain model")
 
         orm_entity = item.to_orm()
 
         if not getattr(orm_entity, '__data__', None):
             # Fucked around and found out (:
-            raise TypeError(f"ORM entity '{orm_entity}' doesn't have a '__data__' attribute")
+            raise TypeError(f"ORM entity '{orm_entity}' doesn't '__data__'")
 
-        bulk_data.append(item.to_orm().__data__)
+        bulk_data.append(orm_entity.__data__)
 
     return bulk_data

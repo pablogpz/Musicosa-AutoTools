@@ -30,7 +30,7 @@ CREATE TABLE settings
 );
 
 INSERT INTO settings (group_key, setting, value, type)
-VALUES ('globals', 'rounds_count', '', 'integer'); --FIXME: To be filled
+VALUES ('global', 'round_count', '', 'integer'); --FIXME: To be filled
 INSERT INTO settings (group_key, setting, value, type)
 VALUES ('validation', 'score_min_value', '0.0', 'real');
 INSERT INTO settings (group_key, setting, value, type)

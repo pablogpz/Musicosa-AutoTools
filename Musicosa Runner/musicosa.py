@@ -13,14 +13,15 @@ from common.constants import VIDEO_TIMESTAMP_SEPARATOR
 from common.db.database import db
 from common.db.peewee_helpers import bulk_pack
 from common.input.better_input import better_input
+from common.model.metadata import get_metadata_by_field
 from common.model.models import Contestant, Avatar, Entry, Scoring, VideoOptions, Template, Setting, ContestantStats, \
-    EntryStats, Metadata, SpecialEntryTopic
+    EntryStats, SpecialEntryTopic, MetadataFields
 from common.naming.identifiers import generate_contestant_uuid5, generate_entry_uuid5
 from common.time.utils import parse_time
 from common.types import TemplateType
 from stage_1_validation.execute import execute as execute_stage_1
-from stage_1_validation.stage_input import get_submissions_from_forms_folder, get_submission_entry_valid_titles, \
-    get_special_entry_topics_from_db
+from stage_1_validation.stage_input import get_submissions_from_forms_folder, get_valid_titles, \
+    get_special_topics_from_db
 from stage_1_validation.types import StageOneOutput, StageOneInput
 from stage_2_ranking.execute import execute as execute_stage_2
 from stage_2_ranking.stage_input import load_musicosa_from_db as load_s2_musicosa_from_db
@@ -326,7 +327,7 @@ def flow_control_gate[SI, SO](
             if CONTINUE_ON_SUCCESS in controls:
                 choice = better_input(on_success_msg,
                                       lambda x: x.lower() in controls,
-                                      lambda x: f"Invalid choice '{x}'")
+                                      error_message=lambda x: f"Invalid choice '{x}'")
 
                 if choice == CONTINUE_ON_SUCCESS:
                     success = True
@@ -337,7 +338,7 @@ def flow_control_gate[SI, SO](
             print(f"{f"{err_header} {err}" if err_header else err}")
             choice = better_input(on_error_msg,
                                   lambda x: x.lower() in error_controls,
-                                  lambda x: f"Invalid choice '{x}'")
+                                  error_message=lambda x: f"Invalid choice '{x}'")
 
             handle_common_controls(choice, error_controls)
 
@@ -459,9 +460,9 @@ if __name__ == '__main__':
 
     # Pipeline Execution
 
-    musicosa_edition = Metadata.ORM.get(Metadata.ORM.field == "edition").value
-    musicosa_topic = Metadata.ORM.get(Metadata.ORM.field == "topic").value
-    musicosa_organiser = Metadata.ORM.get(Metadata.ORM.field == "organiser").value
+    musicosa_edition = get_metadata_by_field(MetadataFields.EDITION).value
+    musicosa_topic = get_metadata_by_field(MetadataFields.TOPIC).value
+    musicosa_organiser = get_metadata_by_field(MetadataFields.ORGANISER).value
 
     print(f"[MUSICOSA {musicosa_edition}º EDITION]")
     print(f"  Topic: {musicosa_topic}")
@@ -473,9 +474,9 @@ if __name__ == '__main__':
     @retry_or_reconfig(err_header="[Stage 1 | Input collection ERROR]", config_file=config_file)
     def stage_1_collect_input(*, config: Config) -> StageOneInput:
         submissions = get_submissions_from_forms_folder(config.stage_1.csv_forms_folder)
-        valid_titles = get_submission_entry_valid_titles(config.stage_1.csv_forms_folder,
-                                                         config.stage_1.valid_titles_file)
-        special_entry_topics = get_special_entry_topics_from_db()
+        valid_titles = get_valid_titles(config.stage_1.csv_forms_folder,
+                                        config.stage_1.valid_titles_file)
+        special_entry_topics = get_special_topics_from_db()
 
         return StageOneInput(submissions=submissions, valid_titles=valid_titles,
                              special_entry_topics=special_entry_topics)

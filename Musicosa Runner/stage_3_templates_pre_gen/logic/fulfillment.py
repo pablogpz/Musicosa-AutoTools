@@ -3,7 +3,7 @@ from os.path import basename
 
 from common.constants import VIDEO_TIMESTAMP_SEPARATOR, VIDEOCLIPS_OVERRIDE_DURATION_FULL_LENGTH
 from common.input.better_input import better_input
-from common.model.models import Avatar, Setting, Contestant, Template, Entry, VideoOptions
+from common.model.models import Avatar, Setting, Contestant, Template, Entry, VideoOptions, SettingKeys
 from common.model.settings import get_setting_by_key, is_setting_set
 from common.time.utils import parse_time, validate_video_timestamp_str, time_str_zfill
 from model.models import SettingGroupKeys, FrameSettingNames, GenerationSettingNames
@@ -48,7 +48,8 @@ def generate_unfulfilled_avatar_pairings(unfulfilled_contestants: list[Contestan
             choice = better_input(
                 f"Avatar for '{contestant.name}' (1..{len(available_avatars)},n=new)",
                 lambda x: x.lower() in ["n"] or 1 <= (int(x) if x.isdigit() else -1) <= len(available_avatars),
-                lambda x: f"Invalid option '{x}' (Pick a valid option number or 'n' to create a new avatar)")
+                error_message=lambda
+                    x: f"Invalid option '{x}' (Pick a valid option number or 'n' to create a new avatar)")
         else:
             choice = "n"
             print("")
@@ -58,36 +59,37 @@ def generate_unfulfilled_avatar_pairings(unfulfilled_contestants: list[Contestan
             filename = better_input(
                 "Avatar filename",
                 lambda x: basename(x.lower()).rsplit(".", 1)[-1] in AVATAR_IMG_SUPPORTED_FORMATS,
-                f"Invalid avatar format (must be one of '{"', '".join(AVATAR_IMG_SUPPORTED_FORMATS)}')",
                 default=last_filename,
+                error_message=f"Invalid avatar format (must be one of '{"', '".join(AVATAR_IMG_SUPPORTED_FORMATS)}')",
                 indentation_level=2)
             last_filename = filename
 
             height = better_input("Image height (px)",
                                   lambda x: x.isdigit() and int(x) > 0,
-                                  lambda x: f"Invalid height '{x}' (Must be a positive number)",
                                   default=last_height,
+                                  error_message=lambda x: f"Invalid height '{x}' (Must be a positive number)",
                                   indentation_level=2)
             last_height = height
 
             score_top = better_input("Score box relative top position (%)",
                                      lambda x: re.match(r"^-?\d{1,3}([.]\d+)?$", x) is not None,
-                                     lambda x: f"Invalid position '{x}' (Must be a valid %)",
                                      default=last_score_top,
+                                     error_message=lambda x: f"Invalid position '{x}' (Must be a valid %)",
                                      indentation_level=2)
             last_score_top = score_top
 
             score_left = better_input("Score box relative left position (%)",
                                       lambda x: re.match(r"^-?\d{1,3}([.]\d+)?$", x) is not None,
-                                      lambda x: f"Invalid position '{x}' (Must be a valid %)",
                                       default=last_score_left,
+                                      error_message=lambda x: f"Invalid position '{x}' (Must be a valid %)",
                                       indentation_level=2)
             last_score_left = score_left
 
             score_font_scale = better_input("Score font scale (factor)",
                                             lambda x: re.match(r"^\d+([.]\d+)?$", x) is not None,
-                                            lambda x: f"Invalid scale factor '{x}' (Must be a numeric factor)",
                                             default=last_score_font_scale,
+                                            error_message=lambda
+                                                x: f"Invalid scale factor '{x}' (Must be a numeric factor)",
                                             indentation_level=2)
             last_score_font_scale = score_font_scale
 
@@ -119,29 +121,29 @@ def generate_unfulfilled_frame_settings() -> list[Setting] | None:
     print("[Frame Settings]")
     print("")
 
-    if not is_setting_set("frame.width_px"):
+    if not is_setting_set(SettingKeys.FRAME_WIDTH_PX):
         print("  Frame width not set...")
         total_width = better_input("Width of the frame where assets get rendered (px)",
                                    lambda x: x.isdigit() and int(x) > 0,
-                                   lambda x: f"Invalid width '{x}' (Must be a positive number)",
+                                   error_message=lambda x: f"Invalid width '{x}' (Must be a positive number)",
                                    indentation_level=4)
 
-        frame_settings.append(Setting(group_key=SettingGroupKeys.FRAME.value,
-                                      setting=FrameSettingNames.WIDTH_PX.value,
+        frame_settings.append(Setting(group_key=SettingGroupKeys.FRAME,
+                                      setting=FrameSettingNames.WIDTH_PX,
                                       value=int(total_width),
                                       type="integer"))
     else:
         print("Frame width set ✔")
 
-    if not is_setting_set("frame.height_px"):
+    if not is_setting_set(SettingKeys.FRAME_HEIGHT_PX):
         print("  Frame height not set...")
         total_height = better_input("Height of the frame where assets get rendered (px)",
                                     lambda x: x.isdigit() and int(x) > 0,
-                                    lambda x: f"Invalid height '{x}' (Must be a positive number)",
+                                    error_message=lambda x: f"Invalid height '{x}' (Must be a positive number)",
                                     indentation_level=4)
 
-        frame_settings.append(Setting(group_key=SettingGroupKeys.FRAME.value,
-                                      setting=FrameSettingNames.HEIGHT_PX.value,
+        frame_settings.append(Setting(group_key=SettingGroupKeys.FRAME,
+                                      setting=FrameSettingNames.HEIGHT_PX,
                                       value=int(total_height),
                                       type="integer"))
     else:
@@ -189,7 +191,7 @@ def generate_unfulfilled_templates(entries_sequence_number_index: dict[int, Entr
         selection = parse_selection(
             better_input("Templates selection (seq_num | [start]:[end] | empty to select all remaining)",
                          validate_selection,
-                         lambda
+                         error_message=lambda
                              x: f"Invalid selection '{x}' (Use a valid index, range, omit a boundary or leave empty)",
                          indentation_level=2))
         print("")
@@ -198,43 +200,44 @@ def generate_unfulfilled_templates(entries_sequence_number_index: dict[int, Entr
 
         avatar_scale = better_input("Avatar scale (factor)",
                                     lambda x: re.match(r"^\d+([.]\d+)?$", x) is not None,
-                                    lambda x: f"Invalid scale factor '{x}' (Must be a numeric factor)",
                                     default=last_avatar_scale,
+                                    error_message=lambda x: f"Invalid scale factor '{x}' (Must be a numeric factor)",
                                     indentation_level=2)
         last_avatar_scale = avatar_scale
 
         author_avatar_scale = better_input("Author's avatar scale (factor)",
                                            lambda x: re.match(r"^\d+([.]\d+)?$", x) is not None,
-                                           lambda x: f"Invalid scale factor '{x}' (Must be a numeric factor)",
                                            default=last_author_avatar_scale,
+                                           error_message=lambda
+                                               x: f"Invalid scale factor '{x}' (Must be a numeric factor)",
                                            indentation_level=2)
         last_author_avatar_scale = author_avatar_scale
 
         video_width = better_input("Videoclip width (px)",
                                    lambda x: x.isdigit() and int(x) > 0,
-                                   lambda x: f"Invalid width '{x}' (Must be a positive number)",
                                    default=last_video_width,
+                                   error_message=lambda x: f"Invalid width '{x}' (Must be a positive number)",
                                    indentation_level=2)
         last_video_width = video_width
 
         video_height = better_input("Videoclip height (px)",
                                     lambda x: x.isdigit() and int(x) > 0,
-                                    lambda x: f"Invalid height '{x}' (Must be a positive number)",
                                     default=last_video_height,
+                                    error_message=lambda x: f"Invalid height '{x}' (Must be a positive number)",
                                     indentation_level=2)
         last_video_height = video_height
 
         video_top = better_input("Videoclip absolute top position (px)",
                                  lambda x: x.isdigit() and int(x) >= 0,
-                                 lambda x: f"Invalid position '{x}' (Must be a non-negative number)",
                                  default=last_video_top,
+                                 error_message=lambda x: f"Invalid position '{x}' (Must be a non-negative number)",
                                  indentation_level=2)
         last_video_top = video_top
 
         video_left = better_input("Videoclip absolute left position (px)",
                                   lambda x: x.isdigit() and int(x) >= 0,
-                                  lambda x: f"Invalid position '{x}' (Must be a non-negative number)",
                                   default=last_video_left,
+                                  error_message=lambda x: f"Invalid position '{x}' (Must be a non-negative number)",
                                   indentation_level=2)
         last_video_left = video_left
 
@@ -257,33 +260,35 @@ def generate_unfulfilled_generation_settings() -> list[Setting] | None:
     print("[Generation General Settings]")
     print("")
 
-    if not is_setting_set("generation.videoclips_override_top_n_duration"):
+    if not is_setting_set(SettingKeys.GENERATION_VIDEOCLIPS_OVERRIDE_TOP_N_DURATION):
         print("  Override duration of top-N videoclips not set...")
         override_top_n_videoclips = better_input("Override duration of top-N videoclips (0=disabled)",
                                                  lambda x: x.isdigit() and int(x) >= 0,
-                                                 lambda x: f"Invalid value '{x}' (Must be 0 or a positive number)",
+                                                 error_message=lambda
+                                                     x: f"Invalid value '{x}' (Must be 0 or a positive number)",
                                                  indentation_level=4)
 
-        generation_settings.append(Setting(group_key=SettingGroupKeys.GENERATION.value,
-                                           setting=GenerationSettingNames.VIDEOCLIPS_OVERRIDE_TOP_N_DURATION.value,
+        generation_settings.append(Setting(group_key=SettingGroupKeys.GENERATION,
+                                           setting=GenerationSettingNames.VIDEOCLIPS_OVERRIDE_TOP_N_DURATION,
                                            value=int(override_top_n_videoclips),
                                            type="integer"))
     else:
         print("Override duration of top-N videoclips set ✔")
 
-    if not is_setting_set("generation.videoclips_override_duration_up_to_x_seconds"):
+    if not is_setting_set(SettingKeys.GENERATION_VIDEOCLIPS_OVERRIDE_DURATION_UP_TO_X_SECONDS):
         print("  Duration override value not set...")
         override_duration_value = better_input(f"Duration override (seconds) of top-N videoclips"
                                                f" ({VIDEOCLIPS_OVERRIDE_DURATION_FULL_LENGTH}=full duration)",
                                                lambda x: (x.isdigit() and int(x) > 0) or
                                                          x == str(VIDEOCLIPS_OVERRIDE_DURATION_FULL_LENGTH),
-                                               lambda x: f"Invalid duration '{x}' "
-                                                         f"(Must be {VIDEOCLIPS_OVERRIDE_DURATION_FULL_LENGTH} "
-                                                         f"or a positive number)",
+                                               error_message=lambda
+                                                   x: f"Invalid duration '{x}' "
+                                                      f"(Must be {VIDEOCLIPS_OVERRIDE_DURATION_FULL_LENGTH} "
+                                                      f"or a positive number)",
                                                indentation_level=4)
 
-        generation_settings.append(Setting(group_key=SettingGroupKeys.GENERATION.value,
-                                           setting=GenerationSettingNames.VIDEOCLIPS_OVERRIDE_DURATION_SECONDS.value,
+        generation_settings.append(Setting(group_key=SettingGroupKeys.GENERATION,
+                                           setting=GenerationSettingNames.VIDEOCLIPS_OVERRIDE_DURATION_SECONDS,
                                            value=int(override_duration_value),
                                            type="integer"))
     else:
@@ -306,7 +311,7 @@ def generate_unfulfilled_video_options(entries_sequence_number_index: dict[int, 
         print("All entries have video options assigned ✔")
         return None
 
-    video_target_duration = get_setting_by_key("validation.entry_video_duration_seconds").value
+    video_target_duration = get_setting_by_key(SettingKeys.VALIDATION_ENTRY_VIDEO_DURATION_SECONDS).value
 
     def get_missing_options() -> list[int]:
         return get_missing_sequence_numbers(video_options, entries_sequence_number_index.keys())
@@ -327,7 +332,7 @@ def generate_unfulfilled_video_options(entries_sequence_number_index: dict[int, 
         selection = parse_selection(
             better_input("Options selection (seq_num|[start]:[end]|empty to select all remaining)",
                          validate_selection,
-                         lambda
+                         error_message=lambda
                              x: f"Invalid selection '{x}' (Use a valid index, range, omit a boundary or leave empty)",
                          indentation_level=2))
         print("")
@@ -336,11 +341,11 @@ def generate_unfulfilled_video_options(entries_sequence_number_index: dict[int, 
 
         video_timestamp = better_input("Videoclip segment ([HH:]MM:SS)-([HH:]MM:SS)",
                                        lambda x: validate_video_timestamp_str(x, video_target_duration),
-                                       lambda
+                                       default=last_video_timestamp,
+                                       error_message=lambda
                                            x: f"Invalid segment '{x}' "
                                               f"(Must be in '[HH:]MM:SS-[HH:]MM:SS' format and last "
                                               f"{video_target_duration} seconds)",
-                                       default=last_video_timestamp,
                                        indentation_level=2)
         last_video_timestamp = video_timestamp
 

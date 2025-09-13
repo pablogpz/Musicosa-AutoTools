@@ -3,6 +3,7 @@ from os import path
 
 from validators import url as validate_url, ValidationError
 
+from common.model.models import SettingKeys
 from common.model.settings import is_setting_set
 from common.types import StageException
 from stage_4_templates_gen.constants import MAX_GEN_RETRY_ATTEMPTS
@@ -19,11 +20,11 @@ def execute(
         overwrite_templates: bool,
         overwrite_presentations: bool,
 ) -> StageFourOutput:
-    if not is_setting_set("frame.width_px"):
-        raise StageException("Setting 'frame.width_px' not set")
+    if not is_setting_set(SettingKeys.FRAME_WIDTH_PX):
+        raise StageException(f"Setting '{SettingKeys.FRAME_WIDTH_PX}' not set")
 
-    if not is_setting_set("frame.height_px"):
-        raise StageException("Setting 'frame.height_px' not set")
+    if not is_setting_set(SettingKeys.FRAME_HEIGHT_PX):
+        raise StageException(f"Setting '{SettingKeys.FRAME_HEIGHT_PX}' not set")
 
     if isinstance(validate_url(templates_api_url, simple_host=True), ValidationError):
         raise StageException(f"Invalid entry templates API URL '{templates_api_url}'")

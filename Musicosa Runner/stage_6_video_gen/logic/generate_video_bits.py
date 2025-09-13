@@ -6,6 +6,7 @@ from ffmpeg_normalize import FFmpegNormalize, FFmpegNormalizeError
 from math import ceil
 
 from common.constants import VIDEOCLIPS_OVERRIDE_DURATION_FULL_LENGTH, TEMPLATE_IMG_FORMAT, VIDEO_FORMAT
+from common.model.models import SettingKeys
 from common.model.settings import get_setting_by_key
 from common.naming.slugify import slugify
 from common.time.utils import parse_time, time_to_seconds
@@ -57,9 +58,10 @@ def generate_all_video_bits(
 
 def generate_video_bit(videoclip_path: str, vid_opts: EntryVideoOptions, template_path: str, video_bit_path: str,
                        quiet_ffmpeg: bool = None) -> str:
-    default_duration = get_setting_by_key("validation.entry_video_duration_seconds").value
-    override_top_n = get_setting_by_key("generation.videoclips_override_top_n_duration").value
-    override_duration_value = get_setting_by_key("generation.videoclips_override_duration_up_to_x_seconds").value
+    default_duration = get_setting_by_key(SettingKeys.VALIDATION_ENTRY_VIDEO_DURATION_SECONDS).value
+    override_top_n = get_setting_by_key(SettingKeys.GENERATION_VIDEOCLIPS_OVERRIDE_TOP_N_DURATION).value
+    override_duration_value = get_setting_by_key(
+        SettingKeys.GENERATION_VIDEOCLIPS_OVERRIDE_DURATION_UP_TO_X_SECONDS).value
 
     videoclip_duration = get_video_duration_seconds(videoclip_path)
 

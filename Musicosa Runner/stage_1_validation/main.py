@@ -11,8 +11,8 @@ from common.time.utils import parse_time
 from common.types import StageException
 from stage_1_validation.defaults import DEFAULT_CSV_FORMS_FOLDER, DEFAULT_VALID_TITLES_FILE
 from stage_1_validation.execute import execute
-from stage_1_validation.stage_input import get_submissions_from_forms_folder, get_submission_entry_valid_titles, \
-    get_special_entry_topics_from_db
+from stage_1_validation.stage_input import get_submissions_from_forms_folder, get_valid_titles, \
+    get_special_topics_from_db
 
 if __name__ == "__main__":
 
@@ -32,8 +32,8 @@ if __name__ == "__main__":
 
     try:
         submissions = get_submissions_from_forms_folder(forms_folder)
-        valid_titles = get_submission_entry_valid_titles(forms_folder, valid_titles_file)
-        special_entry_topics = get_special_entry_topics_from_db()
+        valid_titles = get_valid_titles(forms_folder, valid_titles_file)
+        special_entry_topics = get_special_topics_from_db()
     except Exception as err:
         print(f"[Stage 1 | Data retrieval] {err}")
         exit(1)
