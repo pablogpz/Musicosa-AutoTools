@@ -29,7 +29,6 @@ if __name__ == "__main__":
         if result.frame_settings:
             with db.atomic():
                 Setting.ORM.replace_many(bulk_pack(result.frame_settings)).execute()
-
         if result.templates:
             with db.atomic():
                 Template.ORM.insert_many(bulk_pack(result.templates)).execute()

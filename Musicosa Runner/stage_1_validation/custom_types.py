@@ -23,8 +23,8 @@ class AwardForm:
 class StageOneInput:
     award_forms: list[AwardForm]
     valid_award_slugs: list[str]
-    awards_count: int
-    members_count: int
+    award_count: int
+    member_count: int
 
 
 @dataclass

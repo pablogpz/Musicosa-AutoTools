@@ -37,8 +37,8 @@ if __name__ == "__main__":
     # Stage execution
 
     try:
-        result = execute(award_forms=award_forms, valid_award_slugs=valid_award_slugs, awards_count=award_count,
-                         members_count=member_count)
+        result = execute(award_forms=award_forms, valid_award_slugs=valid_award_slugs, award_count=award_count,
+                         member_count=member_count)
     except StageException as err:
         print(f"[Stage 1 | Execution] {err}")
         exit(1)

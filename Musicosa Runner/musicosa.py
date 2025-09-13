@@ -444,8 +444,8 @@ if __name__ == '__main__':
         awards_count = get_award_count()
         members_count = get_member_count()
 
-        return StageOneInput(award_forms=award_forms, valid_award_slugs=valid_award_slugs, awards_count=awards_count,
-                             members_count=members_count)
+        return StageOneInput(award_forms=award_forms, valid_award_slugs=valid_award_slugs, award_count=awards_count,
+                             member_count=members_count)
 
 
     @stage_gate(err_header="[Stage 1 | Execution ERROR]",
@@ -454,11 +454,11 @@ if __name__ == '__main__':
     def stage_1_do_execute(*, config: Config, stage_input: StageOneInput) -> StageOneOutput:
         award_forms, valid_award_slugs, awards_count, members_count = (stage_input.award_forms,
                                                                        stage_input.valid_award_slugs,
-                                                                       stage_input.awards_count,
-                                                                       stage_input.members_count)
+                                                                       stage_input.award_count,
+                                                                       stage_input.member_count)
 
         result = execute_stage_1(award_forms=award_forms, valid_award_slugs=valid_award_slugs,
-                                 awards_count=awards_count, members_count=members_count)
+                                 award_count=awards_count, member_count=members_count)
 
         print("")
         print("[STAGE 1 SUMMARY | Submissions Validation]")

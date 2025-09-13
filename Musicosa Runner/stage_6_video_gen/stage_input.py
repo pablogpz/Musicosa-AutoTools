@@ -1,7 +1,6 @@
 from peewee import JOIN
 
-from common.model.models import Nomination, NominationStats, VideoOptions, Template
-from model.models import Videoclip
+from common.model.models import Nomination, NominationStats, VideoOptions, Template, Videoclip
 from stage_6_video_gen.custom_types import NominationVideoOptions, Timestamp
 
 

@@ -3,8 +3,7 @@ import re
 from common.input.better_input import better_input
 from common.model.models import Setting, Template, Nomination, SettingGroupKeys, FrameSettingNames, SettingKeys
 from common.model.settings import is_setting_set
-from stage_3_templates_pre_gen.logic.helpers import get_missing_sequence_numbers, \
-    parse_sequence_selection_of_kvstore, \
+from stage_3_templates_pre_gen.logic.helpers import parse_sequence_selection_of_kvstore, \
     format_sequence_numbers, validate_sequence_selection
 
 
@@ -51,18 +50,18 @@ def generate_unfulfilled_templates(nominations_sequence_number_index: dict[int, 
 
     print("")
     print("[Nomination Templates]")
+    print("")
 
     if len(nominations_sequence_number_index) > 0:
         print(f"  Missing nomination templates: "
               f"[{format_sequence_numbers(list(nominations_sequence_number_index.keys()))}]")
 
     if len(nominations_sequence_number_index) == 0:
-        print("")
         print("All nominations have a template assigned ✔")
         return None
 
     def get_missing_templates() -> list[int]:
-        return get_missing_sequence_numbers(templates, nominations_sequence_number_index.keys())
+        return [seq_num for seq_num in nominations_sequence_number_index.keys() if seq_num not in templates]
 
     def validate_selection(selection_str: str) -> bool:
         return validate_sequence_selection(selection_str, nominations_sequence_number_index)
@@ -88,8 +87,8 @@ def generate_unfulfilled_templates(nominations_sequence_number_index: dict[int, 
                          error_message=lambda
                              x: f"Invalid selection '{x}' (Use a valid index, range, omit a boundary or leave empty)",
                          indentation_level=2))
-        print("")
 
+        print("")
         print(f"Setting values for {len(selection)} template(s)...")
 
         avatar_scale = better_input("Avatar scale (factor)",
