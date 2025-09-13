@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from common.types import TemplateType
+from common.custom_types import TemplateType
 from stage_4_templates_gen.defaults import DEFAULT_OVERWRITE_TEMPLATES, \
     DEFAULT_OVERWRITE_PRESENTATIONS
 

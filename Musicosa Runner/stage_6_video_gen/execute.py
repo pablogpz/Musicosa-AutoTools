@@ -3,13 +3,13 @@ from os import path
 from typing import get_args
 
 from common.constants import VIDEO_FORMAT
+from common.custom_types import StageException
 from common.model.models import SettingKeys
 from common.model.settings import is_setting_set
-from common.types import StageException
+from stage_6_video_gen.custom_types import EntryVideoOptions, StageSixOutput, TransitionOptions, \
+    TransitionType
 from stage_6_video_gen.logic.generate_final_video import generate_final_video
 from stage_6_video_gen.logic.generate_video_bits import generate_all_video_bits
-from stage_6_video_gen.types import EntryVideoOptions, StageSixOutput, TransitionOptions, \
-    TransitionType
 
 
 def execute(artifacts_folder: str,

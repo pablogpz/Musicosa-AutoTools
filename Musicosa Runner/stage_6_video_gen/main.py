@@ -3,14 +3,14 @@ from typing import get_args
 
 from peewee import PeeweeException
 
-from common.types import StageException
+from common.custom_types import StageException
+from stage_6_video_gen.custom_types import TransitionOptions, TransitionType
 from stage_6_video_gen.defaults import DEFAULT_ARTIFACTS_FOLDER, DEFAULT_VIDEO_BITS_FOLDER, \
     DEFAULT_FINAL_VIDEO_NAME, DEFAULT_STITCH_FINAL_VIDEO_FLAG, DEFAULT_OVERWRITE_VIDEO_BITS, DEFAULT_QUIET_FFMPEG, \
     DEFAULT_QUIET_FFMPEG_FINAL_VIDEO, DEFAULT_TRANSITION_DURATION, DEFAULT_PRESENTATION_DURATION, \
     DEFAULT_TRANSITION_TYPE
 from stage_6_video_gen.execute import execute
 from stage_6_video_gen.stage_input import load_entries_video_options_from_db
-from stage_6_video_gen.types import TransitionOptions, TransitionType
 
 if __name__ == "__main__":
 

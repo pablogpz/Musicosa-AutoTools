@@ -11,8 +11,8 @@ from common.model.settings import get_setting_by_key
 from common.naming.slugify import slugify
 from common.time.utils import parse_time, time_to_seconds
 from stage_6_video_gen.constants import VIDEO_FPS
+from stage_6_video_gen.custom_types import EntryVideoOptions
 from stage_6_video_gen.logic.helpers import get_video_duration_seconds
-from stage_6_video_gen.types import EntryVideoOptions
 
 
 def generate_all_video_bits(

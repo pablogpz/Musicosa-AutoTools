@@ -3,12 +3,12 @@ import argparse
 from peewee import PeeweeException
 
 from common.constants import VIDEO_TIMESTAMP_SEPARATOR
+from common.custom_types import StageException
 from common.db.database import db
 from common.db.peewee_helpers import bulk_pack
 from common.model.models import Entry, Scoring, VideoOptions, Contestant, SpecialEntryTopic
 from common.naming.identifiers import generate_contestant_uuid5, generate_entry_uuid5
 from common.time.utils import parse_time
-from common.types import StageException
 from stage_1_validation.defaults import DEFAULT_CSV_FORMS_FOLDER, DEFAULT_VALID_TITLES_FILE
 from stage_1_validation.execute import execute
 from stage_1_validation.stage_input import get_submissions_from_forms_folder, get_valid_titles, \

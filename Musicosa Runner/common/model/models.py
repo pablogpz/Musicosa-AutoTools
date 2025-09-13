@@ -1,4 +1,3 @@
-from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import time
 from enum import StrEnum
@@ -7,18 +6,15 @@ from typing import Literal, Any
 from peewee import Model as PeeweeModel, TextField, CompositeKey, AutoField, FloatField, ForeignKeyField, IntegerField
 
 from common.db.database import db
-from common.model.settings import parse_setting_value
 from common.time.utils import parse_time
 
 
-class DomainModel(ABC):
-    @abstractmethod
+class DomainModel:
     def to_orm(self) -> Any:
         pass
 
 
-class DatabaseModel(ABC):
-    @abstractmethod
+class DatabaseModel:
     def to_domain(self) -> Any:
         pass
 
@@ -143,7 +139,22 @@ class Setting(DomainModel):
         def to_domain(self) -> "Setting":
             # noinspection PyTypeChecker
             return Setting(group_key=self.group_key, setting=self.setting, type=self.type,
-                           value=parse_setting_value(value=self.value, type_str=self.type))
+                           value=Setting.parse_setting_value(value=self.value, type_str=self.type))
+
+    @staticmethod
+    def parse_setting_value(value: str, type_str: SettingValueTypes) -> SettingValueTypeSpec:
+        if not value or not value.strip():
+            parsed_value = None
+        elif type_str == SettingValueTypes.INTEGER:
+            parsed_value = int(value)
+        elif type_str == SettingValueTypes.REAL:
+            parsed_value = float(value)
+        elif type_str == SettingValueTypes.BOOLEAN:
+            parsed_value = value.lower() == "true"
+        else:
+            parsed_value = value
+
+        return parsed_value
 
     def to_orm(self) -> ORM:
         return Setting.ORM(group_key=self.group_key, setting=self.setting, type=self.type, value=str(self.value))

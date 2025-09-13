@@ -1,5 +1,5 @@
 from common.model.models import Contestant, Scoring, Entry
-from stage_2_ranking.types import Musicosa, Contestant as S2Contestant, Score as S2_Score, \
+from stage_2_ranking.custom_types import Musicosa, Contestant as S2Contestant, Score as S2_Score, \
     Entry as S2Entry
 
 

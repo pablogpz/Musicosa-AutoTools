@@ -4,8 +4,8 @@ from common.constants import VIDEO_TIMESTAMP_SEPARATOR
 from common.model.models import SpecialEntryTopic, SettingKeys
 from common.model.settings import get_setting_by_key
 from common.time.utils import validate_time_str, parse_time, seconds_between
+from stage_1_validation.custom_types import ContestantSubmissionEntry, ContestantSubmission
 from stage_1_validation.logic.helpers import find_duplicates
-from stage_1_validation.types import ContestantSubmissionEntry, ContestantSubmission
 
 
 def validate_contestant_submission_collection(submissions: list[ContestantSubmission],

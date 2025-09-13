@@ -10,6 +10,7 @@ from typing import Literal, Never, Protocol, Any, cast
 from peewee import PeeweeException
 
 from common.constants import VIDEO_TIMESTAMP_SEPARATOR
+from common.custom_types import TemplateType
 from common.db.database import db
 from common.db.peewee_helpers import bulk_pack
 from common.input.better_input import better_input
@@ -18,30 +19,29 @@ from common.model.models import Contestant, Avatar, Entry, Scoring, VideoOptions
     EntryStats, SpecialEntryTopic, MetadataFields
 from common.naming.identifiers import generate_contestant_uuid5, generate_entry_uuid5
 from common.time.utils import parse_time
-from common.types import TemplateType
+from stage_1_validation.custom_types import StageOneOutput, StageOneInput
 from stage_1_validation.execute import execute as execute_stage_1
 from stage_1_validation.stage_input import get_submissions_from_forms_folder, get_valid_titles, \
     get_special_topics_from_db
-from stage_1_validation.types import StageOneOutput, StageOneInput
+from stage_2_ranking.custom_types import Musicosa as S2Musicosa, Contestant as S2Contestant, \
+    Entry as S2Entry, Score as S2Score, StageTwoOutput, StageTwoInput
 from stage_2_ranking.execute import execute as execute_stage_2
 from stage_2_ranking.stage_input import load_musicosa_from_db as load_s2_musicosa_from_db
-from stage_2_ranking.types import Musicosa as S2Musicosa, Contestant as S2Contestant, \
-    Entry as S2Entry, Score as S2Score, StageTwoOutput, StageTwoInput
+from stage_3_templates_pre_gen.custom_types import Musicosa as S3Musicosa, StageThreeOutput, AvatarPairing, \
+    StageThreeInput
 from stage_3_templates_pre_gen.execute import execute as execute_stage_3
 from stage_3_templates_pre_gen.stage_input import load_musicosa_from_db as load_s3_musicosa_from_db, \
     load_available_avatars_from_db
-from stage_3_templates_pre_gen.types import Musicosa as S3Musicosa, StageThreeOutput, AvatarPairing, \
-    StageThreeInput
+from stage_4_templates_gen.custom_types import StageFourOutput, StageFourInput, Template as S4Template
 from stage_4_templates_gen.execute import execute as execute_stage_4
 from stage_4_templates_gen.stage_input import load_templates_from_db
-from stage_4_templates_gen.types import StageFourOutput, StageFourInput, Template as S4Template
+from stage_5_videoclips_acquisition.custom_types import StageFiveOutput, StageFiveInput
 from stage_5_videoclips_acquisition.execute import execute as execute_stage_5
 from stage_5_videoclips_acquisition.stage_input import load_entries_from_db
-from stage_5_videoclips_acquisition.types import StageFiveOutput, StageFiveInput
+from stage_6_video_gen.custom_types import EntryVideoOptions, Timestamp, StageSixOutput, StageSixInput, \
+    TransitionOptions, TransitionType
 from stage_6_video_gen.execute import execute as execute_stage_6
 from stage_6_video_gen.stage_input import load_entries_video_options_from_db
-from stage_6_video_gen.types import EntryVideoOptions, Timestamp, StageSixOutput, StageSixInput, \
-    TransitionOptions, TransitionType
 
 # STAGE IDs
 

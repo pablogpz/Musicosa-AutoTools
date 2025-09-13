@@ -1,7 +1,7 @@
+from common.custom_types import StageException
 from common.model.models import SpecialEntryTopic
-from common.types import StageException
+from stage_1_validation.custom_types import ContestantSubmission
 from stage_1_validation.logic.parsing.xlsx import parse_contestant_forms_xlsx_folder
-from stage_1_validation.types import ContestantSubmission
 
 
 def get_submissions_from_forms_folder(forms_folder: str) -> list[ContestantSubmission]:

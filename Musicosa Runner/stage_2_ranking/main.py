@@ -1,7 +1,7 @@
+from common.custom_types import StageException
 from common.db.database import db
 from common.db.peewee_helpers import bulk_pack
 from common.model.models import Contestant, Entry, ContestantStats, EntryStats
-from common.types import StageException
 from stage_2_ranking.execute import execute
 from stage_2_ranking.stage_input import load_musicosa_from_db
 
