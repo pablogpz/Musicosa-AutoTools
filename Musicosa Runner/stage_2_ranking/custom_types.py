@@ -4,7 +4,7 @@ from dataclasses import dataclass
 @dataclass
 class Score:
     entry_title: str
-    score_value: float
+    value: float
 
 
 @dataclass
@@ -15,7 +15,7 @@ class Entry:
 
 @dataclass
 class Contestant:
-    contestant_name: str
+    name: str
     scores: list[Score]
 
 

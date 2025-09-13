@@ -38,7 +38,7 @@ if __name__ == "__main__":
         with db.atomic():
             (ContestantStats.ORM
              .insert_many(bulk_pack(
-                [ContestantStats(contestant=contestants_by_name[stat.contestant.contestant_name],
+                [ContestantStats(contestant=contestants_by_name[stat.contestant.name],
                                  avg_given_score=stat.avg_given_score,
                                  avg_received_score=stat.avg_received_score)
                  for stat in contestants_stats]))
@@ -63,8 +63,7 @@ if __name__ == "__main__":
     print(f"  # Contestants loaded: {len(musicosa.contestants)}")
     print(f"  # Entries loaded: {len(musicosa.entries)}")
     print("")
-    contestant_stats_display = [(stat.contestant.contestant_name, stat.avg_given_score, stat.avg_received_score) for
-                                stat in
-                                contestants_stats]
+    contestant_stats_display = [(stat.contestant.name, stat.avg_given_score, stat.avg_received_score)
+                                for stat in contestants_stats]
     print(f"  Contestant stats (name, avg_given_score, avg_received_score): {contestant_stats_display}")
     print(f"  # Ranked entries: {len(entries_stats)}")

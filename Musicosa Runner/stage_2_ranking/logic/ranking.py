@@ -30,7 +30,7 @@ def rank_musicosa(musicosa: Musicosa) -> tuple[list[ContestantStats], list[Entry
                                                                                 significant_decimal_digits)
     # Contestants' stats
 
-    contestants_by_name = {contestant.contestant_name: contestant for contestant in musicosa.contestants}
+    contestants_by_name = {contestant.name: contestant for contestant in musicosa.contestants}
     contestant_stats_collection = [ContestantStats(contestants_by_name[contestant], avg_given, avg_received)
                                    for (contestant, avg_given), (_, avg_received)
                                    in zip(contestants_avg_given_scores, contestants_avg_received_scores)]
@@ -80,10 +80,10 @@ def calculate_contestants_avg_given_scores(contestants: list[Contestant], signif
     for contestant in contestants:
         avg_given_score = 0
         for score in contestant.scores:
-            avg_given_score += score.score_value
+            avg_given_score += score.value
         avg_given_score = round(avg_given_score / len(contestant.scores), significant_decimal_digits)
 
-        contestants_avg_given_scores.append((contestant.contestant_name, avg_given_score))
+        contestants_avg_given_scores.append((contestant.name, avg_given_score))
 
     return contestants_avg_given_scores
 
@@ -96,14 +96,14 @@ def calculate_contestants_avg_received_scores(contestants: list[Contestant],
     entries_by_name = {title: avg_score for title, avg_score in all_entries_avg_scores}
 
     for contestant in contestants:
-        authored_entries = [entry for entry in entries if entry.author_name == contestant.contestant_name]
+        authored_entries = [entry for entry in entries if entry.author_name == contestant.name]
 
         avg_received_score = round(
             reduce(lambda acc, entry:
                    acc + entries_by_name[entry.title], authored_entries, 0) / len(authored_entries),
             significant_decimal_digits)
 
-        contestants_avg_received_scores.append((contestant.contestant_name, avg_received_score))
+        contestants_avg_received_scores.append((contestant.name, avg_received_score))
 
     return contestants_avg_received_scores
 
@@ -117,7 +117,7 @@ def calculate_entries_avg_scores(all_contestant_scores: list[Score],
         if score.entry_title not in entries_avg_scores:
             entries_avg_scores[score.entry_title] = 0
 
-        entries_avg_scores[score.entry_title] += score.score_value
+        entries_avg_scores[score.entry_title] += score.value
 
     for title, avg_score in entries_avg_scores.items():
         entries_avg_scores[title] = round(avg_score / contestants_count, significant_decimal_digits)

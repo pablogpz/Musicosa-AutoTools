@@ -1,9 +1,5 @@
 import re
-from typing import Any, Iterable
-
-
-def get_missing_sequence_numbers(kv_store: dict[int, Any], expected_numbers: Iterable[int]) -> list[int]:
-    return [number for number in expected_numbers if number not in kv_store]
+from typing import Any
 
 
 def format_sequence_numbers(sequence_numbers: list[int]) -> str:

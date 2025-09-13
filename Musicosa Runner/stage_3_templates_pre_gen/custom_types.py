@@ -12,7 +12,7 @@ class AvatarPairing:
 @dataclass
 class Musicosa:
     unfulfilled_contestants: list[Contestant]
-    available_avatars: list[Avatar]
+    avatars: list[Avatar]
     entries_index_of_unfulfilled_templates: dict[int, Entry]
     entries_index_of_unfulfilled_video_options: dict[int, Entry]
 

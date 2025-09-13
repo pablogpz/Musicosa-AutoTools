@@ -31,7 +31,7 @@ from stage_3_templates_pre_gen.custom_types import Musicosa as S3Musicosa, Stage
     StageThreeInput
 from stage_3_templates_pre_gen.execute import execute as execute_stage_3
 from stage_3_templates_pre_gen.stage_input import load_musicosa_from_db as load_s3_musicosa_from_db, \
-    load_available_avatars_from_db
+    load_avatars_from_db
 from stage_4_templates_gen.custom_types import StageFourOutput, StageFourInput, Template as S4Template
 from stage_4_templates_gen.execute import execute as execute_stage_4
 from stage_4_templates_gen.stage_input import load_templates_from_db
@@ -566,8 +566,8 @@ if __name__ == '__main__':
         for contestant in contestant_models:
             contestant_scorings = [s for s in scoring_models if s.contestant.id == contestant.id]
             s2_contestants.append(
-                S2Contestant(contestant_name=contestant.name,
-                             scores=[S2Score(entry_title=scoring.entry.title, score_value=scoring.score)
+                S2Contestant(name=contestant.name,
+                             scores=[S2Score(entry_title=scoring.entry.title, value=scoring.score)
                                      for scoring in contestant_scorings]))
 
         s2_entries = [S2Entry(title=entry.title, author_name=entry.author.name) for entry in entry_models]
@@ -587,7 +587,7 @@ if __name__ == '__main__':
         print(f"  # Contestants loaded: {len(musicosa.contestants)}")
         print(f"  # Entries loaded: {len(musicosa.entries)}")
         print("")
-        contestant_stats_display = [(stat.contestant.contestant_name, stat.avg_given_score, stat.avg_received_score)
+        contestant_stats_display = [(stat.contestant.name, stat.avg_given_score, stat.avg_received_score)
                                     for stat in result.contestants_stats]
         print(f"  Contestant stats (name, avg_given_score, avg_received_score): {contestant_stats_display}")
         print(f"  # Ranked entries: {len(result.entries_stats)}")
@@ -603,7 +603,7 @@ if __name__ == '__main__':
         # Update pipeline state
 
         contestant_stats_models.extend(
-            [ContestantStats(contestant=contestants_by_name[stat.contestant.contestant_name],
+            [ContestantStats(contestant=contestants_by_name[stat.contestant.name],
                              avg_given_score=stat.avg_given_score,
                              avg_received_score=stat.avg_received_score)
              for stat in stage_2_result.contestants_stats])
@@ -625,7 +625,7 @@ if __name__ == '__main__':
 
         unfulfilled_contestants = [c for c in contestant_models if c.avatar is None]
 
-        available_avatars: list[Avatar] = load_available_avatars_from_db()
+        available_avatars: list[Avatar] = load_avatars_from_db()
 
         entries_index_of_unfulfilled_templates: dict[int, Entry] = (
             dict([(stat.ranking_sequence, stat.entry) for stat in entry_stats_models]))
@@ -638,7 +638,7 @@ if __name__ == '__main__':
 
         return StageThreeInput(
             musicosa=S3Musicosa(unfulfilled_contestants=unfulfilled_contestants,
-                                available_avatars=available_avatars,
+                                avatars=available_avatars,
                                 entries_index_of_unfulfilled_templates=entries_index_of_unfulfilled_templates,
                                 entries_index_of_unfulfilled_video_options=entries_index_of_unfulfilled_video_options))
 

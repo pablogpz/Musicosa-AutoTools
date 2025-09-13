@@ -9,8 +9,7 @@ from common.time.utils import parse_time, validate_video_timestamp_str, time_str
 from model.models import SettingGroupKeys, FrameSettingNames, GenerationSettingNames
 from stage_3_templates_pre_gen.constants import AVATAR_IMG_SUPPORTED_FORMATS
 from stage_3_templates_pre_gen.custom_types import AvatarPairing
-from stage_3_templates_pre_gen.logic.helpers import get_missing_sequence_numbers, \
-    parse_sequence_selection_of_kvstore, \
+from stage_3_templates_pre_gen.logic.helpers import parse_sequence_selection_of_kvstore, \
     format_sequence_numbers, validate_sequence_selection
 
 
@@ -20,14 +19,14 @@ def generate_unfulfilled_avatar_pairings(unfulfilled_contestants: list[Contestan
 
     print("")
     print(f"[Avatar Pairings]")
+    print("")
+
+    if len(unfulfilled_contestants) == 0:
+        print("All contestants have an avatar assigned ✔")
+        return None
 
     if len(unfulfilled_contestants) > 0:
         print(f"  Contestants missing an avatar: {", ".join([c.name for c in unfulfilled_contestants])}")
-
-    if len(unfulfilled_contestants) == 0:
-        print("")
-        print("All contestants have an avatar assigned ✔")
-        return None
 
     last_filename = ""
     last_height = ""
@@ -44,18 +43,20 @@ def generate_unfulfilled_avatar_pairings(unfulfilled_contestants: list[Contestan
         print("")
 
     for contestant in unfulfilled_contestants:
+        choice_new_avatar = "n"
         if len(available_avatars) > 0:
             choice = better_input(
-                f"Avatar for '{contestant.name}' (1..{len(available_avatars)},n=new)",
-                lambda x: x.lower() in ["n"] or 1 <= (int(x) if x.isdigit() else -1) <= len(available_avatars),
+                f"Avatar for '{contestant.name}' (1..{len(available_avatars)},{choice_new_avatar}=new)",
+                lambda x: x.lower() in [choice_new_avatar]
+                          or 1 <= (int(x) if x.isdigit() else -1) <= len(available_avatars),
                 error_message=lambda
                     x: f"Invalid option '{x}' (Pick a valid option number or 'n' to create a new avatar)")
         else:
-            choice = "n"
+            choice = choice_new_avatar
             print("")
             print(f"Creating new avatar for '{contestant.name}'...")
 
-        if choice == "n":
+        if choice == choice_new_avatar:
             filename = better_input(
                 "Avatar filename",
                 lambda x: basename(x.lower()).rsplit(".", 1)[-1] in AVATAR_IMG_SUPPORTED_FORMATS,
@@ -157,17 +158,17 @@ def generate_unfulfilled_templates(entries_sequence_number_index: dict[int, Entr
 
     print("")
     print("[Entry Templates]")
+    print("")
 
     if len(entries_sequence_number_index) > 0:
         print(f"  Missing entry templates: [{format_sequence_numbers(list(entries_sequence_number_index.keys()))}]")
 
     if len(entries_sequence_number_index) == 0:
-        print("")
         print("All entries have a template assigned ✔")
         return None
 
     def get_missing_templates() -> list[int]:
-        return get_missing_sequence_numbers(templates, entries_sequence_number_index.keys())
+        return [seq_num for seq_num in entries_sequence_number_index.keys() if seq_num not in templates]
 
     def validate_selection(selection_str: str) -> bool:
         return validate_sequence_selection(selection_str, entries_sequence_number_index)
@@ -194,8 +195,8 @@ def generate_unfulfilled_templates(entries_sequence_number_index: dict[int, Entr
                          error_message=lambda
                              x: f"Invalid selection '{x}' (Use a valid index, range, omit a boundary or leave empty)",
                          indentation_level=2))
-        print("")
 
+        print("")
         print(f"Setting values for {len(selection)} template(s)...")
 
         avatar_scale = better_input("Avatar scale (factor)",
@@ -302,19 +303,19 @@ def generate_unfulfilled_video_options(entries_sequence_number_index: dict[int, 
 
     print("")
     print("[Entry Video Options]")
+    print("")
 
     if len(entries_sequence_number_index) > 0:
         print(f"  Missing entry video options: [{format_sequence_numbers(list(entries_sequence_number_index.keys()))}]")
 
     if len(entries_sequence_number_index) == 0:
-        print("")
         print("All entries have video options assigned ✔")
         return None
 
     video_target_duration = get_setting_by_key(SettingKeys.VALIDATION_ENTRY_VIDEO_DURATION_SECONDS).value
 
     def get_missing_options() -> list[int]:
-        return get_missing_sequence_numbers(video_options, entries_sequence_number_index.keys())
+        return [seq_num for seq_num in entries_sequence_number_index.keys() if seq_num not in video_options]
 
     def validate_selection(selection_str: str) -> bool:
         return validate_sequence_selection(selection_str, entries_sequence_number_index)

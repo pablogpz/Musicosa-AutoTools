@@ -4,7 +4,7 @@ from common.model.models import Contestant, Entry, Avatar, EntryStats, Template,
 from stage_3_templates_pre_gen.custom_types import Musicosa
 
 
-def load_available_avatars_from_db() -> list[Avatar]:
+def load_avatars_from_db() -> list[Avatar]:
     return [avatar.to_domain() for avatar in Avatar.ORM.select()]
 
 
@@ -39,6 +39,6 @@ def load_entries_index_of_unfulfilled_video_options_from_db() -> dict[int, Entry
 
 def load_musicosa_from_db() -> Musicosa:
     return Musicosa(unfulfilled_contestants=load_unfulfilled_contestants_from_db(),
-                    available_avatars=load_available_avatars_from_db(),
+                    avatars=load_avatars_from_db(),
                     entries_index_of_unfulfilled_templates=load_entries_index_of_unfulfilled_templates_from_db(),
                     entries_index_of_unfulfilled_video_options=load_entries_index_of_unfulfilled_video_options_from_db())
