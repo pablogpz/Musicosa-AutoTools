@@ -17,7 +17,7 @@ from stage_6_video_gen.custom_types import EntryVideoOptions
 from stage_6_video_gen.logic.helpers import get_video_duration_seconds
 
 
-def generate_all_video_bits(
+def generate_video_bit_collection(
         artifacts_folder: str,
         video_bits_folder: str,
         overwrite: bool,

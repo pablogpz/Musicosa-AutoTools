@@ -9,7 +9,7 @@ from common.model.settings import is_setting_set
 from stage_6_video_gen.custom_types import EntryVideoOptions, StageSixOutput, TransitionOptions, \
     TransitionType
 from stage_6_video_gen.logic.generate_final_video import generate_final_video
-from stage_6_video_gen.logic.generate_video_bits import generate_all_video_bits
+from stage_6_video_gen.logic.generate_video_bits import generate_video_bit_collection
 
 
 def execute(artifacts_folder: str,
@@ -58,11 +58,11 @@ def execute(artifacts_folder: str,
         raise StageException(f"transition_type ({transition_options.type}) must be one of [{get_args(TransitionType)}]")
 
     generated, missing_sources, failed_to_generate = (
-        generate_all_video_bits(artifacts_folder=artifacts_folder,
-                                video_bits_folder=video_bits_folder,
-                                overwrite=overwrite,
-                                quiet_ffmpeg=quiet_ffmpeg,
-                                entry_video_options=entries_video_options))
+        generate_video_bit_collection(artifacts_folder=artifacts_folder,
+                                      video_bits_folder=video_bits_folder,
+                                      overwrite=overwrite,
+                                      quiet_ffmpeg=quiet_ffmpeg,
+                                      entry_video_options=entries_video_options))
 
     final_video_path = None
 
