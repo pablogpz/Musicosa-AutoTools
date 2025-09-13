@@ -12,16 +12,16 @@ from stage_4_templates_gen.custom_types import Template
 from stage_4_templates_gen.defaults import DEFAULT_OVERWRITE_TEMPLATES, DEFAULT_OVERWRITE_PRESENTATIONS
 
 
-def generate_all_templates(templates_api_url: str,
-                           presentations_api_url: str,
-                           templates: list[Template],
-                           artifacts_folder: str,
-                           retry_attempts: int,
-                           overwrite_templates: bool = DEFAULT_OVERWRITE_TEMPLATES,
-                           overwrite_presentations: bool = DEFAULT_OVERWRITE_PRESENTATIONS
-                           ) -> tuple[list[str] | None, list[str] | None]:
-    generated_templates: list[str] = []
-    failed_templates_uuids: list[str] = []
+def generate_templates(templates_api_url: str,
+                       presentations_api_url: str,
+                       templates: list[Template],
+                       artifacts_folder: str,
+                       retry_attempts: int,
+                       overwrite_templates: bool = DEFAULT_OVERWRITE_TEMPLATES,
+                       overwrite_presentations: bool = DEFAULT_OVERWRITE_PRESENTATIONS
+                       ) -> tuple[list[str] | None, list[str] | None]:
+    generated_template_titles: list[str] = []
+    failed_template_uuids: list[str] = []
 
     frame_width: int = get_setting_by_key(SettingKeys.FRAME_WIDTH_PX).value
     frame_height: int = get_setting_by_key(SettingKeys.FRAME_HEIGHT_PX).value
@@ -53,7 +53,6 @@ def generate_all_templates(templates_api_url: str,
             print(f"  Re-attempting to generate up to {retry_attempts} times")
 
             for attempt in range(1, retry_attempts + 1):
-
                 response = load_template_page(template_url)
 
                 if response.status == 200:
@@ -67,35 +66,35 @@ def generate_all_templates(templates_api_url: str,
 
     with sync_playwright() as p:
         browser = p.chromium.launch()
+        # noinspection PyTypeChecker
         page = browser.new_page(viewport={"width": frame_width, "height": frame_height})
 
         for template in templates:
-            template_result = None
+            entry_result = None
             presentation_result = None
 
-            if TemplateType.ENTRY in template.template_targets:
+            if TemplateType.ENTRY in template.types:
                 template_path = f"{artifacts_folder}/{slugify(template.friendly_name)}.{TEMPLATE_IMG_FORMAT}"
                 template_url = f"{templates_api_url}/{template.uuid}"
 
-                template_result = generate_template(template_path, template_url, overwrite_templates)
+                entry_result = generate_template(template_path, template_url, overwrite_templates)
 
-            if TemplateType.PRESENTATION in template.template_targets:
+            if TemplateType.PRESENTATION in template.types:
                 template_path = \
                     f"{artifacts_folder}/{slugify(template.friendly_name)}-{PRESENTATION_FILE_SUFFIX}.{TEMPLATE_IMG_FORMAT}"
                 template_url = f"{presentations_api_url}/{template.uuid}"
 
                 presentation_result = generate_template(template_path, template_url, overwrite_presentations)
 
-            if template_result is not None or presentation_result is not None:
+            if entry_result is not None or presentation_result is not None:
+                entry_result = entry_result if entry_result is not None else True
+                presentation_result = presentation_result if presentation_result is not None else True
 
-                success = template_result if template_result is not None else True and presentation_result \
-                    if presentation_result is not None else True
-
-                if success:
-                    generated_templates.append(template.friendly_name)
+                if entry_result and presentation_result:
+                    generated_template_titles.append(template.friendly_name)
                 else:
-                    failed_templates_uuids.append(template.uuid)
+                    failed_template_uuids.append(template.uuid)
 
         browser.close()
 
-    return generated_templates or None, failed_templates_uuids or None
+    return generated_template_titles or None, failed_template_uuids or None

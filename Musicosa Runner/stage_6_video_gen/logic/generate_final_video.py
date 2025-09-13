@@ -10,17 +10,17 @@ from ffmpeg.filters import xfade, amix, concat
 
 from common.constants import VIDEO_FORMAT, PRESENTATION_FILE_SUFFIX, TEMPLATE_IMG_FORMAT
 from common.custom_types import StageException
-from naming.slugify import slugify
-from stage_6_video_gen.constants import VIDEO_FPS, FADE_DURATION, NOMINATIONS_PER_FRAGMENT
+from common.naming.slugify import slugify
+from stage_6_video_gen.constants import VIDEO_FPS, FADE_DURATION, NOMINATIONS_PER_FRAGMENT, VIDEO_CODEC, VIDEO_BITRATE
 from stage_6_video_gen.custom_types import NominationVideoOptions, TransitionOptions
 from stage_6_video_gen.logic.helpers import get_video_duration_seconds
 
 
-def generate_awards_final_videos(artifacts_folder: str,
-                                 video_bits_folder: str,
-                                 quiet_ffmpeg: bool,
-                                 vid_opts: list[NominationVideoOptions],
-                                 transition_options: TransitionOptions) -> list[str]:
+def generate_final_video_collection(artifacts_folder: str,
+                                    video_bits_folder: str,
+                                    quiet_ffmpeg: bool,
+                                    vid_opts: list[NominationVideoOptions],
+                                    transition_options: TransitionOptions) -> list[str]:
     opts_by_award: dict[str, list[NominationVideoOptions]] = defaultdict(list)
     for opt in vid_opts:
         opts_by_award[opt.award].append(opt)
@@ -28,6 +28,9 @@ def generate_awards_final_videos(artifacts_folder: str,
     awards_final_video_paths: list[str] = []
 
     for award, award_vid_opts in opts_by_award.items():
+
+        # Check source video bits for this award video
+
         existing_video_bits = [f"{video_bits_folder}/{award}/{opt.sequence_number}.{VIDEO_FORMAT}"
                                for opt in award_vid_opts
                                if path.isfile(f"{video_bits_folder}/{award}/{opt.sequence_number}.{VIDEO_FORMAT}")]
@@ -37,6 +40,8 @@ def generate_awards_final_videos(artifacts_folder: str,
                   f"{len(award_vid_opts) - len(existing_video_bits)}"
                   f" missing video bits")
             continue
+
+        # Generate final video
 
         awards_final_video_paths.append(
             generate_final_video(artifacts_folder=artifacts_folder,
@@ -65,6 +70,9 @@ def generate_final_video(artifacts_folder: str,
         timeline_cursor = 0
 
         for video_option in vid_opts:
+
+            # Check video sources
+
             presentation_file = \
                 f"{artifacts_folder}/{slugify(video_option.template_friendly_name)}-{PRESENTATION_FILE_SUFFIX}.{TEMPLATE_IMG_FORMAT}"
             video_bit_file = f"{video_bits_folder}/{video_option.sequence_number}.{VIDEO_FORMAT}"
@@ -76,6 +84,8 @@ def generate_final_video(artifacts_folder: str,
 
             if not path.isfile(video_bit_file):
                 raise StageException(f"Video file '{video_bit_file}' missing for final video generation")
+
+            # Create timeline of video and audio streams
 
             video_bit_stream = ffmpeg.input(filename=video_bit_file)
             video_bit_duration = get_video_duration_seconds(video_bit_file)
@@ -105,6 +115,8 @@ def generate_final_video(artifacts_folder: str,
 
             timeline_cursor = start_of_audio_track + video_bit_duration
 
+        # Compile FFMpeg command
+
         fragment_path = f"{video_bits_folder}/{award_slug}.fragment-{fragment_id}.{VIDEO_FORMAT}"
 
         try:
@@ -112,11 +124,11 @@ def generate_final_video(artifacts_folder: str,
                           .output(concat(*video_streams, n=len(video_streams), v=1, a=0).video(0),
                                   amix(*audio_streams, inputs=len(audio_streams), duration="longest", normalize=False),
                                   filename=fragment_path,
-                                  vcodec="libx264",
-                                  b="6000k")
+                                  vcodec=VIDEO_CODEC,
+                                  b=VIDEO_BITRATE)
                           .compile(overwrite_output=True))
         except FFMpegError as err:
-            raise StageException(f"Failed to compile ffmpeg command for fragment ({fragment_id}): {err}") from err
+            raise StageException(f"Failed to compile ffmpeg command for fragment '{fragment_id}': {err}") from err
 
         filtergraph_arg_idx = ffmpeg_cmd.index("-filter_complex")
 
@@ -135,6 +147,8 @@ def generate_final_video(artifacts_folder: str,
         recompiled_cmd.extend(cmd_config_and_inputs)
         recompiled_cmd.append(f"-filter_complex_script {filtergraph_script}")
         recompiled_cmd.extend(cmd_output)
+
+        # Execute compiled FFMpeg command
 
         try:
             ffmpeg_exit_code = system(" ".join(recompiled_cmd))
@@ -165,12 +179,13 @@ def generate_final_video(artifacts_folder: str,
     final_video_path = f"{video_bits_folder}/{award_slug}.{VIDEO_FORMAT}"
 
     if len(final_video_fragments_files) == 1:
+        # If 1 fragment rename it
         if path.isfile(final_video_path):
             os.remove(final_video_path)
 
         os.rename(final_video_fragments_files[0], final_video_path)
     else:
-
+        # If multiple fragments concat them with FFMpeg 'concat' filter
         concat_list_file = f"{video_bits_folder}/concat.list"
         with open(concat_list_file, "w") as f:
             f.write("\n".join([f"file '{basename(frag_file)}'" for frag_file in final_video_fragments_files]))

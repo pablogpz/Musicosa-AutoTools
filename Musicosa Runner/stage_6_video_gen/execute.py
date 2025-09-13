@@ -5,8 +5,8 @@ from typing import get_args
 from common.custom_types import StageException
 from stage_6_video_gen.custom_types import NominationVideoOptions, StageSixOutput, TransitionOptions, \
     TransitionType
-from stage_6_video_gen.logic.generate_final_video import generate_awards_final_videos
-from stage_6_video_gen.logic.generate_video_bits import generate_all_video_bits
+from stage_6_video_gen.logic.generate_final_video import generate_final_video_collection
+from stage_6_video_gen.logic.generate_video_bits import generate_video_bit_collection
 
 
 def execute(artifacts_folder: str,
@@ -42,22 +42,22 @@ def execute(artifacts_folder: str,
         raise StageException("No video options provided")
 
     generated, missing_sources, failed_to_generate = (
-        generate_all_video_bits(artifacts_folder=artifacts_folder,
-                                video_bits_folder=video_bits_folder,
-                                overwrite=overwrite,
-                                quiet_ffmpeg=quiet_ffmpeg,
-                                nominations_video_options=nominations_video_options))
+        generate_video_bit_collection(artifacts_folder=artifacts_folder,
+                                      video_bits_folder=video_bits_folder,
+                                      overwrite=overwrite,
+                                      quiet_ffmpeg=quiet_ffmpeg,
+                                      nominations_video_options=nominations_video_options))
 
-    awards_final_video_paths = None
+    award_final_video_paths = None
 
     if stitch_final_video:
-        awards_final_video_paths = generate_awards_final_videos(artifacts_folder=artifacts_folder,
-                                                                video_bits_folder=video_bits_folder,
-                                                                quiet_ffmpeg=quiet_ffmpeg_final_video,
-                                                                vid_opts=nominations_video_options,
-                                                                transition_options=transition_options)
+        award_final_video_paths = generate_final_video_collection(artifacts_folder=artifacts_folder,
+                                                                  video_bits_folder=video_bits_folder,
+                                                                  quiet_ffmpeg=quiet_ffmpeg_final_video,
+                                                                  vid_opts=nominations_video_options,
+                                                                  transition_options=transition_options)
 
-    return StageSixOutput(generated_video_bits_files=generated,
+    return StageSixOutput(generated_video_bit_files=generated,
                           nominations_missing_sources=missing_sources,
                           failed_video_bits=failed_to_generate,
-                          final_videos=awards_final_video_paths)
+                          final_videos_files=award_final_video_paths)
