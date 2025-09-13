@@ -16,26 +16,26 @@ from common.model.metadata import get_metadata_by_field
 from common.model.models import Template, Setting, NominationStats, \
     CastVote, MetadataFields
 from common.naming.identifiers import generate_member_uuid5, generate_nomination_uuid5_from_nomination_str
+from stage_1_validation.custom_types import StageOneOutput, StageOneInput
 from stage_1_validation.execute import execute as execute_stage_1
 from stage_1_validation.stage_input import parse_award_forms_folder, get_award_count, get_member_count, \
     get_valid_award_slugs
-from stage_1_validation.types import StageOneOutput, StageOneInput
+from stage_2_ranking.custom_types import StageTwoOutput, StageTwoInput
 from stage_2_ranking.execute import execute as execute_stage_2
 from stage_2_ranking.stage_input import load_tfa_from_db as load_s2_tfa_from_db
-from stage_2_ranking.types import StageTwoOutput, StageTwoInput
+from stage_3_templates_pre_gen.custom_types import StageThreeOutput, StageThreeInput
 from stage_3_templates_pre_gen.execute import execute as execute_stage_3
 from stage_3_templates_pre_gen.stage_input import load_tfa_from_db as load_s3_tfa_from_db
-from stage_3_templates_pre_gen.types import StageThreeOutput, StageThreeInput
+from stage_4_templates_gen.custom_types import StageFourOutput, StageFourInput
 from stage_4_templates_gen.execute import execute as execute_stage_4
 from stage_4_templates_gen.stage_input import load_templates_from_db
-from stage_4_templates_gen.types import StageFourOutput, StageFourInput
+from stage_5_videoclips_acquisition.custom_types import StageFiveOutput, StageFiveInput
 from stage_5_videoclips_acquisition.execute import execute as execute_stage_5
 from stage_5_videoclips_acquisition.stage_input import load_videoclips_from_db
-from stage_5_videoclips_acquisition.types import StageFiveOutput, StageFiveInput
+from stage_6_video_gen.custom_types import StageSixOutput, \
+    StageSixInput, TransitionOptions, TransitionType
 from stage_6_video_gen.execute import execute as execute_stage_6
 from stage_6_video_gen.stage_input import load_video_options_from_db
-from stage_6_video_gen.types import StageSixOutput, \
-    StageSixInput, TransitionOptions, TransitionType
 
 # STAGE IDs
 

@@ -2,11 +2,11 @@ import os
 from os import path
 from typing import get_args
 
-from common.types import StageException
+from common.custom_types import StageException
+from stage_6_video_gen.custom_types import NominationVideoOptions, StageSixOutput, TransitionOptions, \
+    TransitionType
 from stage_6_video_gen.logic.generate_final_video import generate_awards_final_videos
 from stage_6_video_gen.logic.generate_video_bits import generate_all_video_bits
-from stage_6_video_gen.types import NominationVideoOptions, StageSixOutput, TransitionOptions, \
-    TransitionType
 
 
 def execute(artifacts_folder: str,

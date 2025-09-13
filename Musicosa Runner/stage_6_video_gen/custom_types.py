@@ -78,6 +78,7 @@ class TransitionOptions:
     transition_duration: int
     type: TransitionType
 
+
 @dataclass
 class StageSixInput:
     artifacts_folder: str

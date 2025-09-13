@@ -1,7 +1,7 @@
+from common.custom_types import StageException
 from common.db.database import db
 from common.db.peewee_helpers import bulk_pack
 from common.model.models import Setting, Template
-from common.types import StageException
 from stage_3_templates_pre_gen.execute import execute
 from stage_3_templates_pre_gen.stage_input import load_tfa_from_db
 

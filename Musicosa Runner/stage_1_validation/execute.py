@@ -1,8 +1,8 @@
+from common.custom_types import StageException
 from common.model.models import SettingKeys
 from common.model.settings import is_setting_set
-from common.types import StageException
+from stage_1_validation.custom_types import StageOneOutput, AwardForm
 from stage_1_validation.logic.validation import validate_award_form_collection
-from stage_1_validation.types import StageOneOutput, AwardForm
 
 
 def execute(award_forms: list[AwardForm],

@@ -1,8 +1,8 @@
+from common.custom_types import StageException
 from common.model.models import SettingKeys
 from common.model.settings import is_setting_set
-from common.types import StageException
+from stage_2_ranking.custom_types import TFA, StageTwoOutput
 from stage_2_ranking.logic.ranking import rank_tfa
-from stage_2_ranking.types import TFA, StageTwoOutput
 
 
 def execute(tfa: TFA) -> StageTwoOutput:

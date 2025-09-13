@@ -1,6 +1,6 @@
+from common.custom_types import StageException
 from common.db.database import db
 from common.model.models import NominationStats
-from common.types import StageException
 from stage_2_ranking.execute import execute
 from stage_2_ranking.stage_input import load_tfa_from_db
 

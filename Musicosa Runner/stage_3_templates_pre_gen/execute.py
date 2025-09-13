@@ -1,7 +1,7 @@
-from common.types import StageException
+from common.custom_types import StageException
+from stage_3_templates_pre_gen.custom_types import StageThreeOutput, TFA
 from stage_3_templates_pre_gen.logic.fulfillment import generate_unfulfilled_frame_settings, \
     generate_unfulfilled_templates
-from stage_3_templates_pre_gen.types import StageThreeOutput, TFA
 
 
 def execute(tfa: TFA) -> StageThreeOutput:

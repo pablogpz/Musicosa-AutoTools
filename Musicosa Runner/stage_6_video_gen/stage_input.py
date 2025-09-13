@@ -2,7 +2,7 @@ from peewee import JOIN
 
 from common.model.models import Nomination, NominationStats, VideoOptions, Template
 from model.models import Videoclip
-from stage_6_video_gen.types import NominationVideoOptions, Timestamp
+from stage_6_video_gen.custom_types import NominationVideoOptions, Timestamp
 
 
 def load_video_options_from_db() -> list[NominationVideoOptions]:

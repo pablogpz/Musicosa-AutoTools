@@ -1,10 +1,10 @@
 import os
 from os.path import basename
 
-from common.types import StageException
+from common.custom_types import StageException
 from stage_1_validation.constants import CSV_SEPARATOR, CSV_MEMBER_NAME_HEADER, CSV_UNUSED_HEADERS
+from stage_1_validation.custom_types import AwardForm, MemberSubmission, CastVote
 from stage_1_validation.logic.parsing.utils import parse_score_str, unquote
-from stage_1_validation.types import AwardForm, MemberSubmission, CastVote
 
 
 def parse_award_forms_csv_folder(forms_folder: str) -> list[AwardForm]:

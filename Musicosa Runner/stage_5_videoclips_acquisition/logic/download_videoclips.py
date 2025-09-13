@@ -6,9 +6,9 @@ import yt_dlp
 from ffmpeg.exceptions import FFMpegError
 
 from common.constants import VIDEO_FORMAT
+from common.custom_types import StageException
 from common.model.models import Videoclip
 from common.naming.slugify import slugify
-from common.types import StageException
 
 
 def download_all_videoclips(videoclips: list[Videoclip], artifacts_folder: str, quiet_ffmpeg: bool) \

@@ -3,7 +3,7 @@ from random import randint
 
 from common.model.models import SettingKeys
 from common.model.settings import get_setting_by_key
-from stage_2_ranking.types import TFA, Award, Nomination, NominationStats
+from stage_2_ranking.custom_types import TFA, Award, Nomination, NominationStats
 
 
 def rank_tfa(tfa: TFA) -> list[NominationStats]:

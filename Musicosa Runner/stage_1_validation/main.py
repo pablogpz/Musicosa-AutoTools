@@ -2,10 +2,10 @@ import argparse
 
 from peewee import PeeweeException
 
+from common.custom_types import StageException
 from common.db.database import db
 from common.model.models import CastVote
 from common.naming.identifiers import generate_member_uuid5, generate_nomination_uuid5_from_nomination_str
-from common.types import StageException
 from stage_1_validation.defaults import DEFAULT_AWARD_FORMS_FOLDER
 from stage_1_validation.execute import execute
 from stage_1_validation.stage_input import parse_award_forms_folder, get_valid_award_slugs, get_award_count, \

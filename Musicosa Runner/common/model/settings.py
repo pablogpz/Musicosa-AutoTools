@@ -1,6 +1,6 @@
 from peewee import PeeweeException
 
-from common.model.models import Setting, SettingKeys, SettingValueTypes, SettingValueTypeSpec, SETTING_KEY_SEPARATOR
+from common.model.models import Setting, SettingKeys, SETTING_KEY_SEPARATOR
 
 
 def get_setting_by_key(key: SettingKeys) -> Setting | None:
@@ -24,18 +24,3 @@ def is_setting_set(key: SettingKeys) -> bool:
     setting = get_setting_by_key(key)
 
     return setting is not None and setting.value is not None
-
-
-def parse_setting_value(value: str, type_str: SettingValueTypes) -> SettingValueTypeSpec:
-    if not value or not value.strip():
-        parsed_value = None
-    elif type_str == SettingValueTypes.INTEGER:
-        parsed_value = int(value)
-    elif type_str == SettingValueTypes.REAL:
-        parsed_value = float(value)
-    elif type_str == SettingValueTypes.BOOLEAN:
-        parsed_value = value.lower() == "true"
-    else:
-        parsed_value = value
-
-    return parsed_value
