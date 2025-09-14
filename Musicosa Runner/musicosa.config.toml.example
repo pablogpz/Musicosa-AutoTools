@@ -1,6 +1,6 @@
 start_from = 1
 artifacts_folder = "artifacts"
-stitch_final_video = true
+stitch_final_video = false
 
 [stage_1]
 forms_folder = "contestant_forms"
@@ -20,8 +20,8 @@ quiet_ffmpeg = true
 
 [stage_6]
 video_bits_folder = "artifacts/video_bits"
-overwrite_video_bits = true
-final_video_name = "musicosa-Xth-edition"
+overwrite_video_bits = false
+final_video_name = "musicosa-final"
 presentation_duration = 5
 transition_duration = 3
 transition_type = "fade"

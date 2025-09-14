@@ -214,7 +214,7 @@ def stage_gate[SI, SO](
 
 class NoConfStageExecutor[SI, SO](Protocol):
     def __call__(self, *, stage_input: SI) -> SO:
-        ...
+        pass
 
 
 def noconf_stage_gate[SI, SO](
