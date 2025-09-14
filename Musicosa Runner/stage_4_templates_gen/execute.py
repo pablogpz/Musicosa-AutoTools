@@ -11,15 +11,13 @@ from stage_4_templates_gen.custom_types import Template, StageFourOutput
 from stage_4_templates_gen.logic.generate_templates import generate_templates
 
 
-def execute(
-        templates_api_url: str,
-        presentations_api_url: str,
-        artifacts_folder: str,
-        templates: list[Template],
-        retry_attempts: int,
-        overwrite_templates: bool,
-        overwrite_presentations: bool,
-) -> StageFourOutput:
+def execute(templates_api_url: str,
+            presentations_api_url: str,
+            artifacts_folder: str,
+            templates: list[Template],
+            retry_attempts: int,
+            overwrite_templates: bool,
+            overwrite_presentations: bool) -> StageFourOutput:
     if not is_setting_set(SettingKeys.FRAME_WIDTH_PX):
         raise StageException(f"Setting '{SettingKeys.FRAME_WIDTH_PX}' not set")
 

@@ -3,13 +3,6 @@ from common.model.settings import get_setting_by_key
 from stage_1_validation.custom_types import AwardForm, MemberSubmission
 
 
-def validate_score(score: float, min_score: float, max_score: float) -> str | None:
-    if not isinstance(score, float) or not (min_score <= score <= max_score):
-        return f"Invalid score ({score})"
-
-    return None
-
-
 def validate_award_form_collection(award_forms: list[AwardForm],
                                    valid_award_slugs: list[str],
                                    award_count: int,
@@ -59,3 +52,10 @@ def validate_member_submission(submission: MemberSubmission) -> list[str] | None
             validation_errors.append(f"[{cast_vote.nomination}] {error}")
 
     return [f"[{submission.name}] {err_msg}" for err_msg in validation_errors] or None
+
+
+def validate_score(score: float, min_score: float, max_score: float) -> str | None:
+    if not isinstance(score, float) or not (min_score <= score <= max_score):
+        return f"Invalid score ({score})"
+
+    return None

@@ -2,11 +2,11 @@ import argparse
 
 from peewee import PeeweeException
 
+from common.config.loader import load_config
 from common.custom_types import StageException
 from common.db.database import db
 from common.model.models import CastVote
 from common.naming.identifiers import generate_member_uuid5, generate_nomination_uuid5_from_nomination_str
-from stage_1_validation.defaults import DEFAULT_AWARD_FORMS_FOLDER
 from stage_1_validation.execute import execute
 from stage_1_validation.stage_input import parse_award_forms_folder, get_valid_award_slugs, get_award_count, \
     get_member_count
@@ -16,12 +16,16 @@ if __name__ == "__main__":
     # Configuration
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--award_forms_folder', default=DEFAULT_AWARD_FORMS_FOLDER)
+    parser.add_argument("--config_file")
     args = parser.parse_args()
 
-    award_forms_folder_arg = args.award_forms_folder.strip()
-    award_forms_folder = award_forms_folder_arg.removesuffix('/') if award_forms_folder_arg.endswith('/') \
-        else award_forms_folder_arg
+    try:
+        config = load_config(args.config_file.strip() if args.config_file else None)
+    except FileNotFoundError | IOError | TypeError as err:
+        print(err)
+        exit(1)
+
+    award_forms_folder = config.stage_1.award_forms_folder
 
     # Data retrieval
 

@@ -34,7 +34,7 @@ if __name__ == "__main__":
 
     try:
         with db.atomic():
-            NominationStats.ORM.insert_many([stat.__data__ for stat in raw_nominations_stats]).execute()  # CAREFUL !
+            NominationStats.ORM.insert_many([stat.__data__ for stat in raw_nominations_stats]).execute()  # CAREFUL!
     except Exception as err:
         print(f"[Stage 2 | Data persistence] {err}")
         exit(1)

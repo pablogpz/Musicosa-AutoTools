@@ -9,7 +9,7 @@ from math import ceil
 from common.constants import TEMPLATE_IMG_FORMAT, VIDEO_FORMAT
 from common.naming.slugify import slugify
 from common.time.utils import parse_time, time_to_seconds
-from stage_6_video_gen.constants import VIDEO_FPS, VIDEO_CODEC, VIDEO_BITRATE, NORMALIZATION_RANGE_TARGET, \
+from stage_6_video_gen.constants import VIDEO_FPS, VIDEO_CODEC, VIDEO_BITRATE, NORMALIZATION_LOUDNESS_RANGE_TARGET, \
     NORMALIZATION_TYPE, NORMALIZATION_AUDIO_CODEC, NORMALIZATION_AUDIO_SAMPLE_RATE, NORMALIZATION_TARGET_LEVEL
 from stage_6_video_gen.custom_types import NominationVideoOptions
 from stage_6_video_gen.logic.helpers import get_video_duration_seconds
@@ -104,7 +104,7 @@ def generate_video_bit(videoclip_path: str, vid_opts: NominationVideoOptions, te
 
         normalizer = FFmpegNormalize(normalization_type=NORMALIZATION_TYPE,
                                      target_level=NORMALIZATION_TARGET_LEVEL,
-                                     loudness_range_target=NORMALIZATION_RANGE_TARGET,
+                                     loudness_range_target=NORMALIZATION_LOUDNESS_RANGE_TARGET,
                                      audio_codec=NORMALIZATION_AUDIO_CODEC,
                                      sample_rate=NORMALIZATION_AUDIO_SAMPLE_RATE,
                                      video_codec="copy")

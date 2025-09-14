@@ -1,14 +1,13 @@
 import argparse
 import inspect
-import tomllib
 from collections.abc import Callable
-from dataclasses import dataclass, field
-from logging import error
-from os import path
 from typing import Literal, Never, Protocol, Any, cast
 
 from peewee import PeeweeException
 
+from common.config.config import Config
+from common.config.loader import load_config
+from common.custom_types import STAGE_ONE, STAGE_TWO, STAGE_THREE, STAGE_FOUR, STAGE_FIVE, STAGE_SIX
 from common.db.database import db
 from common.db.peewee_helpers import bulk_pack
 from common.input.better_input import better_input
@@ -36,174 +35,6 @@ from stage_6_video_gen.custom_types import StageSixOutput, \
     StageSixInput, TransitionOptions, TransitionType
 from stage_6_video_gen.execute import execute as execute_stage_6
 from stage_6_video_gen.stage_input import load_video_options_from_db
-
-# STAGE IDs
-
-STAGE_ONE: Literal[1] = 1
-STAGE_TWO: Literal[2] = 2
-STAGE_THREE: Literal[3] = 3
-STAGE_FOUR: Literal[4] = 4
-STAGE_FIVE: Literal[5] = 5
-STAGE_SIX: Literal[6] = 6
-
-type Stage = Literal[1, 2, 3, 4, 5, 6]
-
-# MUSICOSA CONFIG DEFAULTS
-
-DEFAULT_CONFIG_FILE = "musicosa.config.toml"
-
-# Global defaults
-DEFAULT_ARTIFACTS_FOLDER = "artifacts"
-DEFAULT_START_FROM_STAGE: Stage = STAGE_ONE
-DEFAULT_STITCH_FINAL_VIDEO_FLAG = False
-# Stage 1 defaults
-DEFAULT_AWARD_FORMS_FOLDER = "award_forms"
-# Stage 4 defaults
-DEFAULT_TEMPLATES_API_URL = "http://localhost:3000/templates"
-DEFAULT_PRESENTATIONS_API_URL = "http://localhost:3000/presentations"
-DEFAULT_GENERATION_RETRY_ATTEMPTS = 3
-DEFAULT_OVERWRITE_TEMPLATES = True
-DEFAULT_OVERWRITE_PRESENTATIONS = True
-# Stage 5 defaults
-DEFAULT_STAGE_5_QUIET_FFMPEG = True
-# Stage 6 defaults
-DEFAULT_VIDEO_BITS_FOLDER = f"{DEFAULT_ARTIFACTS_FOLDER}/video_bits"
-DEFAULT_OVERWRITE_VIDEO_BITS = True
-DEFAULT_PRESENTATION_DURATION = 5
-DEFAULT_TRANSITION_DURATION = 3
-DEFAULT_TRANSITION_TYPE = "fade"
-DEFAULT_STAGE_6_QUIET_FFMPEG = True
-DEFAULT_QUIET_FFMPEG_FINAL_VIDEO = True
-
-
-# Config dataclasses
-#     Note: Keep in sync with TOML keys
-
-@dataclass
-class StageOneConfig:
-    award_forms_folder: str = DEFAULT_AWARD_FORMS_FOLDER
-
-    def __init__(self, award_forms_folder: str = DEFAULT_AWARD_FORMS_FOLDER):
-        award_forms_folder = award_forms_folder.strip()
-
-        self.award_forms_folder = award_forms_folder.removesuffix("/") if award_forms_folder.endswith("/") \
-            else award_forms_folder
-
-
-@dataclass
-class StageFourConfig:
-    templates_api_url: str = DEFAULT_TEMPLATES_API_URL
-    presentations_api_url: str = DEFAULT_PRESENTATIONS_API_URL
-    gen_retry_attempts: int = DEFAULT_GENERATION_RETRY_ATTEMPTS
-    overwrite_templates: bool = DEFAULT_OVERWRITE_TEMPLATES
-    overwrite_presentations: bool = DEFAULT_OVERWRITE_PRESENTATIONS
-
-    def __init__(self, templates_api_url: str = DEFAULT_TEMPLATES_API_URL,
-                 presentations_api_url: str = DEFAULT_PRESENTATIONS_API_URL,
-                 gen_retry_attempts: int = DEFAULT_GENERATION_RETRY_ATTEMPTS,
-                 overwrite_templates: bool = DEFAULT_OVERWRITE_TEMPLATES,
-                 overwrite_presentations: bool = DEFAULT_OVERWRITE_PRESENTATIONS):
-        templates_api_url = templates_api_url.strip()
-
-        self.templates_api_url = templates_api_url.removesuffix("/") if templates_api_url.endswith("/") \
-            else templates_api_url
-
-        presentations_api_url = presentations_api_url.strip()
-
-        self.presentations_api_url = presentations_api_url.removesuffix("/") if presentations_api_url.endswith("/") \
-            else presentations_api_url
-
-        self.gen_retry_attempts = gen_retry_attempts
-        self.overwrite_templates = overwrite_templates
-        self.overwrite_presentations = overwrite_presentations
-
-
-@dataclass
-class StageFiveConfig:
-    quiet_ffmpeg: bool = DEFAULT_STAGE_5_QUIET_FFMPEG
-
-    def __init__(self, quiet_ffmpeg: bool = DEFAULT_STAGE_5_QUIET_FFMPEG):
-        self.quiet_ffmpeg = quiet_ffmpeg
-
-
-@dataclass
-class StageSixConfig:
-    video_bits_folder: str = DEFAULT_VIDEO_BITS_FOLDER
-    overwrite_video_bits: bool = DEFAULT_OVERWRITE_VIDEO_BITS
-    presentation_duration: int = DEFAULT_PRESENTATION_DURATION
-    transition_duration: int = DEFAULT_TRANSITION_DURATION
-    transition_type: str = DEFAULT_TRANSITION_TYPE
-    quiet_ffmpeg: bool = DEFAULT_STAGE_6_QUIET_FFMPEG
-    quiet_ffmpeg_final_video: bool = DEFAULT_QUIET_FFMPEG_FINAL_VIDEO
-
-    def __init__(self, video_bits_folder: str = DEFAULT_VIDEO_BITS_FOLDER,
-                 overwrite_video_bits: bool = DEFAULT_OVERWRITE_VIDEO_BITS,
-                 presentation_duration: int = DEFAULT_PRESENTATION_DURATION,
-                 transition_duration: int = DEFAULT_TRANSITION_DURATION,
-                 transition_type: str = DEFAULT_TRANSITION_TYPE,
-                 quiet_ffmpeg: bool = DEFAULT_STAGE_6_QUIET_FFMPEG,
-                 quiet_ffmpeg_final_video: bool = DEFAULT_QUIET_FFMPEG_FINAL_VIDEO):
-        video_bits_folder = video_bits_folder.strip()
-
-        self.video_bits_folder = video_bits_folder.removesuffix("/") if video_bits_folder.endswith("/") \
-            else video_bits_folder
-        self.overwrite_video_bits = overwrite_video_bits
-        self.presentation_duration = presentation_duration
-        self.transition_duration = transition_duration
-        self.transition_type = transition_type.strip()
-        self.quiet_ffmpeg = quiet_ffmpeg
-        self.quiet_ffmpeg_final_video = quiet_ffmpeg_final_video
-
-
-@dataclass
-class Config:
-    start_from: Stage = DEFAULT_START_FROM_STAGE
-    artifacts_folder: str = DEFAULT_ARTIFACTS_FOLDER
-    stitch_final_video: bool = DEFAULT_STITCH_FINAL_VIDEO_FLAG
-    stage_1: StageOneConfig = field(default_factory=StageOneConfig)
-    stage_4: StageFourConfig = field(default_factory=StageFourConfig)
-    stage_5: StageFiveConfig = field(default_factory=StageFiveConfig)
-    stage_6: StageSixConfig = field(default_factory=StageSixConfig)
-
-    def __init__(self, start_from: Stage = DEFAULT_START_FROM_STAGE,
-                 artifacts_folder: str = DEFAULT_ARTIFACTS_FOLDER,
-                 stitch_final_video: bool = DEFAULT_STITCH_FINAL_VIDEO_FLAG,
-                 stage_1: StageOneConfig = StageOneConfig(),
-                 stage_4: StageFourConfig = StageFourConfig(),
-                 stage_5: StageFiveConfig = StageFiveConfig(),
-                 stage_6: StageSixConfig = StageSixConfig()):
-        self.start_from = start_from
-        self.artifacts_folder = artifacts_folder.strip()
-        self.stitch_final_video = stitch_final_video
-        self.stage_1 = stage_1
-        self.stage_4 = stage_4
-        self.stage_5 = stage_5
-        self.stage_6 = stage_6
-
-
-def load_config(toml_config_file: str = DEFAULT_CONFIG_FILE) -> Config:
-    if not path.isfile(toml_config_file):
-        raise FileNotFoundError(f"Config file '{toml_config_file}' not found")
-
-    with open(toml_config_file, "r") as config:
-        try:
-            config_str_contents = config.read()
-        except IOError as err:
-            raise IOError(f"Couldn't read config file contents: {err}") from err
-
-    config_dict = tomllib.loads(config_str_contents, parse_float=float)
-
-    try:
-        return Config(start_from=config_dict["start_from"],
-                      artifacts_folder=config_dict["artifacts_folder"],
-                      stitch_final_video=config_dict["stitch_final_video"],
-                      stage_1=StageOneConfig(**config_dict["stage_1"]),
-                      stage_4=StageFourConfig(**config_dict["stage_4"]),
-                      stage_5=StageFiveConfig(**config_dict["stage_5"]),
-                      stage_6=StageSixConfig(**config_dict["stage_6"]))
-    except TypeError as err:
-        raise TypeError(f"Couldn't parse config file: {err}") from err
-
 
 # FLOW CONTROL GATES
 
@@ -248,7 +79,7 @@ def flow_control_gate[SI, SO](
         /, *,
         controls: set[FlowControl],
         err_header: str | None = None,
-        config_file: str = DEFAULT_CONFIG_FILE,
+        config_file: str | None = None,
         reload_input: StageInputCollector | None = None
 ) -> SO | Never:
     """
@@ -334,7 +165,7 @@ def flow_control_gate[SI, SO](
 def custom_gate[SI, SO](
         controls: set[FlowControl],
         err_header: str | None = None,
-        config_file: str = DEFAULT_CONFIG_FILE,
+        config_file: str | None = None,
         reload_input: StageInputCollector | None = None
 ) -> Callable[[ControlGateSurrogate[SI, SO]], ControlGateSurrogate[SI, SO]]:
     def generator(func: ControlGateSurrogate[SI, SO]) -> ControlGateSurrogate[SI, SO]:
@@ -359,7 +190,7 @@ def retry[SI, SO](err_header: str | None = None) -> Callable[
 
 def retry_or_reconfig[SI, SO](
         err_header: str | None = None,
-        config_file: str = DEFAULT_CONFIG_FILE
+        config_file: str | None = None
 ) -> Callable[[ControlGateSurrogate[SI, SO]], ControlGateSurrogate[SI, SO]]:
     return custom_gate(controls={RETRY, RELOAD_CONFIG, ABORT}, err_header=err_header, config_file=config_file)
 
@@ -367,7 +198,7 @@ def retry_or_reconfig[SI, SO](
 def stage_gate[SI, SO](
         err_header: str,
         reload_input: StageInputCollector[SI],
-        config_file: str = DEFAULT_CONFIG_FILE
+        config_file: str | None = None
 ) -> Callable[[ControlGateSurrogate[SI, SO]], ControlGateSurrogate[SI, SO]]:
     return custom_gate(controls={CONTINUE_ON_SUCCESS, RETRY, RELOAD_CONFIG, RELOAD_DATA, RELOAD_CONFIG_AND_DATA, ABORT},
                        err_header=err_header,
@@ -377,7 +208,7 @@ def stage_gate[SI, SO](
 
 class NoConfStageExecutor[SI, SO](Protocol):
     def __call__(self, *, stage_input: SI) -> SO:
-        ...
+        pass
 
 
 def noconf_stage_gate[SI, SO](
@@ -407,15 +238,15 @@ if __name__ == '__main__':
     # MUSICOSA CONFIG
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config_file", default=DEFAULT_CONFIG_FILE)
+    parser.add_argument("--config_file")
     args = parser.parse_args()
 
-    config_file = args.config_file.strip()
+    config_file = args.config_file.strip() if args.config_file else None
 
     try:
         config = load_config(config_file)
     except FileNotFoundError | IOError | TypeError as err:
-        error(f"Config loading error: {err}")
+        print(f"Config loading error: {err}")
         exit(1)
 
     # MUSICOSA PIPELINE
