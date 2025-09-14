@@ -2,7 +2,7 @@ from os import path, getenv
 
 from peewee import SqliteDatabase, OperationalError
 
-db_path = getenv('MUSICOSA_DB_PATH', '')
+db_path = getenv("DB_PATH", "")
 
 if not path.isfile(db_path):
     print(f"[DB ERROR] Database not found at '{db_path}'")
