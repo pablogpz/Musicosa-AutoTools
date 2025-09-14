@@ -9,7 +9,6 @@ from common.model.models import SettingKeys
 from common.model.settings import get_setting_by_key
 from common.naming.slugify import slugify
 from stage_4_templates_gen.custom_types import Template
-from stage_4_templates_gen.defaults import DEFAULT_OVERWRITE_TEMPLATES, DEFAULT_OVERWRITE_PRESENTATIONS
 
 
 def generate_templates(templates_api_url: str,
@@ -17,9 +16,8 @@ def generate_templates(templates_api_url: str,
                        templates: list[Template],
                        artifacts_folder: str,
                        retry_attempts: int,
-                       overwrite_templates: bool = DEFAULT_OVERWRITE_TEMPLATES,
-                       overwrite_presentations: bool = DEFAULT_OVERWRITE_PRESENTATIONS
-                       ) -> tuple[list[str] | None, list[str] | None]:
+                       overwrite_templates: bool,
+                       overwrite_presentations: bool) -> tuple[list[str] | None, list[str] | None]:
     generated_template_titles: list[str] = []
     failed_template_uuids: list[str] = []
 

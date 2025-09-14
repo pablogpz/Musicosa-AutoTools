@@ -18,8 +18,7 @@ def execute(
         templates: list[Template],
         retry_attempts: int,
         overwrite_templates: bool,
-        overwrite_presentations: bool,
-) -> StageFourOutput:
+        overwrite_presentations: bool) -> StageFourOutput:
     if not is_setting_set(SettingKeys.FRAME_WIDTH_PX):
         raise StageException(f"Setting '{SettingKeys.FRAME_WIDTH_PX}' not set")
 

@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 
 from common.custom_types import TemplateType
-from stage_4_templates_gen.defaults import DEFAULT_OVERWRITE_TEMPLATES, DEFAULT_OVERWRITE_PRESENTATIONS
 
 
 @dataclass
@@ -18,8 +17,8 @@ class StageFourInput:
     artifacts_folder: str
     templates: list[Template]
     retry_attempts: int
-    overwrite_templates: bool = DEFAULT_OVERWRITE_TEMPLATES
-    overwrite_presentations: bool = DEFAULT_OVERWRITE_PRESENTATIONS
+    overwrite_templates: bool
+    overwrite_presentations: bool
 
 
 @dataclass

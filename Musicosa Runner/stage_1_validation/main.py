@@ -2,6 +2,7 @@ import argparse
 
 from peewee import PeeweeException
 
+from common.config.loader import load_config
 from common.constants import VIDEO_TIMESTAMP_SEPARATOR
 from common.custom_types import StageException
 from common.db.database import db
@@ -9,7 +10,6 @@ from common.db.peewee_helpers import bulk_pack
 from common.model.models import Entry, Scoring, VideoOptions, Contestant, SpecialEntryTopic
 from common.naming.identifiers import generate_contestant_uuid5, generate_entry_uuid5
 from common.time.utils import parse_time
-from stage_1_validation.defaults import DEFAULT_CSV_FORMS_FOLDER, DEFAULT_VALID_TITLES_FILE
 from stage_1_validation.execute import execute
 from stage_1_validation.stage_input import get_submissions_from_forms_folder, get_valid_titles, \
     get_special_topics_from_db
@@ -19,19 +19,24 @@ if __name__ == "__main__":
     # Configuration
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--csv_forms_folder", default=DEFAULT_CSV_FORMS_FOLDER)
-    parser.add_argument("--valid_titles_file", default=DEFAULT_VALID_TITLES_FILE)
+    parser.add_argument("--config_file")
     args = parser.parse_args()
 
-    forms_folder_arg = args.csv_forms_folder.strip()
-    forms_folder = forms_folder_arg.removesuffix("/") if forms_folder_arg.endswith("/") else forms_folder_arg
+    try:
+        config = load_config(args.config_file.strip() if args.config_file else None)
+    except FileNotFoundError | IOError | TypeError as err:
+        print(err)
+        exit(1)
 
-    valid_titles_file = args.valid_titles_file.strip()
+    forms_folder = config.stage_1.forms_folder
+    valid_titles_file = config.stage_1.valid_titles_file
+    contestant_name_coords = config.stage_1.contestant_name_coords
+    entries_data_coords = config.stage_1.entries_data_coords
 
     # Data retrieval
 
     try:
-        submissions = get_submissions_from_forms_folder(forms_folder)
+        submissions = get_submissions_from_forms_folder(forms_folder, contestant_name_coords, entries_data_coords)
         valid_titles = get_valid_titles(forms_folder, valid_titles_file)
         special_entry_topics = get_special_topics_from_db()
     except Exception as err:

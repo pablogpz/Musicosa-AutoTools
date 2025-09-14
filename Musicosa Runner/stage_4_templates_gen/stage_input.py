@@ -1,10 +1,9 @@
 from common.custom_types import TemplateType
 from common.model.models import Template
 from stage_4_templates_gen.custom_types import Template as S4Template
-from stage_4_templates_gen.defaults import DEFAULT_GENERATE_PRESENTATIONS
 
 
-def load_templates_from_db(generate_presentations: bool = DEFAULT_GENERATE_PRESENTATIONS) -> list[S4Template]:
+def load_templates_from_db(generate_presentations: bool) -> list[S4Template]:
     # noinspection PyTypeChecker
     return [S4Template(template.entry.id,
                        template.entry.title,

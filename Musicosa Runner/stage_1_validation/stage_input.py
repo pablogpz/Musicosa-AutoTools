@@ -4,9 +4,13 @@ from stage_1_validation.custom_types import ContestantSubmission
 from stage_1_validation.logic.parsing.xlsx import parse_contestant_forms_xlsx_folder
 
 
-def get_submissions_from_forms_folder(forms_folder: str) -> list[ContestantSubmission]:
+def get_submissions_from_forms_folder(forms_folder: str,
+                                      contestant_name_coords: str,
+                                      entries_data_coords: str) -> list[ContestantSubmission]:
     try:
-        contestant_submissions = parse_contestant_forms_xlsx_folder(forms_folder)
+        contestant_submissions = parse_contestant_forms_xlsx_folder(forms_folder,
+                                                                    contestant_name_coords,
+                                                                    entries_data_coords)
     except Exception as err:
         raise StageException(f"[Submission forms parsing error] {err}") from err
 

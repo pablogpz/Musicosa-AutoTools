@@ -10,7 +10,7 @@ from ffmpeg.filters import xfade, amix, concat
 from common.constants import VIDEO_FORMAT, PRESENTATION_FILE_SUFFIX, TEMPLATE_IMG_FORMAT
 from common.custom_types import StageException
 from common.naming.slugify import slugify
-from stage_6_video_gen.constants import VIDEO_FPS, FADE_DURATION, ENTRIES_PER_FRAGMENT
+from stage_6_video_gen.constants import VIDEO_FPS, TRANSITION_FADE_DURATION_SECONDS, ENTRIES_PER_FRAGMENT
 from stage_6_video_gen.custom_types import EntryVideoOptions, TransitionOptions
 from stage_6_video_gen.logic.helpers import get_video_duration_seconds
 
@@ -56,10 +56,11 @@ def generate_final_video(artifacts_folder: str,
                 xfade(presentation_stream
                       .fps(fps=VIDEO_FPS)
                       .settb(expr="AVTB")
-                      .fade(type="in", duration=FADE_DURATION),
+                      .fade(type="in", duration=TRANSITION_FADE_DURATION_SECONDS),
                       video_bit_stream
                       .settb(expr="AVTB")
-                      .fade(type="out", duration=FADE_DURATION, start_time=video_bit_duration - FADE_DURATION),
+                      .fade(type="out", duration=TRANSITION_FADE_DURATION_SECONDS,
+                            start_time=video_bit_duration - TRANSITION_FADE_DURATION_SECONDS),
                       transition=transition_type,
                       duration=transition_duration,
                       offset=presentation_duration - transition_duration / 2))
@@ -69,10 +70,10 @@ def generate_final_video(artifacts_folder: str,
             audio_streams.append(
                 video_bit_stream
                 .adelay(delays="|".join(2 * [str(start_of_audio_track * 1000)]))
-                .afade(type="in", duration=FADE_DURATION, curve="tri")
+                .afade(type="in", duration=TRANSITION_FADE_DURATION_SECONDS, curve="tri")
                 .afade(type="out",
-                       duration=FADE_DURATION,
-                       start_time=(start_of_audio_track + video_bit_duration) - FADE_DURATION,
+                       duration=TRANSITION_FADE_DURATION_SECONDS,
+                       start_time=(start_of_audio_track + video_bit_duration) - TRANSITION_FADE_DURATION_SECONDS,
                        curve="tri"))
 
             timeline_cursor = start_of_audio_track + video_bit_duration
