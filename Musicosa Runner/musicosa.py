@@ -13,9 +13,9 @@ from common.db.peewee_helpers import bulk_pack
 from common.input.better_input import better_input
 from common.model.metadata import get_metadata_by_field
 from common.model.models import Template, Setting, NominationStats, \
-    CastVote, MetadataFields
-from common.naming.identifiers import generate_member_uuid5, generate_nomination_uuid5_from_nomination_str
-from stage_1_validation.custom_types import StageOneOutput, StageOneInput
+    CastVote, MetadataFields, Member, Nomination
+from common.naming.identifiers import generate_nomination_uuid5_from_nomination_str
+from stage_1_validation.custom_types import AwardForm, StageOneOutput, StageOneInput
 from stage_1_validation.execute import execute as execute_stage_1
 from stage_1_validation.stage_input import parse_award_forms_folder, get_award_count, get_member_count, \
     get_valid_award_slugs
@@ -254,9 +254,95 @@ def configless_stage[D, O](
     return generator
 
 
+class PipelineStateManager:
+    cast_vote_models: list[CastVote]
+    nomination_stats_models: list[NominationStats]
+    template_models: list[Template]
+    setting_models: list[Setting]
+
+    # Helper indices
+
+    members_by_name: dict[str, Member]
+    nominations_by_id: dict[str, Nomination]
+
+    def __init__(self):
+        self.cast_vote_models = []
+        self.nomination_stats_models = []
+        self.template_models = []
+        self.setting_models = []
+
+        self.members_by_name = {}
+        self.nominations_by_id = {}
+
+        self.build_helper_indices_from_db()
+
+    def build_helper_indices_from_db(self) -> None:
+        members = [member.to_domain() for member in Member.ORM.select()]
+        self.members_by_name = dict([(member.name, member) for member in members])
+
+        nominations = [nomination.to_domain() for nomination in Nomination.ORM.select()]
+        self.members_by_name = dict([(nomination.id, nomination) for nomination in nominations])
+
+    def register_award_forms(self, award_forms: list[AwardForm]) -> None:
+        for award in award_forms:
+            for submission in award.submissions:
+                for cast_vote in submission.cast_votes:
+                    nomination_id = generate_nomination_uuid5_from_nomination_str(cast_vote.nomination,
+                                                                                  award.award_slug).hex
+                    self.cast_vote_models.append(
+                        CastVote(member=self.members_by_name[submission.name],
+                                 nomination=self.nominations_by_id[nomination_id],
+                                 score=cast_vote.score))
+
+    def save_cast_votes(self) -> None:
+        try:
+            with db.atomic() as tx:
+                if len(self.cast_vote_models) > 0:
+                    CastVote.ORM.replace_many(bulk_pack(self.cast_vote_models)).execute()
+        except PeeweeException as err:
+            tx.rollback()
+            raise RuntimeError(f"DB transaction was rolled back due to an error: {err}") from err
+
+    def register_stage_2_output(self, stage_output: StageTwoOutput) -> None:
+        for stat in stage_output.nomination_stats:
+            self.nomination_stats_models.append(
+                NominationStats(nomination=self.nominations_by_id[stat.nomination_id],
+                                avg_score=stat.avg_score,
+                                ranking_place=stat.ranking_place,
+                                ranking_sequence=stat.ranking_sequence))
+
+    def save_nomination_stats(self) -> None:
+        try:
+            with db.atomic() as tx:
+                if len(self.nomination_stats_models) > 0:
+                    NominationStats.ORM.replace_many(bulk_pack(self.nomination_stats_models)).execute()
+        except PeeweeException as err:
+            tx.rollback()
+            raise RuntimeError(f"DB transaction was rolled back due to an error: {err}") from err
+
+    def register_stage_3_output(self, stage_output: StageThreeOutput) -> None:
+        if stage_output.frame_settings:
+            self.setting_models.extend(stage_output.frame_settings)
+
+        if stage_output.templates:
+            self.template_models.extend(stage_output.templates)
+
+    def save_settings_and_templates(self) -> None:
+        try:
+            with db.atomic() as tx:
+                if len(self.setting_models) > 0:
+                    Setting.ORM.replace_many(bulk_pack(self.setting_models)).execute()
+
+                if len(self.template_models) > 0:
+                    Template.ORM.replace_many(bulk_pack(self.template_models)).execute()
+        except PeeweeException as err:
+            tx.rollback()
+            raise RuntimeError(f"DB transaction was rolled back due to an error: {err}") from err
+
+
 if __name__ == '__main__':
 
-    # MUSICOSA CONFIG
+    # CONFIGURATION
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--config_file")
@@ -271,21 +357,16 @@ if __name__ == '__main__':
         print(f"Config loading error: {err}")
         exit(1)
 
-    # Pipeline state
+    # STATE MANAGEMENT
 
-    # Pipeline State
-
-    raw_cast_vote_models: list[CastVote.ORM] = []
-    raw_nomination_stats_models: list[NominationStats.ORM] = []
-    template_models: list[Template] = []
-    setting_models: list[Setting] = []
+    state_manager = PipelineStateManager()
 
     # PIPELINE EXECUTION
 
-    musicosa_edition = get_metadata_by_field(MetadataFields.EDITION).value
+    tfa_edition = get_metadata_by_field(MetadataFields.EDITION).value
 
-    print(f"[TFA {musicosa_edition}º EDITION]")
-    print(f"  Edition: {musicosa_edition}")
+    print(f"[TFA {tfa_edition}º EDITION]")
+    print(f"  Edition: {tfa_edition}")
 
 
     # STAGE 1
@@ -306,7 +387,7 @@ if __name__ == '__main__':
     @stage(err_header="[Stage 1 | Execution ERROR]",
            config_loader=config_loader,
            data_collector=stage_1_collect_input)
-    def stage_1_do_execute(*, config: Config, stage_input: StageOneInput) -> StageOneOutput:
+    def stage_1_do_execute(config: Config, stage_input: StageOneInput) -> StageOneOutput:
         award_forms, valid_award_slugs, awards_count, members_count = (stage_input.award_forms,
                                                                        stage_input.valid_award_slugs,
                                                                        stage_input.award_count,
@@ -338,33 +419,22 @@ if __name__ == '__main__':
 
 
     if config.start_from <= STAGE_ONE:
-        stage_1_input: StageOneInput = stage_1_collect_input(config)
-        stage_1_result: StageOneOutput = stage_1_do_execute(config, stage_1_input)
+        stage_1_input = stage_1_collect_input(config)
+        stage_1_result = stage_1_do_execute(config, stage_1_input)
 
-        # Update pipeline state
-
-        for award in stage_1_input.award_forms:
-            for submission in award.submissions:
-                for cast_vote in submission.cast_votes:
-                    raw_cast_vote_models.append(
-                        CastVote.ORM(member=generate_member_uuid5(submission.name).hex,
-                                     nomination=generate_nomination_uuid5_from_nomination_str(cast_vote.nomination,
-                                                                                              award.award_slug).hex,
-                                     score=cast_vote.score))
+        state_manager.register_award_forms(stage_1_input.award_forms)
 
         print("")
-        print("Checkpointing Musicosa model to database...")
+        print("Saving cast votes to database...")
 
         try:
-            with db.atomic():
-                if raw_cast_vote_models:
-                    CastVote.ORM.replace_many([vote.__data__ for vote in raw_cast_vote_models]).execute()  # CAREFUL!
-        except PeeweeException as err:
-            print(f"Database checkpoint failed: {err}")
+            state_manager.save_cast_votes()
+        except RuntimeError as err:
+            print(f"Database insertion failed: {err}")
             print("Aborting...")
             exit(1)
 
-        print("Checkpointing done ✔")
+        print("Save done ✔")
         print("")
 
 
@@ -392,32 +462,22 @@ if __name__ == '__main__':
 
 
     if config.start_from <= STAGE_TWO:
-        stage_2_input: StageTwoInput = stage_2_collect_input()
-        stage_2_result: StageTwoOutput = stage_2_do_execute(stage_2_input)
+        stage_2_input = stage_2_collect_input()
+        stage_2_result = stage_2_do_execute(stage_2_input)
 
-        # Update pipeline state
-
-        for stat in stage_2_result.nomination_stats:
-            raw_nomination_stats_models.append(
-                NominationStats.ORM(nomination=stat.nomination_id,
-                                    avg_score=stat.avg_score,
-                                    ranking_place=stat.ranking_place,
-                                    ranking_sequence=stat.ranking_sequence))
+        state_manager.register_stage_2_output(stage_2_result)
 
         print("")
-        print("Checkpointing Musicosa model to database...")
+        print("Saving nomination stats to database...")
 
         try:
-            with db.atomic():
-                if raw_nomination_stats_models:
-                    NominationStats.ORM.replace_many(
-                        [nomination.__data__ for nomination in raw_nomination_stats_models]).execute()  # CAREFUL!
-        except PeeweeException as err:
-            print(f"Database checkpoint failed: {err}")
+            state_manager.save_nomination_stats()
+        except RuntimeError as err:
+            print(f"Database insertion failed: {err}")
             print("Aborting...")
             exit(1)
 
-        print("Checkpointing done ✔")
+        print("Save done ✔")
         print("")
 
 
@@ -438,45 +498,26 @@ if __name__ == '__main__':
         print(f"  # Frame settings set: {len(result.frame_settings) if result.frame_settings else 0}")
         print(f"  # Entry templates fulfilled: {len(result.templates) if result.templates else 0}")
 
-        print("")
-        print(" [!] Database checkpoint ahead")
-        print("")
-
         return result
 
 
     if config.start_from <= STAGE_THREE:
-        stage_3_input: StageThreeInput = stage_3_collect_input()
-        stage_3_result: StageThreeOutput = stage_3_do_execute(stage_3_input)
+        stage_3_input = stage_3_collect_input()
+        stage_3_result = stage_3_do_execute(stage_3_input)
 
-        # Update pipeline state
-
-        if stage_3_result.frame_settings:
-            setting_models.extend(stage_3_result.frame_settings)
-
-        if stage_3_result.templates:
-            template_models.extend(stage_3_result.templates)
-
-    # DATA PERSISTENCE CHECKPOINT
-
-    if config.start_from <= STAGE_THREE:
+        state_manager.register_stage_3_output(stage_3_result)
 
         print("")
-        print("Checkpointing Musicosa model to database...")
+        print("Saving settings and templates to database...")
 
         try:
-            with db.atomic():
-                if setting_models:
-                    Setting.ORM.replace_many(bulk_pack(setting_models)).execute()
-
-                if template_models:
-                    Template.ORM.replace_many(bulk_pack(template_models)).execute()
-        except PeeweeException as err:
-            print(f"Database checkpoint failed: {err}")
+            state_manager.save_settings_and_templates()
+        except RuntimeError as err:
+            print(f"Database insertion failed: {err}")
             print("Aborting...")
             exit(1)
 
-        print("Checkpointing done ✔")
+        print("Save done ✔")
         print("")
 
 
@@ -520,8 +561,7 @@ if __name__ == '__main__':
 
 
     if config.start_from <= STAGE_FOUR:
-        stage_4_input: StageFourInput = stage_4_collect_input(config)
-        stage_4_result: StageFourOutput = stage_4_do_execute(config, stage_4_input)
+        stage_4_do_execute(config, stage_4_collect_input(config))
 
 
     # STAGE 5
@@ -556,8 +596,7 @@ if __name__ == '__main__':
 
 
     if config.start_from <= STAGE_FIVE:
-        stage_5_input: StageFiveInput = stage_5_collect_input(config)
-        stage_5_result: StageFiveOutput = stage_5_do_execute(config, stage_5_input)
+        stage_5_do_execute(config, stage_5_collect_input(config))
 
 
     # STAGE 6
@@ -613,10 +652,7 @@ if __name__ == '__main__':
 
 
     if config.start_from <= STAGE_SIX:
-        stage_6_input: StageSixInput = stage_6_collect_input(config)
-        stage_6_result: StageSixOutput = stage_6_do_execute(config, stage_6_input)
-
-    # END OF MUSICOSA PIPELINE
+        stage_6_do_execute(config, stage_6_collect_input(config))
 
     print("")
     print("Pipeline execution completed ✔")
