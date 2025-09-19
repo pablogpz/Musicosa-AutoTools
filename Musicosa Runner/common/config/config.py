@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from common.config.defaults import DEFAULT_ARTIFACTS_FOLDER, DEFAULT_START_FROM_STAGE, DEFAULT_STITCH_FINAL_VIDEO_FLAG, \
     DEFAULT_FORMS_FOLDER, DEFAULT_VALID_TITLES_FILE, DEFAULT_TEMPLATES_API_URL, DEFAULT_PRESENTATIONS_API_URL, \
@@ -13,10 +13,10 @@ from common.custom_types import Stage
 
 @dataclass
 class StageOneConfig:
-    forms_folder: str = DEFAULT_FORMS_FOLDER
-    valid_titles_file: str = DEFAULT_VALID_TITLES_FILE
-    contestant_name_coords: str = DEFAULT_CONTESTANT_NAME_COORDS
-    entries_data_coords: str = DEFAULT_ENTRIES_DATA_COORDS
+    forms_folder: str
+    valid_titles_file: str
+    contestant_name_coords: str
+    entries_data_coords: str
 
     def __init__(self, forms_folder: str = DEFAULT_FORMS_FOLDER,
                  valid_titles_file: str = DEFAULT_VALID_TITLES_FILE,
@@ -32,11 +32,11 @@ class StageOneConfig:
 
 @dataclass
 class StageFourConfig:
-    templates_api_url: str = DEFAULT_TEMPLATES_API_URL
-    presentations_api_url: str = DEFAULT_PRESENTATIONS_API_URL
-    gen_retry_attempts: int = DEFAULT_GENERATION_RETRY_ATTEMPTS
-    overwrite_templates: bool = DEFAULT_OVERWRITE_TEMPLATES
-    overwrite_presentations: bool = DEFAULT_OVERWRITE_PRESENTATIONS
+    templates_api_url: str
+    presentations_api_url: str
+    gen_retry_attempts: int
+    overwrite_templates: bool
+    overwrite_presentations: bool
 
     def __init__(self, templates_api_url: str = DEFAULT_TEMPLATES_API_URL,
                  presentations_api_url: str = DEFAULT_PRESENTATIONS_API_URL,
@@ -60,7 +60,7 @@ class StageFourConfig:
 
 @dataclass
 class StageFiveConfig:
-    quiet_ffmpeg: bool = DEFAULT_STAGE_5_QUIET_FFMPEG
+    quiet_ffmpeg: bool
 
     def __init__(self, quiet_ffmpeg: bool = DEFAULT_STAGE_5_QUIET_FFMPEG):
         self.quiet_ffmpeg = quiet_ffmpeg
@@ -68,14 +68,14 @@ class StageFiveConfig:
 
 @dataclass
 class StageSixConfig:
-    video_bits_folder: str = DEFAULT_VIDEO_BITS_FOLDER
-    overwrite_video_bits: bool = DEFAULT_OVERWRITE_VIDEO_BITS
-    final_video_name: str = DEFAULT_FINAL_VIDEO_NAME
-    presentation_duration: int = DEFAULT_PRESENTATION_DURATION
-    transition_duration: int = DEFAULT_TRANSITION_DURATION
-    transition_type: str = DEFAULT_TRANSITION_TYPE
-    quiet_ffmpeg: bool = DEFAULT_STAGE_6_QUIET_FFMPEG
-    quiet_ffmpeg_final_video: bool = DEFAULT_QUIET_FFMPEG_FINAL_VIDEO
+    video_bits_folder: str
+    overwrite_video_bits: bool
+    final_video_name: str
+    presentation_duration: int
+    transition_duration: int
+    transition_type: str
+    quiet_ffmpeg: bool
+    quiet_ffmpeg_final_video: bool
 
     def __init__(self, video_bits_folder: str = DEFAULT_VIDEO_BITS_FOLDER,
                  overwrite_video_bits: bool = DEFAULT_OVERWRITE_VIDEO_BITS,
@@ -100,13 +100,13 @@ class StageSixConfig:
 
 @dataclass
 class Config:
-    start_from: Stage = DEFAULT_START_FROM_STAGE
-    artifacts_folder: str = DEFAULT_ARTIFACTS_FOLDER
-    stitch_final_video: bool = DEFAULT_STITCH_FINAL_VIDEO_FLAG
-    stage_1: StageOneConfig = field(default_factory=StageOneConfig)
-    stage_4: StageFourConfig = field(default_factory=StageFourConfig)
-    stage_5: StageFiveConfig = field(default_factory=StageFiveConfig)
-    stage_6: StageSixConfig = field(default_factory=StageSixConfig)
+    start_from: Stage
+    artifacts_folder: str
+    stitch_final_video: bool
+    stage_1: StageOneConfig
+    stage_4: StageFourConfig
+    stage_5: StageFiveConfig
+    stage_6: StageSixConfig
 
     def __init__(self, start_from: Stage = DEFAULT_START_FROM_STAGE,
                  artifacts_folder: str = DEFAULT_ARTIFACTS_FOLDER,

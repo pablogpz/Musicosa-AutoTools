@@ -21,16 +21,16 @@ from stage_1_validation.custom_types import StageOneOutput, StageOneInput
 from stage_1_validation.execute import execute as execute_stage_1
 from stage_1_validation.stage_input import get_submissions_from_forms_folder, get_valid_titles, \
     get_special_topics_from_db
-from stage_2_ranking.custom_types import Musicosa as S2Musicosa, Contestant as S2Contestant, \
-    Entry as S2Entry, Score as S2Score, StageTwoOutput, StageTwoInput
+from stage_2_ranking.custom_types import Musicosa as S2_Musicosa, Contestant as S2_Contestant, \
+    Entry as S2_Entry, Score as S2_Score, StageTwoOutput, StageTwoInput
 from stage_2_ranking.execute import execute as execute_stage_2
 from stage_2_ranking.stage_input import load_musicosa_from_db as load_s2_musicosa_from_db
-from stage_3_templates_pre_gen.custom_types import Musicosa as S3Musicosa, StageThreeOutput, AvatarPairing, \
+from stage_3_templates_pre_gen.custom_types import Musicosa as S3_Musicosa, StageThreeOutput, AvatarPairing, \
     StageThreeInput
 from stage_3_templates_pre_gen.execute import execute as execute_stage_3
 from stage_3_templates_pre_gen.stage_input import load_musicosa_from_db as load_s3_musicosa_from_db, \
     load_avatars_from_db
-from stage_4_templates_gen.custom_types import StageFourOutput, StageFourInput, Template as S4Template
+from stage_4_templates_gen.custom_types import StageFourOutput, StageFourInput, Template as S4_Template
 from stage_4_templates_gen.execute import execute as execute_stage_4
 from stage_4_templates_gen.stage_input import load_templates_from_db
 from stage_5_videoclips_acquisition.custom_types import StageFiveOutput, StageFiveInput
@@ -41,21 +41,32 @@ from stage_6_video_gen.custom_types import EntryVideoOptions, Timestamp, StageSi
 from stage_6_video_gen.execute import execute as execute_stage_6
 from stage_6_video_gen.stage_input import load_entries_video_options_from_db
 
-# FLOW CONTROL GATES
 
-CONTINUE_ON_SUCCESS: Literal["c"] = "c"
+# PIPELINE STEP FLOW GATE Types
+
+class PipelineStep[D, O](Protocol):
+    def __call__(self, config: Config | None, reloadable_data: D | None, *args: Any, **kwargs: Any) -> O:
+        pass
+
+
+type ConfigLoader = Callable[[], Config]
+type DataCollector[D] = Callable[[Config], D]
+
+# PIPELINE STEP FLOW GATE Controls
+
+CONTINUE: Literal["c"] = "c"
 RETRY: Literal["r"] = "r"
 RELOAD_CONFIG: Literal["rc"] = "rc"
 RELOAD_DATA: Literal["rd"] = "rd"
 RELOAD_CONFIG_AND_DATA: Literal["re"] = "re"
 ABORT: Literal["a"] = "a"
 
-type FlowControl = Literal["c", "r", "rc", "rd", "re", "a"]
+type GateControl = Literal["c", "r", "rc", "rd", "re", "a"]
 
-ERROR_CONTROLS = {RETRY, RELOAD_CONFIG, RELOAD_DATA, RELOAD_CONFIG_AND_DATA, ABORT}
+ALLOWED_CONTROLS_ON_ERROR = {RETRY, RELOAD_CONFIG, RELOAD_DATA, RELOAD_CONFIG_AND_DATA, ABORT}
 
-FLOW_GATE_MESSAGES: dict[FlowControl, str] = {
-    CONTINUE_ON_SUCCESS: "continue",
+GATE_MESSAGES: dict[GateControl, str] = {
+    CONTINUE: "continue",
     RETRY: "retry",
     RELOAD_CONFIG: "reload config, then retry",
     RELOAD_DATA: "reload data, then retry",
@@ -64,175 +75,184 @@ FLOW_GATE_MESSAGES: dict[FlowControl, str] = {
 }
 
 
-class StageInputCollector[T](Protocol):
-    def __call__(self, *, config: Config) -> T:
-        pass
+# PIPELINE STEP FLOW GATE Definition
 
-
-class StageExecutor[SI, SO](Protocol):
-    def __call__(self, *, config: Config, stage_input: SI) -> SO:
-        pass
-
-
-type ControlGateSurrogate[SI, SO] = StageInputCollector[SI] | StageExecutor[SI, SO]
-
-
-def flow_control_gate[SI, SO](
-        func: ControlGateSurrogate[SI, SO],
-        f_args: tuple[Any, ...],
-        f_kwargs: dict[str, ...],
+def flow_gate[D, O](
+        step: PipelineStep[D, O],
+        step_args: tuple[Any, ...],
+        step_kwargs: dict[str, Any],
         /, *,
-        controls: set[FlowControl],
+        controls: set[GateControl],
         err_header: str | None = None,
-        config_file: str | None = None,
-        reload_input: StageInputCollector | None = None
-) -> SO | Never:
+        config_loader: ConfigLoader | None = None,
+        data_collector: DataCollector[D] | None = None
+) -> O | Never:
     """
-    :param func: Must have the signature of a StageInputCollector or a StageExecutor (see ControlGateSurrogate)
-    :param f_args: func's args
-    :param f_kwargs: func's kwargs
-    :param controls: Set of flow controls to be performed (see FlowControlType)
-    :param err_header: Error header to show if an exception is raised by func
-    :param config_file: Config file path used to reload the config
-    :param reload_input: A function to be used to reload the stage input (see StageInputCollector)
-    :return: func's result or nothing if aborted
+    :param step: Pipeline step function to be executed (see PipelineStep)
+    :param step_args: step's args
+    :param step_kwargs: step's kwargs
+    :param controls: Set of gate controls that are available to this step (see GateControl)
+    :param err_header: Error header to show to the user if an exception is raised by the step
+    :param config_loader: Function used to reload the configuration of the step
+    :param data_collector: Function to be used to reload the step's data
+    :return: step's result or nothing if aborted
     """
     controls = {*controls, ABORT}  # Should always have the option to abort
 
     # Runtime checks
 
-    func_argspec = inspect.getfullargspec(func)
+    if len(inspect.getfullargspec(step).args) < 2:
+        raise RuntimeError(f"Step function '{step}' is missing mandatory positional arguments")
 
     if not controls.isdisjoint({RELOAD_CONFIG, RELOAD_CONFIG_AND_DATA}):
-        if ((func_argspec.kwonlyargs and func_argspec.kwonlyargs[0] != "config") or
-                (func_argspec.args and func_argspec.args[0] != "config") or
-                func_argspec.annotations.get("config") != Config):
-            raise RuntimeError(f"Function {func} does not match ControlGateSurrogate signature. "
-                               f"Expected 'config: Config' as first argument")
+        if config_loader is None:
+            raise RuntimeError(f"Step function '{step}' supports config reloading but does not provide a config loader")
 
     if not controls.isdisjoint({RELOAD_DATA, RELOAD_CONFIG_AND_DATA}):
-        if ((func_argspec.kwonlyargs and func_argspec.kwonlyargs[1] != "stage_input") or
-                (func_argspec.args and func_argspec.args[1] != "stage_input")):
-            raise RuntimeError(f"Function {func} does not match ControlGateSurrogate signature. "
-                               f"Expected 'stage_input: Generic[SI]' as second argument when reloading data")
+        if data_collector is None:
+            raise RuntimeError(f"Step function '{step}' supports data reloading but does not provide a data collector")
 
-    error_controls = {opt for opt in controls if opt in ERROR_CONTROLS}
-    on_error_msg = (f"-|Action required|-\n"
-                    f"  {'\n  '.join([f"[{k}] {v}" for k, v in FLOW_GATE_MESSAGES.items() if k in error_controls])}"
-                    f"\n")
+    # Step execution
 
-    on_success_msg = (f"-|Control Gate|-\n"
-                      f"  {'\n  '.join([f"[{k}] {v}" for k, v in FLOW_GATE_MESSAGES.items() if k in controls])}"
+    config_arg, reloadable_data_arg, *other_args = step_args
+    step_result = None
+
+    on_success_msg = (f"-|Pipeline Step Gate|-\n"
+                      f"  {'\n  '.join([f"[{k}] {v}" for k, v in GATE_MESSAGES.items() if k in controls])}"
                       f"\n")
 
-    def handle_common_controls(choice: str, enabled_controls: set[FlowControl]) -> None | Never:
-        if choice in enabled_controls:
-            if choice == RETRY:
-                pass
+    error_controls = {ctrl for ctrl in controls if ctrl in ALLOWED_CONTROLS_ON_ERROR}
+    on_error_msg = (f"-|Action required|-\n"
+                    f"  {'\n  '.join([f"[{k}] {v}" for k, v in GATE_MESSAGES.items() if k in error_controls])}"
+                    f"\n")
 
-            if choice == RELOAD_CONFIG or choice == RELOAD_CONFIG_AND_DATA:
-                f_kwargs["config"] = load_config(config_file)
+    choice = CONTINUE
 
-            if choice == RELOAD_DATA or choice == RELOAD_CONFIG_AND_DATA:
-                f_kwargs["stage_input"] = reload_input(config=f_kwargs["config"])
-
-            if choice == ABORT:
-                exit(1)
-
-    success = False
-    result = None
-
-    while not success:
+    while True:
         try:
-            result = func(*f_args, **f_kwargs)
+            step_result = step(config_arg, reloadable_data_arg, *other_args, **step_kwargs)
 
-            if CONTINUE_ON_SUCCESS in controls:
+            if CONTINUE in controls:
                 choice = better_input(on_success_msg,
-                                      lambda x: x.lower() in controls,
+                                      lambda x: x in controls,
                                       error_message=lambda x: f"Invalid choice '{x}'")
-
-                if choice == CONTINUE_ON_SUCCESS:
-                    success = True
-
-                handle_common_controls(choice, controls)
-            else:
-                success = True
         except Exception as err:
-            print(f"{f"{err_header} {err}" if err_header else err}")
+            print(f"{err_header} {err}" if err_header else err)
             choice = better_input(on_error_msg,
-                                  lambda x: x.lower() in error_controls,
+                                  lambda x: x in error_controls,
                                   error_message=lambda x: f"Invalid choice '{x}'")
 
-            handle_common_controls(choice, error_controls)
+        if choice == ABORT:
+            exit(1)
 
-    return result
+        if choice == CONTINUE:
+            break
+
+        if choice == RETRY:
+            continue
+
+        if choice == RELOAD_CONFIG or choice == RELOAD_CONFIG_AND_DATA:
+            config_arg = config_loader()
+
+        if choice == RELOAD_DATA or choice == RELOAD_CONFIG_AND_DATA:
+            reloadable_data_arg = data_collector(config_arg)
+
+    return step_result
 
 
-def custom_gate[SI, SO](
-        controls: set[FlowControl],
+# PIPELINE STEP FLOW GATE Decorators
+
+def flow_gate_decorator[D, O](
+        controls: set[GateControl],
         err_header: str | None = None,
-        config_file: str | None = None,
-        reload_input: StageInputCollector | None = None
-) -> Callable[[ControlGateSurrogate[SI, SO]], ControlGateSurrogate[SI, SO]]:
-    def generator(func: ControlGateSurrogate[SI, SO]) -> ControlGateSurrogate[SI, SO]:
-        def wrap(*args: Any, **kwargs: Any) -> SO:
-            return flow_control_gate(func, args, kwargs,
-                                     controls=controls,
-                                     err_header=err_header,
-                                     config_file=config_file,
-                                     reload_input=reload_input)
+        config_loader: ConfigLoader | None = None,
+        data_collector: DataCollector[D] | None = None
+) -> Callable[[PipelineStep[D, O]], PipelineStep[D, O]]:
+    def generator(step_func: PipelineStep[D, O]) -> PipelineStep[D, O]:
+        def wrap(*args: Any, **kwargs: Any) -> O:
+            return flow_gate(step_func, args, kwargs,
+                             controls=controls,
+                             err_header=err_header,
+                             config_loader=config_loader,
+                             data_collector=data_collector)
 
         return wrap
 
     return generator
 
 
-# Gate decorators
-
-def retry[SI, SO](err_header: str | None = None) -> Callable[
-    [ControlGateSurrogate[SI, SO]], ControlGateSurrogate[SI, SO]]:
-    return custom_gate(controls={RETRY, ABORT}, err_header=err_header)
-
-
-def retry_or_reconfig[SI, SO](
-        err_header: str | None = None,
-        config_file: str | None = None
-) -> Callable[[ControlGateSurrogate[SI, SO]], ControlGateSurrogate[SI, SO]]:
-    return custom_gate(controls={RETRY, RELOAD_CONFIG, ABORT}, err_header=err_header, config_file=config_file)
-
-
-def stage_gate[SI, SO](
-        err_header: str,
-        reload_input: StageInputCollector[SI],
-        config_file: str | None = None
-) -> Callable[[ControlGateSurrogate[SI, SO]], ControlGateSurrogate[SI, SO]]:
-    return custom_gate(controls={CONTINUE_ON_SUCCESS, RETRY, RELOAD_CONFIG, RELOAD_DATA, RELOAD_CONFIG_AND_DATA, ABORT},
-                       err_header=err_header,
-                       config_file=config_file,
-                       reload_input=reload_input)
-
-
-class NoConfStageExecutor[SI, SO](Protocol):
-    def __call__(self, *, stage_input: SI) -> SO:
+class RetryPipelineStep[O](Protocol):
+    def __call__(self, *args: Any, **kwargs: Any) -> O:
         pass
 
 
-def noconf_stage_gate[SI, SO](
-        err_header: str,
-        reload_input_with_oob_config: Callable[[], SI],
-) -> Callable[[NoConfStageExecutor[SI, SO]], NoConfStageExecutor[SI, SO]]:
-    def generator(func: NoConfStageExecutor[SI, SO]) -> NoConfStageExecutor[SI, SO]:
-        adapted_executor: StageExecutor[SI, SO] = lambda config, stage_input: func(stage_input=stage_input)
+def retry[O](err_header: str | None = None) -> Callable[[PipelineStep[None, O]], RetryPipelineStep[O]]:
+    decorator = flow_gate_decorator(controls={RETRY, ABORT}, err_header=err_header)
 
-        def wrap(*args: Any, **kwargs: Any) -> SO:
-            adapted_kwargs = {"config": None, **kwargs}
-            adapted_reload_input = lambda config: reload_input_with_oob_config()
+    def generator(func: PipelineStep[None, O]) -> RetryPipelineStep[O]:
+        adapted_step_func: PipelineStep[None, O] = lambda _c, _d, *args, **kwargs: func(*args, **kwargs)
 
-            return flow_control_gate(adapted_executor, args, adapted_kwargs,
-                                     controls={CONTINUE_ON_SUCCESS, RETRY, RELOAD_DATA, ABORT},
-                                     err_header=err_header,
-                                     config_file=config_file,
-                                     reload_input=adapted_reload_input)
+        def wrap(*args: Any, **kwargs: Any) -> O:
+            return decorator(adapted_step_func)(None, None, *args, **kwargs)
+
+        return wrap
+
+    return generator
+
+
+class RetryReconfigPipelineStep[O](Protocol):
+    def __call__(self, config: Config, *args: Any, **kwargs: Any) -> O:
+        pass
+
+
+def retry_or_reconfig[O](
+        config_loader: ConfigLoader,
+        err_header: str | None = None,
+) -> Callable[[PipelineStep[None, O]], RetryReconfigPipelineStep[O]]:
+    decorator = flow_gate_decorator(controls={RETRY, RELOAD_CONFIG, ABORT},
+                                    err_header=err_header,
+                                    config_loader=config_loader)
+
+    def generator(func: PipelineStep[None, O]) -> RetryReconfigPipelineStep[O]:
+        adapted_step_func: PipelineStep[None, O] = lambda config, _d, *args, **kwargs: func(config, *args, **kwargs)
+
+        def wrap(config: Config, *args: Any, **kwargs: Any) -> O:
+            return decorator(adapted_step_func)(config, None, *args, **kwargs)
+
+        return wrap
+
+    return generator
+
+
+def stage[D, O](
+        config_loader: ConfigLoader,
+        data_collector: DataCollector[D],
+        err_header: str | None = None,
+) -> Callable[[PipelineStep[D, O]], PipelineStep[D, O]]:
+    return flow_gate_decorator(controls={CONTINUE, RETRY, RELOAD_CONFIG, RELOAD_DATA, RELOAD_CONFIG_AND_DATA, ABORT},
+                               err_header=err_header,
+                               config_loader=config_loader,
+                               data_collector=data_collector)
+
+
+class ConfiglessStagePipelineStep[O](Protocol):
+    def __call__(self, reloadable_data: Any, *args: Any, **kwargs: Any) -> O:
+        pass
+
+
+def configless_stage[D, O](
+        data_collector: DataCollector[D],
+        err_header: str | None = None
+) -> Callable[[PipelineStep[D, O]], ConfiglessStagePipelineStep[O]]:
+    decorator = flow_gate_decorator(controls={CONTINUE, RETRY, RELOAD_DATA, ABORT},
+                                    err_header=err_header,
+                                    data_collector=data_collector)
+
+    def generator(func: PipelineStep[D, O]) -> ConfiglessStagePipelineStep[O]:
+        adapted_step_func: PipelineStep[D, O] = lambda _c, data, *args, **kwargs: func(data, *args, **kwargs)
+
+        def wrap(data: D, *args: Any, **kwargs: Any) -> O:
+            return decorator(adapted_step_func)(None, data, *args, **kwargs)
 
         return wrap
 
@@ -248,14 +268,15 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     config_file = args.config_file.strip() if args.config_file else None
+    config_loader: ConfigLoader = lambda: load_config(config_file)
 
     try:
-        config = load_config(config_file)
+        config = config_loader()
     except FileNotFoundError | IOError | TypeError as err:
         print(err)
         exit(1)
 
-    # MUSICOSA PIPELINE
+    # Pipeline state
 
     # Pipeline State
 
@@ -281,7 +302,7 @@ if __name__ == '__main__':
         loaded_entries = [entry.to_domain() for entry in Entry.ORM.select()]
         entries_by_title = dict([(entry.title, entry) for entry in loaded_entries])
 
-    # Pipeline Execution
+    # PIPELINE EXECUTION
 
     musicosa_edition = get_metadata_by_field(MetadataFields.EDITION).value
     musicosa_topic = get_metadata_by_field(MetadataFields.TOPIC).value
@@ -294,20 +315,23 @@ if __name__ == '__main__':
 
     # STAGE 1
 
-    @retry_or_reconfig(err_header="[Stage 1 | Input collection ERROR]", config_file=config_file)
-    def stage_1_collect_input(*, config: Config) -> StageOneInput:
+    @retry_or_reconfig(err_header="[Stage 1 | Input collection ERROR]", config_loader=config_loader)
+    def stage_1_collect_input(config: Config) -> StageOneInput:
         submissions = get_submissions_from_forms_folder(config.stage_1.forms_folder,
                                                         config.stage_1.contestant_name_coords,
                                                         config.stage_1.entries_data_coords)
         valid_titles = get_valid_titles(config.stage_1.forms_folder, config.stage_1.valid_titles_file)
         special_entry_topics = get_special_topics_from_db()
 
-        return StageOneInput(submissions=submissions, valid_titles=valid_titles,
+        return StageOneInput(submissions=submissions,
+                             valid_titles=valid_titles,
                              special_entry_topics=special_entry_topics)
 
 
-    @stage_gate(err_header="[Stage 1 | Execution ERROR]", config_file=config_file, reload_input=stage_1_collect_input)
-    def stage_1_do_execute(*, config: Config, stage_input: StageOneInput) -> StageOneOutput:
+    @stage(err_header="[Stage 1 | Execution ERROR]",
+           config_loader=config_loader,
+           data_collector=stage_1_collect_input)
+    def stage_1_do_execute(config: Config, stage_input: StageOneInput) -> StageOneOutput:
         submissions, valid_titles, special_entry_topics = (
             stage_input.submissions, stage_input.valid_titles, stage_input.special_entry_topics)
 
@@ -341,8 +365,8 @@ if __name__ == '__main__':
 
 
     if config.start_from <= STAGE_ONE:
-        stage_1_input: StageOneInput = stage_1_collect_input(config=config)
-        stage_1_result: StageOneOutput = stage_1_do_execute(config=config, stage_input=stage_1_input)
+        stage_1_input: StageOneInput = stage_1_collect_input(config)
+        stage_1_result: StageOneOutput = stage_1_do_execute(config, stage_1_input)
 
         # Update pipeline state
 
@@ -380,27 +404,26 @@ if __name__ == '__main__':
     # STAGE 2
 
     @retry(err_header="[Stage 2 | Input collection ERROR]")
-    def stage_2_collect_input(*, config: Config) -> StageTwoInput:
+    def stage_2_collect_input() -> StageTwoInput:
         if config.start_from == STAGE_TWO:
             return StageTwoInput(musicosa=load_s2_musicosa_from_db())
 
-        s2_contestants: list[S2Contestant] = []
+        s2_contestants: list[S2_Contestant] = []
 
         for contestant in contestant_models:
             contestant_scorings = [s for s in scoring_models if s.contestant.id == contestant.id]
             s2_contestants.append(
-                S2Contestant(name=contestant.name,
-                             scores=[S2Score(entry_title=scoring.entry.title, value=scoring.score)
-                                     for scoring in contestant_scorings]))
+                S2_Contestant(name=contestant.name,
+                              scores=[S2_Score(entry_title=scoring.entry.title, value=scoring.score)
+                                      for scoring in contestant_scorings]))
 
-        s2_entries = [S2Entry(title=entry.title, author_name=entry.author.name) for entry in entry_models]
+        s2_entries = [S2_Entry(title=entry.title, author_name=entry.author.name) for entry in entry_models]
 
-        return StageTwoInput(musicosa=S2Musicosa(contestants=s2_contestants, entries=s2_entries))
+        return StageTwoInput(musicosa=S2_Musicosa(contestants=s2_contestants, entries=s2_entries))
 
 
-    @noconf_stage_gate(err_header="[Stage 2 | Execution ERROR]",
-                       reload_input_with_oob_config=lambda: stage_2_collect_input(config=config))
-    def stage_2_do_execute(*, stage_input: StageTwoInput) -> StageTwoOutput:
+    @configless_stage(err_header="[Stage 2 | Execution ERROR]", data_collector=stage_2_collect_input)
+    def stage_2_do_execute(stage_input: StageTwoInput) -> StageTwoOutput:
         musicosa = stage_input.musicosa
 
         result = execute_stage_2(musicosa=musicosa)
@@ -420,8 +443,8 @@ if __name__ == '__main__':
 
 
     if config.start_from <= STAGE_TWO:
-        stage_2_input: StageTwoInput = stage_2_collect_input(config=config)
-        stage_2_result: StageTwoOutput = stage_2_do_execute(stage_input=stage_2_input)
+        stage_2_input: StageTwoInput = stage_2_collect_input()
+        stage_2_result: StageTwoOutput = stage_2_do_execute(stage_2_input)
 
         # Update pipeline state
 
@@ -442,7 +465,7 @@ if __name__ == '__main__':
     # STAGE 3
 
     @retry(err_header="[Stage 3 | Input collection ERROR]")
-    def stage_3_collect_input(*, config: Config) -> StageThreeInput:
+    def stage_3_collect_input() -> StageThreeInput:
         if config.start_from >= STAGE_TWO:
             return StageThreeInput(musicosa=load_s3_musicosa_from_db())
 
@@ -460,15 +483,14 @@ if __name__ == '__main__':
                   if stat.entry.id not in entry_ids_with_video_options]))
 
         return StageThreeInput(
-            musicosa=S3Musicosa(unfulfilled_contestants=unfulfilled_contestants,
-                                avatars=available_avatars,
-                                entries_index_of_unfulfilled_templates=entries_index_of_unfulfilled_templates,
-                                entries_index_of_unfulfilled_video_options=entries_index_of_unfulfilled_video_options))
+            musicosa=S3_Musicosa(unfulfilled_contestants=unfulfilled_contestants,
+                                 avatars=available_avatars,
+                                 entries_index_of_unfulfilled_templates=entries_index_of_unfulfilled_templates,
+                                 entries_index_of_unfulfilled_video_options=entries_index_of_unfulfilled_video_options))
 
 
-    @noconf_stage_gate(err_header="[Stage 3 | Execution ERROR]",
-                       reload_input_with_oob_config=lambda: stage_3_collect_input(config=config))
-    def stage_3_do_execute(*, stage_input: StageThreeInput) -> StageThreeOutput:
+    @configless_stage(err_header="[Stage 3 | Execution ERROR]", data_collector=stage_3_collect_input)
+    def stage_3_do_execute(stage_input: StageThreeInput) -> StageThreeOutput:
         result = execute_stage_3(musicosa=stage_input.musicosa)
 
         print("")
@@ -489,8 +511,8 @@ if __name__ == '__main__':
 
 
     if config.start_from <= STAGE_THREE:
-        stage_3_input: StageThreeInput = stage_3_collect_input(config=config)
-        stage_3_result: StageThreeOutput = stage_3_do_execute(stage_input=stage_3_input)
+        stage_3_input: StageThreeInput = stage_3_collect_input()
+        stage_3_result: StageThreeOutput = stage_3_do_execute(stage_3_input)
 
         # Update pipeline state
 
@@ -560,8 +582,8 @@ if __name__ == '__main__':
 
     # STAGE 4
 
-    @retry_or_reconfig(err_header="[Stage 4 | Input collection ERROR]", config_file=config_file)
-    def stage_4_collect_input(*, config: Config) -> StageFourInput:
+    @retry_or_reconfig(err_header="[Stage 4 | Input collection ERROR]", config_loader=config_loader)
+    def stage_4_collect_input(config: Config) -> StageFourInput:
         if config.start_from == STAGE_FOUR:
             return StageFourInput(templates_api_url=config.stage_4.templates_api_url,
                                   presentations_api_url=config.stage_4.presentations_api_url,
@@ -575,18 +597,20 @@ if __name__ == '__main__':
         return StageFourInput(templates_api_url=config.stage_4.templates_api_url,
                               presentations_api_url=config.stage_4.presentations_api_url,
                               artifacts_folder=config.artifacts_folder,
-                              templates=[S4Template(template.entry.id,
-                                                    template.entry.title,
-                                                    TemplateType.ENTRY if not config.stitch_final_video else (
-                                                            TemplateType.ENTRY | TemplateType.PRESENTATION))
+                              templates=[S4_Template(template.entry.id,
+                                                     template.entry.title,
+                                                     TemplateType.ENTRY if not config.stitch_final_video else (
+                                                             TemplateType.ENTRY | TemplateType.PRESENTATION))
                                          for template in template_models],
                               retry_attempts=config.stage_4.gen_retry_attempts,
                               overwrite_templates=config.stage_4.overwrite_templates,
                               overwrite_presentations=config.stage_4.overwrite_presentations)
 
 
-    @stage_gate(err_header="[Stage 4 | Execution ERROR]", config_file=config_file, reload_input=stage_4_collect_input)
-    def stage_4_do_execute(*, config: Config, stage_input: StageFourInput) -> StageFourOutput:
+    @stage(err_header="[Stage 4 | Execution ERROR]",
+           config_loader=config_loader,
+           data_collector=stage_4_collect_input)
+    def stage_4_do_execute(config: Config, stage_input: StageFourInput) -> StageFourOutput:
         result = execute_stage_4(templates_api_url=config.stage_4.templates_api_url,
                                  presentations_api_url=config.stage_4.presentations_api_url,
                                  artifacts_folder=config.artifacts_folder,
@@ -609,14 +633,14 @@ if __name__ == '__main__':
 
 
     if config.start_from <= STAGE_FOUR:
-        stage_4_input: StageFourInput = stage_4_collect_input(config=config)
-        stage_4_result: StageFourOutput = stage_4_do_execute(config=config, stage_input=stage_4_input)
+        stage_4_input: StageFourInput = stage_4_collect_input(config)
+        stage_4_result: StageFourOutput = stage_4_do_execute(config, stage_4_input)
 
 
     # STAGE 5
 
-    @retry_or_reconfig(err_header="[Stage 5 | Input collection ERROR]", config_file=config_file)
-    def stage_5_collect_input(*, config: Config) -> StageFiveInput:
+    @retry_or_reconfig(err_header="[Stage 5 | Input collection ERROR]", config_loader=config_loader)
+    def stage_5_collect_input(config: Config) -> StageFiveInput:
         if config.start_from > STAGE_ONE:
             return StageFiveInput(artifacts_folder=config.artifacts_folder, quiet_ffmpeg=config.stage_5.quiet_ffmpeg,
                                   entries=load_entries_from_db())
@@ -625,8 +649,10 @@ if __name__ == '__main__':
                               entries=entry_models)
 
 
-    @stage_gate(err_header="[Stage 5 | Execution ERROR]", config_file=config_file, reload_input=stage_5_collect_input)
-    def stage_5_do_execute(*, config: Config, stage_input: StageFiveInput) -> StageFiveOutput:
+    @stage(err_header="[Stage 5 | Execution ERROR]",
+           config_loader=config_loader,
+           data_collector=stage_5_collect_input)
+    def stage_5_do_execute(config: Config, stage_input: StageFiveInput) -> StageFiveOutput:
         result = execute_stage_5(artifacts_folder=config.artifacts_folder, quiet_ffmpeg=config.stage_5.quiet_ffmpeg,
                                  entries=stage_input.entries)
 
@@ -644,14 +670,14 @@ if __name__ == '__main__':
 
 
     if config.start_from <= STAGE_FIVE:
-        stage_5_input: StageFiveInput = stage_5_collect_input(config=config)
-        stage_5_result: StageFiveOutput = stage_5_do_execute(config=config, stage_input=stage_5_input)
+        stage_5_input: StageFiveInput = stage_5_collect_input(config)
+        stage_5_result: StageFiveOutput = stage_5_do_execute(config, stage_5_input)
 
 
     # STAGE 6
 
-    @retry_or_reconfig(err_header="[Stage 6 | Input collection ERROR]", config_file=config_file)
-    def stage_6_collect_input(*, config: Config) -> StageSixInput:
+    @retry_or_reconfig(err_header="[Stage 6 | Input collection ERROR]", config_loader=config_loader)
+    def stage_6_collect_input(config: Config) -> StageSixInput:
         if config.start_from > STAGE_ONE:
             return StageSixInput(artifacts_folder=config.artifacts_folder,
                                  video_bits_folder=config.stage_6.video_bits_folder,
@@ -697,8 +723,10 @@ if __name__ == '__main__':
                              quiet_ffmpeg_final_video=config.stage_6.quiet_ffmpeg_final_video)
 
 
-    @stage_gate(err_header="[Stage 6 | Execution ERROR]", config_file=config_file, reload_input=stage_6_collect_input)
-    def stage_6_do_execute(*, config: Config, stage_input: StageSixInput) -> StageSixOutput:
+    @stage(err_header="[Stage 6 | Execution ERROR]",
+           config_loader=config_loader,
+           data_collector=stage_6_collect_input)
+    def stage_6_do_execute(config: Config, stage_input: StageSixInput) -> StageSixOutput:
         result = execute_stage_6(artifacts_folder=config.artifacts_folder,
                                  video_bits_folder=config.stage_6.video_bits_folder,
                                  entries_video_options=stage_input.entries_video_options,
@@ -730,8 +758,8 @@ if __name__ == '__main__':
 
 
     if config.start_from <= STAGE_SIX:
-        stage_6_input: StageSixInput = stage_6_collect_input(config=config)
-        stage_6_result: StageSixOutput = stage_6_do_execute(config=config, stage_input=stage_6_input)
+        stage_6_input: StageSixInput = stage_6_collect_input(config)
+        stage_6_result: StageSixOutput = stage_6_do_execute(config, stage_6_input)
 
     # END OF MUSICOSA PIPELINE
 
