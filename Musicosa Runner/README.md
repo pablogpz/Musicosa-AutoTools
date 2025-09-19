@@ -18,7 +18,7 @@ the final video bits (or stitch the entire final video)
 To run the pipeline, execute the main script:
 
 ```sh
-python musicosa.py
+python pipeline.py
 ```
 
 ### Environment

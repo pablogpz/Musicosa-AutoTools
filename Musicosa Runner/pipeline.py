@@ -255,10 +255,10 @@ def configless_stage[D, O](
 
 
 class PipelineStateManager:
-    cast_vote_models: list[CastVote]
-    nomination_stats_models: list[NominationStats]
-    template_models: list[Template]
-    setting_models: list[Setting]
+    cast_votes: list[CastVote]
+    nomination_stats_collection: list[NominationStats]
+    templates: list[Template]
+    settings: list[Setting]
 
     # Helper indices
 
@@ -266,10 +266,10 @@ class PipelineStateManager:
     nominations_by_id: dict[str, Nomination]
 
     def __init__(self):
-        self.cast_vote_models = []
-        self.nomination_stats_models = []
-        self.template_models = []
-        self.setting_models = []
+        self.cast_votes = []
+        self.nomination_stats_collection = []
+        self.templates = []
+        self.settings = []
 
         self.members_by_name = {}
         self.nominations_by_id = {}
@@ -289,7 +289,7 @@ class PipelineStateManager:
                 for cast_vote in submission.cast_votes:
                     nomination_id = generate_nomination_uuid5_from_nomination_str(cast_vote.nomination,
                                                                                   award.award_slug).hex
-                    self.cast_vote_models.append(
+                    self.cast_votes.append(
                         CastVote(member=self.members_by_name[submission.name],
                                  nomination=self.nominations_by_id[nomination_id],
                                  score=cast_vote.score))
@@ -297,15 +297,15 @@ class PipelineStateManager:
     def save_cast_votes(self) -> None:
         try:
             with db.atomic() as tx:
-                if len(self.cast_vote_models) > 0:
-                    CastVote.ORM.replace_many(bulk_pack(self.cast_vote_models)).execute()
+                if len(self.cast_votes) > 0:
+                    CastVote.ORM.replace_many(bulk_pack(self.cast_votes)).execute()
         except PeeweeException as err:
             tx.rollback()
             raise RuntimeError(f"DB transaction was rolled back due to an error: {err}") from err
 
     def register_stage_2_output(self, stage_output: StageTwoOutput) -> None:
         for stat in stage_output.nomination_stats:
-            self.nomination_stats_models.append(
+            self.nomination_stats_collection.append(
                 NominationStats(nomination=self.nominations_by_id[stat.nomination_id],
                                 avg_score=stat.avg_score,
                                 ranking_place=stat.ranking_place,
@@ -314,27 +314,27 @@ class PipelineStateManager:
     def save_nomination_stats(self) -> None:
         try:
             with db.atomic() as tx:
-                if len(self.nomination_stats_models) > 0:
-                    NominationStats.ORM.replace_many(bulk_pack(self.nomination_stats_models)).execute()
+                if len(self.nomination_stats_collection) > 0:
+                    NominationStats.ORM.replace_many(bulk_pack(self.nomination_stats_collection)).execute()
         except PeeweeException as err:
             tx.rollback()
             raise RuntimeError(f"DB transaction was rolled back due to an error: {err}") from err
 
     def register_stage_3_output(self, stage_output: StageThreeOutput) -> None:
         if stage_output.frame_settings:
-            self.setting_models.extend(stage_output.frame_settings)
+            self.settings.extend(stage_output.frame_settings)
 
         if stage_output.templates:
-            self.template_models.extend(stage_output.templates)
+            self.templates.extend(stage_output.templates)
 
     def save_settings_and_templates(self) -> None:
         try:
             with db.atomic() as tx:
-                if len(self.setting_models) > 0:
-                    Setting.ORM.replace_many(bulk_pack(self.setting_models)).execute()
+                if len(self.settings) > 0:
+                    Setting.ORM.replace_many(bulk_pack(self.settings)).execute()
 
-                if len(self.template_models) > 0:
-                    Template.ORM.replace_many(bulk_pack(self.template_models)).execute()
+                if len(self.templates) > 0:
+                    Template.ORM.replace_many(bulk_pack(self.templates)).execute()
         except PeeweeException as err:
             tx.rollback()
             raise RuntimeError(f"DB transaction was rolled back due to an error: {err}") from err
@@ -420,7 +420,7 @@ if __name__ == '__main__':
 
     if config.start_from <= STAGE_ONE:
         stage_1_input = stage_1_collect_input(config)
-        stage_1_result = stage_1_do_execute(config, stage_1_input)
+        stage_1_do_execute(config, stage_1_input)
 
         state_manager.register_award_forms(stage_1_input.award_forms)
 
