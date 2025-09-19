@@ -259,16 +259,16 @@ def configless_stage[D, O](
 
 
 class PipelineStateManager:
-    avatar_models: list[Avatar]
-    new_avatar_paired_models: list[tuple[Contestant, Avatar.Insert]]
-    contestant_models: list[Contestant]
-    entry_models: list[Entry]
-    scoring_models: list[Scoring]
-    contestant_stats_models: list[ContestantStats]
-    entry_stats_models: list[EntryStats]
-    template_models: list[Template]
-    setting_models: list[Setting]
-    video_options_models: list[VideoOptions]
+    avatars: list[Avatar]
+    new_avatars_paired: list[tuple[Contestant, Avatar.Insert]]
+    contestants: list[Contestant]
+    entries: list[Entry]
+    scoring_entries: list[Scoring]
+    contestant_stats_collection: list[ContestantStats]
+    entry_stats_collection: list[EntryStats]
+    templates: list[Template]
+    settings: list[Setting]
+    video_options: list[VideoOptions]
 
     # Helper indices
 
@@ -276,16 +276,16 @@ class PipelineStateManager:
     contestants_by_name: dict[str, Contestant]
 
     def __init__(self, populate_helper_indices: bool = False):
-        self.avatar_models = []
-        self.new_avatar_paired_models = []
-        self.contestant_models = []
-        self.entry_models = []
-        self.scoring_models = []
-        self.contestant_stats_models = []
-        self.entry_stats_models = []
-        self.template_models = []
-        self.setting_models = []
-        self.video_options_models = []
+        self.avatars = []
+        self.new_avatars_paired = []
+        self.contestants = []
+        self.entries = []
+        self.scoring_entries = []
+        self.contestant_stats_collection = []
+        self.entry_stats_collection = []
+        self.templates = []
+        self.settings = []
+        self.video_options = []
 
         self.entries_by_title = {}
         self.contestants_by_name = {}
@@ -303,34 +303,34 @@ class PipelineStateManager:
     def checkpoint(self):
         try:
             with db.atomic() as tx:
-                if len(self.new_avatar_paired_models) > 0:
-                    for contestant, new_avatar in self.new_avatar_paired_models:
+                if len(self.new_avatars_paired) > 0:
+                    for contestant, new_avatar in self.new_avatars_paired:
                         inserted_avatar = Avatar.ORM.create(**vars(new_avatar))
                         self.contestants_by_name[contestant.name].avatar = inserted_avatar.to_domain()
 
-                if len(self.contestant_models) > 0:
-                    Contestant.ORM.replace_many(bulk_pack(self.contestant_models)).execute()
+                if len(self.contestants) > 0:
+                    Contestant.ORM.replace_many(bulk_pack(self.contestants)).execute()
 
-                if len(self.entry_models) > 0:
-                    Entry.ORM.replace_many(bulk_pack(self.entry_models)).execute()
+                if len(self.entries) > 0:
+                    Entry.ORM.replace_many(bulk_pack(self.entries)).execute()
 
-                if len(self.scoring_models) > 0:
-                    Scoring.ORM.replace_many(bulk_pack(self.scoring_models)).execute()
+                if len(self.scoring_entries) > 0:
+                    Scoring.ORM.replace_many(bulk_pack(self.scoring_entries)).execute()
 
-                if len(self.contestant_stats_models) > 0:
-                    ContestantStats.ORM.replace_many(bulk_pack(self.contestant_stats_models)).execute()
+                if len(self.contestant_stats_collection) > 0:
+                    ContestantStats.ORM.replace_many(bulk_pack(self.contestant_stats_collection)).execute()
 
-                if len(self.entry_stats_models) > 0:
-                    EntryStats.ORM.replace_many(bulk_pack(self.entry_stats_models)).execute()
+                if len(self.entry_stats_collection) > 0:
+                    EntryStats.ORM.replace_many(bulk_pack(self.entry_stats_collection)).execute()
 
-                if len(self.setting_models) > 0:
-                    Setting.ORM.replace_many(bulk_pack(self.setting_models)).execute()
+                if len(self.settings) > 0:
+                    Setting.ORM.replace_many(bulk_pack(self.settings)).execute()
 
-                if len(self.template_models) > 0:
-                    Template.ORM.replace_many(bulk_pack(self.template_models)).execute()
+                if len(self.templates) > 0:
+                    Template.ORM.replace_many(bulk_pack(self.templates)).execute()
 
-                if len(self.video_options_models) > 0:
-                    VideoOptions.ORM.replace_many(bulk_pack(self.video_options_models)).execute()
+                if len(self.video_options) > 0:
+                    VideoOptions.ORM.replace_many(bulk_pack(self.video_options)).execute()
         except PeeweeException as err:
             tx.rollback()
             raise RuntimeError(f"DB transaction was rolled back due to an error: {err}") from err
@@ -340,7 +340,7 @@ class PipelineStateManager:
         for sub in submissions:
             new_contestant = Contestant(id=generate_contestant_uuid5(sub.name).hex, name=sub.name, avatar=None)
 
-            self.contestant_models.append(new_contestant)
+            self.contestants.append(new_contestant)
             self.contestants_by_name[sub.name] = new_contestant
 
             for entry in sub.entries:
@@ -356,43 +356,43 @@ class PipelineStateManager:
 
                     if entry.video_timestamp:
                         start, end = entry.video_timestamp.split(VIDEO_TIMESTAMP_SEPARATOR)
-                        self.video_options_models.append(VideoOptions(entry=new_entry,
-                                                                      timestamp_start=parse_time(start),
-                                                                      timestamp_end=parse_time(end)))
+                        self.video_options.append(VideoOptions(entry=new_entry,
+                                                               timestamp_start=parse_time(start),
+                                                               timestamp_end=parse_time(end)))
 
-                    self.entry_models.append(new_entry)
+                    self.entries.append(new_entry)
                     self.entries_by_title[entry.title] = new_entry
 
         # Second iteration. Register scores with helper indices
         for sub in submissions:
             for entry in sub.entries:
-                self.scoring_models.append(Scoring(contestant=self.contestants_by_name[sub.name],
-                                                   entry=self.entries_by_title[entry.title],
-                                                   score=entry.score))
+                self.scoring_entries.append(Scoring(contestant=self.contestants_by_name[sub.name],
+                                                    entry=self.entries_by_title[entry.title],
+                                                    score=entry.score))
 
     def produce_stage_2_input(self) -> StageTwoInput:
         s2_contestants: list[S2_Contestant] = []
 
-        for contestant in self.contestant_models:
-            contestant_scorings = [s for s in self.scoring_models if s.contestant.id == contestant.id]
+        for contestant in self.contestants:
+            contestant_scorings = [s for s in self.scoring_entries if s.contestant.id == contestant.id]
 
             s2_contestants.append(
                 S2_Contestant(name=contestant.name,
                               scores=[S2_Score(entry_title=scoring.entry.title, value=scoring.score)
                                       for scoring in contestant_scorings]))
 
-        s2_entries = [S2_Entry(title=entry.title, author_name=entry.author.name) for entry in self.entry_models]
+        s2_entries = [S2_Entry(title=entry.title, author_name=entry.author.name) for entry in self.entries]
 
         return StageTwoInput(musicosa=S2_Musicosa(contestants=s2_contestants, entries=s2_entries))
 
     def register_stage_2_output(self, stage_output: StageTwoOutput) -> None:
-        self.contestant_stats_models.extend(
+        self.contestant_stats_collection.extend(
             [ContestantStats(contestant=self.contestants_by_name[stat.contestant.name],
                              avg_given_score=stat.avg_given_score,
                              avg_received_score=stat.avg_received_score)
              for stat in stage_output.contestants_stats])
 
-        self.entry_stats_models.extend(
+        self.entry_stats_collection.extend(
             [EntryStats(entry=self.entries_by_title[stat.entry.title],
                         avg_score=stat.avg_score,
                         ranking_place=stat.ranking_place,
@@ -400,23 +400,23 @@ class PipelineStateManager:
              for stat in stage_output.entries_stats])
 
     def produce_stage_3_input(self) -> StageThreeInput:
-        unfulfilled_contestants = [c for c in self.contestant_models if c.avatar is None]
+        unfulfilled_contestants = [c for c in self.contestants if c.avatar is None]
 
-        if len(self.avatar_models) == 0:
-            self.avatar_models = load_avatars_from_db()
+        if len(self.avatars) == 0:
+            self.avatars = load_avatars_from_db()
 
         entries_index_of_unfulfilled_templates: dict[int, Entry] = (dict([(stat.ranking_sequence, stat.entry)
-                                                                          for stat in self.entry_stats_models]))
+                                                                          for stat in self.entry_stats_collection]))
 
-        entry_ids_with_video_options = [options.entry.id for options in self.video_options_models]
+        entry_ids_with_video_options = [options.entry.id for options in self.video_options]
         entries_index_of_unfulfilled_video_options: dict[int, Entry] = (
             dict([(stat.ranking_sequence, stat.entry)
-                  for stat in self.entry_stats_models
+                  for stat in self.entry_stats_collection
                   if stat.entry.id not in entry_ids_with_video_options]))
 
         return StageThreeInput(
             musicosa=S3_Musicosa(unfulfilled_contestants=unfulfilled_contestants,
-                                 avatars=self.avatar_models,
+                                 avatars=self.avatars,
                                  entries_index_of_unfulfilled_templates=entries_index_of_unfulfilled_templates,
                                  entries_index_of_unfulfilled_video_options=entries_index_of_unfulfilled_video_options))
 
@@ -426,19 +426,19 @@ class PipelineStateManager:
                 if isinstance(pairing.avatar, Avatar):
                     self.contestants_by_name[pairing.contestant.name].avatar = pairing.avatar
                 if isinstance(pairing.avatar, Avatar.Insert):
-                    self.new_avatar_paired_models.append((pairing.contestant, pairing.avatar))
+                    self.new_avatars_paired.append((pairing.contestant, pairing.avatar))
 
         if stage_output.frame_settings:
-            self.setting_models.extend(stage_output.frame_settings)
+            self.settings.extend(stage_output.frame_settings)
 
         if stage_output.templates:
-            self.template_models.extend(stage_output.templates)
+            self.templates.extend(stage_output.templates)
 
         if stage_output.generation_settings:
-            self.setting_models.extend(stage_output.generation_settings)
+            self.settings.extend(stage_output.generation_settings)
 
         if stage_output.video_options:
-            self.video_options_models.extend(stage_output.video_options)
+            self.video_options.extend(stage_output.video_options)
 
     def produce_stage_4_input(self, templates_api_url: str,
                               presentations_api_url: str,
@@ -455,7 +455,7 @@ class PipelineStateManager:
                                                      template.entry.title,
                                                      TemplateType.ENTRY if not stitch_final_video else (
                                                              TemplateType.ENTRY | TemplateType.PRESENTATION))
-                                         for template in self.template_models],
+                                         for template in self.templates],
                               retry_attempts=retry_attempts,
                               overwrite_templates=overwrite_templates,
                               overwrite_presentations=overwrite_presentations)
@@ -463,7 +463,7 @@ class PipelineStateManager:
     def produce_stage_5_input(self, artifacts_folder: str, quiet_ffmpeg: bool) -> StageFiveInput:
         return StageFiveInput(artifacts_folder=artifacts_folder,
                               quiet_ffmpeg=quiet_ffmpeg,
-                              entries=self.entry_models)
+                              entries=self.entries)
 
     def produce_stage_6_input(self, artifacts_folder: str,
                               video_bits_folder: str,
@@ -477,12 +477,12 @@ class PipelineStateManager:
                               quiet_ffmpeg_final_video: bool) -> StageSixInput:
         entries_video_options: list[EntryVideoOptions] = []
 
-        for entry in self.entry_models:
+        for entry in self.entries:
             entry_id = entry.id
             entry_title = entry.title
-            sequence_number = next(s.ranking_sequence for s in self.entry_stats_models if s.entry.id == entry_id)
-            video_options = next(opt for opt in self.video_options_models if opt.entry.id == entry_id)
-            template = next(t for t in self.template_models if t.entry.id == entry_id)
+            sequence_number = next(s.ranking_sequence for s in self.entry_stats_collection if s.entry.id == entry_id)
+            video_options = next(opt for opt in self.video_options if opt.entry.id == entry_id)
+            template = next(t for t in self.templates if t.entry.id == entry_id)
 
             entries_video_options.append(
                 EntryVideoOptions(entry_id=entry_id,
@@ -595,7 +595,7 @@ if __name__ == '__main__':
 
     if config.start_from <= STAGE_ONE:
         stage_1_input = stage_1_collect_input(config)
-        stage_1_result = stage_1_do_execute(config, stage_1_input)
+        stage_1_do_execute(config, stage_1_input)
 
         state_manager.register_submissions(stage_1_input.submissions)
 
@@ -631,8 +631,8 @@ if __name__ == '__main__':
 
 
     if config.start_from <= STAGE_TWO:
-        stage_2_input: StageTwoInput = stage_2_collect_input()
-        stage_2_result: StageTwoOutput = stage_2_do_execute(stage_2_input)
+        stage_2_input = stage_2_collect_input()
+        stage_2_result = stage_2_do_execute(stage_2_input)
 
         state_manager.register_stage_2_output(stage_2_result)
 
