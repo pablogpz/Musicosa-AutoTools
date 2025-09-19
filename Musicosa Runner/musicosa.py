@@ -17,7 +17,7 @@ from common.model.models import Contestant, Avatar, Entry, Scoring, VideoOptions
     EntryStats, SpecialEntryTopic, MetadataFields
 from common.naming.identifiers import generate_contestant_uuid5, generate_entry_uuid5
 from common.time.utils import parse_time
-from stage_1_validation.custom_types import StageOneOutput, StageOneInput
+from stage_1_validation.custom_types import ContestantSubmission, StageOneOutput, StageOneInput
 from stage_1_validation.execute import execute as execute_stage_1
 from stage_1_validation.stage_input import get_submissions_from_forms_folder, get_valid_titles, \
     get_special_topics_from_db
@@ -25,8 +25,7 @@ from stage_2_ranking.custom_types import Musicosa as S2_Musicosa, Contestant as 
     Entry as S2_Entry, Score as S2_Score, StageTwoOutput, StageTwoInput
 from stage_2_ranking.execute import execute as execute_stage_2
 from stage_2_ranking.stage_input import load_musicosa_from_db as load_s2_musicosa_from_db
-from stage_3_templates_pre_gen.custom_types import Musicosa as S3_Musicosa, StageThreeOutput, AvatarPairing, \
-    StageThreeInput
+from stage_3_templates_pre_gen.custom_types import Musicosa as S3_Musicosa, StageThreeOutput, StageThreeInput
 from stage_3_templates_pre_gen.execute import execute as execute_stage_3
 from stage_3_templates_pre_gen.stage_input import load_musicosa_from_db as load_s3_musicosa_from_db, \
     load_avatars_from_db
@@ -259,6 +258,256 @@ def configless_stage[D, O](
     return generator
 
 
+class PipelineStateManager:
+    avatar_models: list[Avatar]
+    new_avatar_paired_models: list[tuple[Contestant, Avatar.Insert]]
+    contestant_models: list[Contestant]
+    entry_models: list[Entry]
+    scoring_models: list[Scoring]
+    contestant_stats_models: list[ContestantStats]
+    entry_stats_models: list[EntryStats]
+    template_models: list[Template]
+    setting_models: list[Setting]
+    video_options_models: list[VideoOptions]
+
+    # Helper indices
+
+    entries_by_title: dict[str, Entry]
+    contestants_by_name: dict[str, Contestant]
+
+    def __init__(self, populate_helper_indices: bool = False):
+        self.avatar_models = []
+        self.new_avatar_paired_models = []
+        self.contestant_models = []
+        self.entry_models = []
+        self.scoring_models = []
+        self.contestant_stats_models = []
+        self.entry_stats_models = []
+        self.template_models = []
+        self.setting_models = []
+        self.video_options_models = []
+
+        self.entries_by_title = {}
+        self.contestants_by_name = {}
+
+        if populate_helper_indices:
+            self.build_helper_indices_from_db()
+
+    def build_helper_indices_from_db(self) -> None:
+        contestants = [contestant.to_domain() for contestant in Contestant.ORM.select()]
+        self.contestants_by_name = dict([(contestant.name, contestant) for contestant in contestants])
+
+        entries = [entry.to_domain() for entry in Entry.ORM.select()]
+        self.entries_by_title = dict([(entry.title, entry) for entry in entries])
+
+    def checkpoint(self):
+        try:
+            with db.atomic() as tx:
+                if len(self.new_avatar_paired_models) > 0:
+                    for contestant, new_avatar in self.new_avatar_paired_models:
+                        inserted_avatar = Avatar.ORM.create(**vars(new_avatar))
+                        self.contestants_by_name[contestant.name].avatar = inserted_avatar.to_domain()
+
+                if len(self.contestant_models) > 0:
+                    Contestant.ORM.replace_many(bulk_pack(self.contestant_models)).execute()
+
+                if len(self.entry_models) > 0:
+                    Entry.ORM.replace_many(bulk_pack(self.entry_models)).execute()
+
+                if len(self.scoring_models) > 0:
+                    Scoring.ORM.replace_many(bulk_pack(self.scoring_models)).execute()
+
+                if len(self.contestant_stats_models) > 0:
+                    ContestantStats.ORM.replace_many(bulk_pack(self.contestant_stats_models)).execute()
+
+                if len(self.entry_stats_models) > 0:
+                    EntryStats.ORM.replace_many(bulk_pack(self.entry_stats_models)).execute()
+
+                if len(self.setting_models) > 0:
+                    Setting.ORM.replace_many(bulk_pack(self.setting_models)).execute()
+
+                if len(self.template_models) > 0:
+                    Template.ORM.replace_many(bulk_pack(self.template_models)).execute()
+
+                if len(self.video_options_models) > 0:
+                    VideoOptions.ORM.replace_many(bulk_pack(self.video_options_models)).execute()
+        except PeeweeException as err:
+            tx.rollback()
+            raise RuntimeError(f"DB transaction was rolled back due to an error: {err}") from err
+
+    def register_submissions(self, submissions: list[ContestantSubmission]) -> None:
+        # First iteration. Register new contestants and entries
+        for sub in submissions:
+            new_contestant = Contestant(id=generate_contestant_uuid5(sub.name).hex, name=sub.name, avatar=None)
+
+            self.contestant_models.append(new_contestant)
+            self.contestants_by_name[sub.name] = new_contestant
+
+            for entry in sub.entries:
+                if entry.is_author:
+                    # noinspection PyTypeChecker
+                    special_topic = SpecialEntryTopic(designation=entry.special_topic) if entry.special_topic else None
+
+                    new_entry = Entry(id=generate_entry_uuid5(entry.title).hex,
+                                      title=entry.title,
+                                      author=new_contestant,
+                                      video_url=entry.video_url,
+                                      special_topic=special_topic)
+
+                    if entry.video_timestamp:
+                        start, end = entry.video_timestamp.split(VIDEO_TIMESTAMP_SEPARATOR)
+                        self.video_options_models.append(VideoOptions(entry=new_entry,
+                                                                      timestamp_start=parse_time(start),
+                                                                      timestamp_end=parse_time(end)))
+
+                    self.entry_models.append(new_entry)
+                    self.entries_by_title[entry.title] = new_entry
+
+        # Second iteration. Register scores with helper indices
+        for sub in submissions:
+            for entry in sub.entries:
+                self.scoring_models.append(Scoring(contestant=self.contestants_by_name[sub.name],
+                                                   entry=self.entries_by_title[entry.title],
+                                                   score=entry.score))
+
+    def produce_stage_2_input(self) -> StageTwoInput:
+        s2_contestants: list[S2_Contestant] = []
+
+        for contestant in self.contestant_models:
+            contestant_scorings = [s for s in self.scoring_models if s.contestant.id == contestant.id]
+
+            s2_contestants.append(
+                S2_Contestant(name=contestant.name,
+                              scores=[S2_Score(entry_title=scoring.entry.title, value=scoring.score)
+                                      for scoring in contestant_scorings]))
+
+        s2_entries = [S2_Entry(title=entry.title, author_name=entry.author.name) for entry in self.entry_models]
+
+        return StageTwoInput(musicosa=S2_Musicosa(contestants=s2_contestants, entries=s2_entries))
+
+    def register_stage_2_output(self, stage_output: StageTwoOutput) -> None:
+        self.contestant_stats_models.extend(
+            [ContestantStats(contestant=self.contestants_by_name[stat.contestant.name],
+                             avg_given_score=stat.avg_given_score,
+                             avg_received_score=stat.avg_received_score)
+             for stat in stage_output.contestants_stats])
+
+        self.entry_stats_models.extend(
+            [EntryStats(entry=self.entries_by_title[stat.entry.title],
+                        avg_score=stat.avg_score,
+                        ranking_place=stat.ranking_place,
+                        ranking_sequence=stat.ranking_sequence)
+             for stat in stage_output.entries_stats])
+
+    def produce_stage_3_input(self) -> StageThreeInput:
+        unfulfilled_contestants = [c for c in self.contestant_models if c.avatar is None]
+
+        if len(self.avatar_models) == 0:
+            self.avatar_models = load_avatars_from_db()
+
+        entries_index_of_unfulfilled_templates: dict[int, Entry] = (dict([(stat.ranking_sequence, stat.entry)
+                                                                          for stat in self.entry_stats_models]))
+
+        entry_ids_with_video_options = [options.entry.id for options in self.video_options_models]
+        entries_index_of_unfulfilled_video_options: dict[int, Entry] = (
+            dict([(stat.ranking_sequence, stat.entry)
+                  for stat in self.entry_stats_models
+                  if stat.entry.id not in entry_ids_with_video_options]))
+
+        return StageThreeInput(
+            musicosa=S3_Musicosa(unfulfilled_contestants=unfulfilled_contestants,
+                                 avatars=self.avatar_models,
+                                 entries_index_of_unfulfilled_templates=entries_index_of_unfulfilled_templates,
+                                 entries_index_of_unfulfilled_video_options=entries_index_of_unfulfilled_video_options))
+
+    def register_stage_3_output(self, stage_output: StageThreeOutput) -> None:
+        if stage_output.avatar_pairings:
+            for pairing in stage_output.avatar_pairings:
+                if isinstance(pairing.avatar, Avatar):
+                    self.contestants_by_name[pairing.contestant.name].avatar = pairing.avatar
+                if isinstance(pairing.avatar, Avatar.Insert):
+                    self.new_avatar_paired_models.append((pairing.contestant, pairing.avatar))
+
+        if stage_output.frame_settings:
+            self.setting_models.extend(stage_output.frame_settings)
+
+        if stage_output.templates:
+            self.template_models.extend(stage_output.templates)
+
+        if stage_output.generation_settings:
+            self.setting_models.extend(stage_output.generation_settings)
+
+        if stage_output.video_options:
+            self.video_options_models.extend(stage_output.video_options)
+
+    def produce_stage_4_input(self, templates_api_url: str,
+                              presentations_api_url: str,
+                              artifacts_folder: str,
+                              stitch_final_video: bool,
+                              retry_attempts: int,
+                              overwrite_templates: bool,
+                              overwrite_presentations: bool) -> StageFourInput:
+        # noinspection PyTypeChecker
+        return StageFourInput(templates_api_url=templates_api_url,
+                              presentations_api_url=presentations_api_url,
+                              artifacts_folder=artifacts_folder,
+                              templates=[S4_Template(template.entry.id,
+                                                     template.entry.title,
+                                                     TemplateType.ENTRY if not stitch_final_video else (
+                                                             TemplateType.ENTRY | TemplateType.PRESENTATION))
+                                         for template in self.template_models],
+                              retry_attempts=retry_attempts,
+                              overwrite_templates=overwrite_templates,
+                              overwrite_presentations=overwrite_presentations)
+
+    def produce_stage_5_input(self, artifacts_folder: str, quiet_ffmpeg: bool) -> StageFiveInput:
+        return StageFiveInput(artifacts_folder=artifacts_folder,
+                              quiet_ffmpeg=quiet_ffmpeg,
+                              entries=self.entry_models)
+
+    def produce_stage_6_input(self, artifacts_folder: str,
+                              video_bits_folder: str,
+                              overwrite_video_bits: bool,
+                              stitch_final_video: bool,
+                              final_video_name: str,
+                              presentation_duration: int,
+                              transition_duration: int,
+                              transition_type: TransitionType,
+                              quiet_ffmpeg: bool,
+                              quiet_ffmpeg_final_video: bool) -> StageSixInput:
+        entries_video_options: list[EntryVideoOptions] = []
+
+        for entry in self.entry_models:
+            entry_id = entry.id
+            entry_title = entry.title
+            sequence_number = next(s.ranking_sequence for s in self.entry_stats_models if s.entry.id == entry_id)
+            video_options = next(opt for opt in self.video_options_models if opt.entry.id == entry_id)
+            template = next(t for t in self.template_models if t.entry.id == entry_id)
+
+            entries_video_options.append(
+                EntryVideoOptions(entry_id=entry_id,
+                                  entry_title=entry_title,
+                                  sequence_number=sequence_number,
+                                  timestamp=Timestamp(start=str(video_options.timestamp_start),
+                                                      end=str(video_options.timestamp_end)),
+                                  width=template.video_box_width_px,
+                                  height=template.video_box_height_px,
+                                  position_top=template.video_box_position_top_px,
+                                  position_left=template.video_box_position_left_px))
+
+        return StageSixInput(artifacts_folder=artifacts_folder,
+                             video_bits_folder=video_bits_folder,
+                             entries_video_options=entries_video_options,
+                             overwrite=overwrite_video_bits,
+                             stitch_final_video=stitch_final_video,
+                             final_video_name=final_video_name,
+                             transition_options=TransitionOptions(presentation_duration,
+                                                                  transition_duration,
+                                                                  transition_type),
+                             quiet_ffmpeg=quiet_ffmpeg,
+                             quiet_ffmpeg_final_video=quiet_ffmpeg_final_video)
+
+
 if __name__ == '__main__':
 
     # CONFIGURATION
@@ -276,31 +525,9 @@ if __name__ == '__main__':
         print(err)
         exit(1)
 
-    # Pipeline state
+    # STATE MANAGEMENT
 
-    # Pipeline State
-
-    avatar_pairings: list[AvatarPairing] = []
-    contestant_models: list[Contestant] = []
-    entry_models: list[Entry] = []
-    scoring_models: list[Scoring] = []
-    contestant_stats_models: list[ContestantStats] = []
-    entry_stats_models: list[EntryStats] = []
-    template_models: list[Template] = []
-    setting_models: list[Setting] = []
-    video_options_models: list[VideoOptions] = []
-
-    # Helper indexes (pre-populated from DB when starting after STAGE 1)
-
-    contestants_by_name: dict[str, Contestant] = {}
-    if config.start_from > STAGE_ONE:
-        loaded_contestants = [contestant.to_domain() for contestant in Contestant.ORM.select()]
-        contestants_by_name = dict([(contestant.name, contestant) for contestant in loaded_contestants])
-
-    entries_by_title: dict[str, Entry] = {}
-    if config.start_from > STAGE_ONE:
-        loaded_entries = [entry.to_domain() for entry in Entry.ORM.select()]
-        entries_by_title = dict([(entry.title, entry) for entry in loaded_entries])
+    state_manager = PipelineStateManager(populate_helper_indices=config.start_from > STAGE_ONE)
 
     # PIPELINE EXECUTION
 
@@ -332,10 +559,12 @@ if __name__ == '__main__':
            config_loader=config_loader,
            data_collector=stage_1_collect_input)
     def stage_1_do_execute(config: Config, stage_input: StageOneInput) -> StageOneOutput:
-        submissions, valid_titles, special_entry_topics = (
-            stage_input.submissions, stage_input.valid_titles, stage_input.special_entry_topics)
+        submissions, valid_titles, special_entry_topics = (stage_input.submissions,
+                                                           stage_input.valid_titles,
+                                                           stage_input.special_entry_topics)
 
-        result = execute_stage_1(submissions=submissions, valid_titles=valid_titles,
+        result = execute_stage_1(submissions=submissions,
+                                 valid_titles=valid_titles,
                                  special_entry_topics=special_entry_topics)
 
         print("")
@@ -365,40 +594,10 @@ if __name__ == '__main__':
 
 
     if config.start_from <= STAGE_ONE:
-        stage_1_input: StageOneInput = stage_1_collect_input(config)
-        stage_1_result: StageOneOutput = stage_1_do_execute(config, stage_1_input)
+        stage_1_input = stage_1_collect_input(config)
+        stage_1_result = stage_1_do_execute(config, stage_1_input)
 
-        # Update pipeline state
-
-        for sub in stage_1_input.submissions:
-            new_contestant = Contestant(id=generate_contestant_uuid5(sub.name).hex, name=sub.name, avatar=None)
-            for entry in sub.entries:
-                if entry.is_author:
-                    # noinspection PyTypeChecker
-                    special_topic = SpecialEntryTopic(designation=entry.special_topic) if entry.special_topic else None
-                    new_entry = Entry(id=generate_entry_uuid5(entry.title).hex,
-                                      title=entry.title,
-                                      author=new_contestant,
-                                      video_url=entry.video_url,
-                                      special_topic=special_topic)
-
-                    if entry.video_timestamp:
-                        start, end = entry.video_timestamp.split(VIDEO_TIMESTAMP_SEPARATOR)
-                        video_options_models.append(VideoOptions(entry=new_entry,
-                                                                 timestamp_start=parse_time(start),
-                                                                 timestamp_end=parse_time(end)))
-
-                    entry_models.append(new_entry)
-                    entries_by_title[entry.title] = new_entry
-
-            contestant_models.append(new_contestant)
-            contestants_by_name[sub.name] = new_contestant
-
-        for sub in stage_1_input.submissions:
-            for entry in sub.entries:
-                scoring_models.append(Scoring(contestant=contestants_by_name[sub.name],
-                                              entry=entries_by_title[entry.title],
-                                              score=entry.score))
+        state_manager.register_submissions(stage_1_input.submissions)
 
 
     # STAGE 2
@@ -407,19 +606,8 @@ if __name__ == '__main__':
     def stage_2_collect_input() -> StageTwoInput:
         if config.start_from == STAGE_TWO:
             return StageTwoInput(musicosa=load_s2_musicosa_from_db())
-
-        s2_contestants: list[S2_Contestant] = []
-
-        for contestant in contestant_models:
-            contestant_scorings = [s for s in scoring_models if s.contestant.id == contestant.id]
-            s2_contestants.append(
-                S2_Contestant(name=contestant.name,
-                              scores=[S2_Score(entry_title=scoring.entry.title, value=scoring.score)
-                                      for scoring in contestant_scorings]))
-
-        s2_entries = [S2_Entry(title=entry.title, author_name=entry.author.name) for entry in entry_models]
-
-        return StageTwoInput(musicosa=S2_Musicosa(contestants=s2_contestants, entries=s2_entries))
+        else:
+            return state_manager.produce_stage_2_input()
 
 
     @configless_stage(err_header="[Stage 2 | Execution ERROR]", data_collector=stage_2_collect_input)
@@ -446,20 +634,7 @@ if __name__ == '__main__':
         stage_2_input: StageTwoInput = stage_2_collect_input()
         stage_2_result: StageTwoOutput = stage_2_do_execute(stage_2_input)
 
-        # Update pipeline state
-
-        contestant_stats_models.extend(
-            [ContestantStats(contestant=contestants_by_name[stat.contestant.name],
-                             avg_given_score=stat.avg_given_score,
-                             avg_received_score=stat.avg_received_score)
-             for stat in stage_2_result.contestants_stats])
-
-        entry_stats_models.extend(
-            [EntryStats(entry=entries_by_title[stat.entry.title],
-                        avg_score=stat.avg_score,
-                        ranking_place=stat.ranking_place,
-                        ranking_sequence=stat.ranking_sequence)
-             for stat in stage_2_result.entries_stats])
+        state_manager.register_stage_2_output(stage_2_result)
 
 
     # STAGE 3
@@ -468,25 +643,8 @@ if __name__ == '__main__':
     def stage_3_collect_input() -> StageThreeInput:
         if config.start_from >= STAGE_TWO:
             return StageThreeInput(musicosa=load_s3_musicosa_from_db())
-
-        unfulfilled_contestants = [c for c in contestant_models if c.avatar is None]
-
-        available_avatars: list[Avatar] = load_avatars_from_db()
-
-        entries_index_of_unfulfilled_templates: dict[int, Entry] = (
-            dict([(stat.ranking_sequence, stat.entry) for stat in entry_stats_models]))
-
-        entry_ids_with_video_options = [options.entry.id for options in video_options_models]
-        entries_index_of_unfulfilled_video_options: dict[int, Entry] = (
-            dict([(stat.ranking_sequence, stat.entry)
-                  for stat in entry_stats_models
-                  if stat.entry.id not in entry_ids_with_video_options]))
-
-        return StageThreeInput(
-            musicosa=S3_Musicosa(unfulfilled_contestants=unfulfilled_contestants,
-                                 avatars=available_avatars,
-                                 entries_index_of_unfulfilled_templates=entries_index_of_unfulfilled_templates,
-                                 entries_index_of_unfulfilled_video_options=entries_index_of_unfulfilled_video_options))
+        else:
+            return state_manager.produce_stage_3_input()
 
 
     @configless_stage(err_header="[Stage 3 | Execution ERROR]", data_collector=stage_3_collect_input)
@@ -511,67 +669,20 @@ if __name__ == '__main__':
 
 
     if config.start_from <= STAGE_THREE:
-        stage_3_input: StageThreeInput = stage_3_collect_input()
-        stage_3_result: StageThreeOutput = stage_3_do_execute(stage_3_input)
+        stage_3_input = stage_3_collect_input()
+        stage_3_result = stage_3_do_execute(stage_3_input)
 
-        # Update pipeline state
-
-        if stage_3_result.avatar_pairings:
-            avatar_pairings.extend(stage_3_result.avatar_pairings)
-
-        if stage_3_result.frame_settings:
-            setting_models.extend(stage_3_result.frame_settings)
-
-        if stage_3_result.templates:
-            template_models.extend(stage_3_result.templates)
-
-        if stage_3_result.generation_settings:
-            setting_models.extend(stage_3_result.generation_settings)
-
-        if stage_3_result.video_options:
-            video_options_models.extend(stage_3_result.video_options)
+        state_manager.register_stage_3_output(stage_3_result)
 
     # DATA PERSISTENCE CHECKPOINT
 
     if config.start_from <= STAGE_THREE:
-
         print("")
-        print("Checkpointing Musicosa model to database...")
+        print("Checkpointing state to database...")
 
         try:
-            with db.atomic():
-                if avatar_pairings:
-                    for pairing in avatar_pairings:
-                        if isinstance(pairing.avatar, Avatar.Insert):
-                            paired_avatar_entity = Avatar.ORM.create(**vars(pairing.avatar))
-                            contestants_by_name[pairing.contestant.name].avatar = paired_avatar_entity.to_domain()
-                        else:
-                            contestants_by_name[pairing.contestant.name].avatar = pairing.avatar
-
-                if contestant_models:
-                    Contestant.ORM.replace_many(bulk_pack(contestant_models)).execute()
-
-                if entry_models:
-                    Entry.ORM.replace_many(bulk_pack(entry_models)).execute()
-
-                if scoring_models:
-                    Scoring.ORM.replace_many(bulk_pack(scoring_models)).execute()
-
-                if contestant_stats_models:
-                    ContestantStats.ORM.replace_many(bulk_pack(contestant_stats_models)).execute()
-
-                if entry_stats_models:
-                    EntryStats.ORM.replace_many(bulk_pack(entry_stats_models)).execute()
-
-                if setting_models:
-                    Setting.ORM.replace_many(bulk_pack(setting_models)).execute()
-
-                if template_models:
-                    Template.ORM.replace_many(bulk_pack(template_models)).execute()
-
-                if video_options_models:
-                    VideoOptions.ORM.replace_many(bulk_pack(video_options_models)).execute()
-        except PeeweeException as err:
+            state_manager.checkpoint()
+        except RuntimeError as err:
             print(f"Database checkpoint failed: {err}")
             print("Aborting...")
             exit(1)
@@ -592,19 +703,14 @@ if __name__ == '__main__':
                                   retry_attempts=config.stage_4.gen_retry_attempts,
                                   overwrite_templates=config.stage_4.overwrite_templates,
                                   overwrite_presentations=config.stage_4.overwrite_presentations)
-
-        # noinspection PyTypeChecker
-        return StageFourInput(templates_api_url=config.stage_4.templates_api_url,
-                              presentations_api_url=config.stage_4.presentations_api_url,
-                              artifacts_folder=config.artifacts_folder,
-                              templates=[S4_Template(template.entry.id,
-                                                     template.entry.title,
-                                                     TemplateType.ENTRY if not config.stitch_final_video else (
-                                                             TemplateType.ENTRY | TemplateType.PRESENTATION))
-                                         for template in template_models],
-                              retry_attempts=config.stage_4.gen_retry_attempts,
-                              overwrite_templates=config.stage_4.overwrite_templates,
-                              overwrite_presentations=config.stage_4.overwrite_presentations)
+        else:
+            return state_manager.produce_stage_4_input(templates_api_url=config.stage_4.templates_api_url,
+                                                       presentations_api_url=config.stage_4.presentations_api_url,
+                                                       artifacts_folder=config.artifacts_folder,
+                                                       stitch_final_video=config.stitch_final_video,
+                                                       retry_attempts=config.stage_4.gen_retry_attempts,
+                                                       overwrite_templates=config.stage_4.overwrite_templates,
+                                                       overwrite_presentations=config.stage_4.overwrite_presentations)
 
 
     @stage(err_header="[Stage 4 | Execution ERROR]",
@@ -633,8 +739,7 @@ if __name__ == '__main__':
 
 
     if config.start_from <= STAGE_FOUR:
-        stage_4_input: StageFourInput = stage_4_collect_input(config)
-        stage_4_result: StageFourOutput = stage_4_do_execute(config, stage_4_input)
+        stage_4_do_execute(config, stage_4_collect_input(config))
 
 
     # STAGE 5
@@ -642,18 +747,20 @@ if __name__ == '__main__':
     @retry_or_reconfig(err_header="[Stage 5 | Input collection ERROR]", config_loader=config_loader)
     def stage_5_collect_input(config: Config) -> StageFiveInput:
         if config.start_from > STAGE_ONE:
-            return StageFiveInput(artifacts_folder=config.artifacts_folder, quiet_ffmpeg=config.stage_5.quiet_ffmpeg,
+            return StageFiveInput(artifacts_folder=config.artifacts_folder,
+                                  quiet_ffmpeg=config.stage_5.quiet_ffmpeg,
                                   entries=load_entries_from_db())
-
-        return StageFiveInput(artifacts_folder=config.artifacts_folder, quiet_ffmpeg=config.stage_5.quiet_ffmpeg,
-                              entries=entry_models)
+        else:
+            return state_manager.produce_stage_5_input(artifacts_folder=config.artifacts_folder,
+                                                       quiet_ffmpeg=config.stage_5.quiet_ffmpeg)
 
 
     @stage(err_header="[Stage 5 | Execution ERROR]",
            config_loader=config_loader,
            data_collector=stage_5_collect_input)
     def stage_5_do_execute(config: Config, stage_input: StageFiveInput) -> StageFiveOutput:
-        result = execute_stage_5(artifacts_folder=config.artifacts_folder, quiet_ffmpeg=config.stage_5.quiet_ffmpeg,
+        result = execute_stage_5(artifacts_folder=config.artifacts_folder,
+                                 quiet_ffmpeg=config.stage_5.quiet_ffmpeg,
                                  entries=stage_input.entries)
 
         print("")
@@ -670,8 +777,7 @@ if __name__ == '__main__':
 
 
     if config.start_from <= STAGE_FIVE:
-        stage_5_input: StageFiveInput = stage_5_collect_input(config)
-        stage_5_result: StageFiveOutput = stage_5_do_execute(config, stage_5_input)
+        stage_5_do_execute(config, stage_5_collect_input(config))
 
 
     # STAGE 6
@@ -691,36 +797,18 @@ if __name__ == '__main__':
                                                                            config.stage_6.transition_type)),
                                  quiet_ffmpeg=config.stage_6.quiet_ffmpeg,
                                  quiet_ffmpeg_final_video=config.stage_6.quiet_ffmpeg_final_video)
-
-        entries_video_options: list[EntryVideoOptions] = []
-        for entry in entry_models:
-            entry_id = entry.id
-            entry_title = entry.title
-            sequence_number = next(s.ranking_sequence for s in entry_stats_models if s.entry.id == entry_id)
-            video_options = next(opt for opt in video_options_models if opt.entry.id == entry_id)
-            template = next(t for t in template_models if t.entry.id == entry_id)
-
-            entries_video_options.append(EntryVideoOptions(entry_id=entry_id,
-                                                           entry_title=entry_title,
-                                                           sequence_number=sequence_number,
-                                                           timestamp=Timestamp(start=str(video_options.timestamp_start),
-                                                                               end=str(video_options.timestamp_end)),
-                                                           width=template.video_box_width_px,
-                                                           height=template.video_box_height_px,
-                                                           position_top=template.video_box_position_top_px,
-                                                           position_left=template.video_box_position_left_px))
-
-        return StageSixInput(artifacts_folder=config.artifacts_folder,
-                             video_bits_folder=config.stage_6.video_bits_folder,
-                             entries_video_options=entries_video_options,
-                             overwrite=config.stage_6.overwrite_video_bits,
-                             stitch_final_video=config.stitch_final_video,
-                             final_video_name=config.stage_6.final_video_name,
-                             transition_options=TransitionOptions(config.stage_6.presentation_duration,
-                                                                  config.stage_6.transition_duration,
-                                                                  cast(TransitionType, config.stage_6.transition_type)),
-                             quiet_ffmpeg=config.stage_6.quiet_ffmpeg,
-                             quiet_ffmpeg_final_video=config.stage_6.quiet_ffmpeg_final_video)
+        else:
+            return state_manager.produce_stage_6_input(artifacts_folder=config.artifacts_folder,
+                                                       video_bits_folder=config.stage_6.video_bits_folder,
+                                                       overwrite_video_bits=config.stage_6.overwrite_video_bits,
+                                                       stitch_final_video=config.stitch_final_video,
+                                                       final_video_name=config.stage_6.final_video_name,
+                                                       presentation_duration=config.stage_6.presentation_duration,
+                                                       transition_duration=config.stage_6.transition_duration,
+                                                       transition_type=cast(TransitionType,
+                                                                            config.stage_6.transition_type),
+                                                       quiet_ffmpeg=config.stage_6.quiet_ffmpeg,
+                                                       quiet_ffmpeg_final_video=config.stage_6.quiet_ffmpeg_final_video)
 
 
     @stage(err_header="[Stage 6 | Execution ERROR]",
@@ -758,10 +846,7 @@ if __name__ == '__main__':
 
 
     if config.start_from <= STAGE_SIX:
-        stage_6_input: StageSixInput = stage_6_collect_input(config)
-        stage_6_result: StageSixOutput = stage_6_do_execute(config, stage_6_input)
-
-    # END OF MUSICOSA PIPELINE
+        stage_6_do_execute(config, stage_6_collect_input(config))
 
     print("")
     print("Pipeline execution completed ✔")
