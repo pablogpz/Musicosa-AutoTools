@@ -1,13 +1,16 @@
 import os
 from os import path, getenv
 
+from common.config.config import Config
 from common.custom_types import StageException
-from common.model.models import Entry
-from stage_5_videoclips_acquisition.custom_types import StageFiveOutput
+from stage_5_videoclips_acquisition.custom_types import StageFiveInput, StageFiveOutput
 from stage_5_videoclips_acquisition.logic.download_videoclips import download_all_videoclips
 
 
-def execute(artifacts_folder: str, quiet_ffmpeg: bool, entries: list[Entry]) -> StageFiveOutput:
+def execute(config: Config, stage_input: StageFiveInput) -> StageFiveOutput:
+    artifacts_folder, quiet_ffmpeg = (config.artifacts_folder, config.stage_5.quiet_ffmpeg)
+    entries = stage_input.entries
+
     if not getenv("PATCHED_FFMPEG_PATH", ""):
         raise StageException("Patched FFmpeg path not set in environment variable 'PATCHED_FFMPEG_PATH'")
 

@@ -1,7 +1,7 @@
 import argparse
 import inspect
 from collections.abc import Callable
-from typing import Literal, Never, Protocol, Any, cast
+from typing import Literal, Never, Protocol, Any
 
 from peewee import PeeweeException
 
@@ -35,8 +35,7 @@ from stage_4_templates_gen.stage_input import load_templates_from_db
 from stage_5_videoclips_acquisition.custom_types import StageFiveOutput, StageFiveInput
 from stage_5_videoclips_acquisition.execute import execute as execute_stage_5
 from stage_5_videoclips_acquisition.stage_input import load_entries_from_db
-from stage_6_video_gen.custom_types import EntryVideoOptions, Timestamp, StageSixOutput, StageSixInput, \
-    TransitionOptions, TransitionType
+from stage_6_video_gen.custom_types import EntryVideoOptions, Timestamp, StageSixOutput, StageSixInput
 from stage_6_video_gen.execute import execute as execute_stage_6
 from stage_6_video_gen.stage_input import load_entries_video_options_from_db
 
@@ -437,39 +436,18 @@ class PipelineStateManager:
         if stage_output.video_options:
             self.video_options.extend(stage_output.video_options)
 
-    def produce_stage_4_input(self, templates_api_url: str,
-                              presentations_api_url: str,
-                              artifacts_folder: str,
-                              stitch_final_video: bool,
-                              retry_attempts: int,
-                              overwrite_templates: bool,
-                              overwrite_presentations: bool) -> StageFourInput:
+    def produce_stage_4_input(self, generate_presentations: bool) -> StageFourInput:
         # noinspection PyTypeChecker
-        return StageFourInput(templates_api_url=templates_api_url,
-                              presentations_api_url=presentations_api_url,
-                              artifacts_folder=artifacts_folder,
-                              templates=[S4_Template(template.entry.id,
-                                                     template.entry.title,
-                                                     TemplateType.ENTRY if not stitch_final_video else (
-                                                             TemplateType.ENTRY | TemplateType.PRESENTATION))
-                                         for template in self.templates],
-                              retry_attempts=retry_attempts,
-                              overwrite_templates=overwrite_templates,
-                              overwrite_presentations=overwrite_presentations)
+        return StageFourInput([S4_Template(template.entry.id,
+                                           template.entry.title,
+                                           TemplateType.ENTRY if not generate_presentations else (
+                                                   TemplateType.ENTRY | TemplateType.PRESENTATION))
+                               for template in self.templates])
 
-    def produce_stage_5_input(self, artifacts_folder: str, quiet_ffmpeg: bool) -> StageFiveInput:
-        return StageFiveInput(artifacts_folder, quiet_ffmpeg, self.entries)
+    def produce_stage_5_input(self) -> StageFiveInput:
+        return StageFiveInput(self.entries)
 
-    def produce_stage_6_input(self, artifacts_folder: str,
-                              video_bits_folder: str,
-                              overwrite_video_bits: bool,
-                              stitch_final_video: bool,
-                              final_video_name: str,
-                              presentation_duration: int,
-                              transition_duration: int,
-                              transition_type: TransitionType,
-                              quiet_ffmpeg: bool,
-                              quiet_ffmpeg_final_video: bool) -> StageSixInput:
+    def produce_stage_6_input(self) -> StageSixInput:
         entries_video_options: list[EntryVideoOptions] = []
 
         for entry in self.entries:
@@ -490,17 +468,7 @@ class PipelineStateManager:
                                   position_top=template.video_box_position_top_px,
                                   position_left=template.video_box_position_left_px))
 
-        return StageSixInput(artifacts_folder=artifacts_folder,
-                             video_bits_folder=video_bits_folder,
-                             entries_video_options=entries_video_options,
-                             overwrite=overwrite_video_bits,
-                             stitch_final_video=stitch_final_video,
-                             final_video_name=final_video_name,
-                             transition_options=TransitionOptions(presentation_duration,
-                                                                  transition_duration,
-                                                                  transition_type),
-                             quiet_ffmpeg=quiet_ffmpeg,
-                             quiet_ffmpeg_final_video=quiet_ffmpeg_final_video)
+        return StageSixInput(entries_video_options)
 
 
 if __name__ == '__main__':
@@ -552,13 +520,10 @@ if __name__ == '__main__':
            config_loader=config_loader,
            data_collector=stage_1_collect_input)
     def stage_1_do_execute(config: Config, stage_input: StageOneInput) -> StageOneOutput:
-        submissions, valid_titles, special_entry_topics = (stage_input.submissions,
-                                                           stage_input.valid_titles,
-                                                           stage_input.special_entry_topics)
+        submissions, valid_titles, special_entry_topics = (
+            stage_input.submissions, stage_input.valid_titles, stage_input.special_entry_topics)
 
-        result = execute_stage_1(submissions=submissions,
-                                 valid_titles=valid_titles,
-                                 special_entry_topics=special_entry_topics)
+        result = execute_stage_1(stage_input)
 
         print("")
         print("[STAGE 1 SUMMARY | Submissions Validation]")
@@ -607,7 +572,7 @@ if __name__ == '__main__':
     def stage_2_do_execute(stage_input: StageTwoInput) -> StageTwoOutput:
         musicosa = stage_input.musicosa
 
-        result = execute_stage_2(musicosa=musicosa)
+        result = execute_stage_2(stage_input)
 
         print("")
         print("[STAGE 2 SUMMARY | Musicosa Ranking]")
@@ -642,7 +607,7 @@ if __name__ == '__main__':
 
     @configless_stage(err_header="[Stage 3 | Execution ERROR]", data_collector=stage_3_collect_input)
     def stage_3_do_execute(stage_input: StageThreeInput) -> StageThreeOutput:
-        result = execute_stage_3(musicosa=stage_input.musicosa)
+        result = execute_stage_3(stage_input)
 
         print("")
         print("[STAGE 3 SUMMARY | Templates Pre-Generation]")
@@ -689,38 +654,22 @@ if __name__ == '__main__':
     @retry_or_reconfig(err_header="[Stage 4 | Input collection ERROR]", config_loader=config_loader)
     def stage_4_collect_input(config: Config) -> StageFourInput:
         if config.start_from == STAGE_FOUR:
-            return StageFourInput(templates_api_url=config.stage_4.templates_api_url,
-                                  presentations_api_url=config.stage_4.presentations_api_url,
-                                  artifacts_folder=config.artifacts_folder,
-                                  templates=load_templates_from_db(config.stitch_final_video),
-                                  retry_attempts=config.stage_4.gen_retry_attempts,
-                                  overwrite_templates=config.stage_4.overwrite_templates,
-                                  overwrite_presentations=config.stage_4.overwrite_presentations)
+            return StageFourInput(load_templates_from_db(generate_presentations=config.stitch_final_video))
         else:
-            return state_manager.produce_stage_4_input(templates_api_url=config.stage_4.templates_api_url,
-                                                       presentations_api_url=config.stage_4.presentations_api_url,
-                                                       artifacts_folder=config.artifacts_folder,
-                                                       stitch_final_video=config.stitch_final_video,
-                                                       retry_attempts=config.stage_4.gen_retry_attempts,
-                                                       overwrite_templates=config.stage_4.overwrite_templates,
-                                                       overwrite_presentations=config.stage_4.overwrite_presentations)
+            return state_manager.produce_stage_4_input(generate_presentations=config.stitch_final_video)
 
 
     @stage(err_header="[Stage 4 | Execution ERROR]",
            config_loader=config_loader,
            data_collector=stage_4_collect_input)
     def stage_4_do_execute(config: Config, stage_input: StageFourInput) -> StageFourOutput:
-        result = execute_stage_4(templates_api_url=config.stage_4.templates_api_url,
-                                 presentations_api_url=config.stage_4.presentations_api_url,
-                                 artifacts_folder=config.artifacts_folder,
-                                 templates=stage_input.templates,
-                                 retry_attempts=config.stage_4.gen_retry_attempts,
-                                 overwrite_templates=config.stage_4.overwrite_templates,
-                                 overwrite_presentations=config.stage_4.overwrite_presentations)
+        templates = stage_input.templates
+
+        result = execute_stage_4(config, stage_input)
 
         print("")
         print("[STAGE 4 SUMMARY | Templates Generation]")
-        print(f"  # Templates to generate: {len(stage_input.templates)}")
+        print(f"  # Templates to generate: {len(templates)}")
         print("")
         print(f"  # Successfully generated templates: "
               f"{len(result.generated_template_titles) if result.generated_template_titles else 0}")
@@ -740,20 +689,16 @@ if __name__ == '__main__':
     @retry_or_reconfig(err_header="[Stage 5 | Input collection ERROR]", config_loader=config_loader)
     def stage_5_collect_input(config: Config) -> StageFiveInput:
         if config.start_from > STAGE_ONE:
-            return StageFiveInput(artifacts_folder=config.artifacts_folder,
-                                  quiet_ffmpeg=config.stage_5.quiet_ffmpeg,
-                                  entries=load_entries_from_db())
+            return StageFiveInput(load_entries_from_db())
         else:
-            return state_manager.produce_stage_5_input(config.artifacts_folder, config.stage_5.quiet_ffmpeg)
+            return state_manager.produce_stage_5_input()
 
 
     @stage(err_header="[Stage 5 | Execution ERROR]",
            config_loader=config_loader,
            data_collector=stage_5_collect_input)
     def stage_5_do_execute(config: Config, stage_input: StageFiveInput) -> StageFiveOutput:
-        result = execute_stage_5(artifacts_folder=config.artifacts_folder,
-                                 quiet_ffmpeg=config.stage_5.quiet_ffmpeg,
-                                 entries=stage_input.entries)
+        result = execute_stage_5(config, stage_input)
 
         print("")
         print("[STAGE 5 SUMMARY | Videoclips Acquisition]")
@@ -777,52 +722,22 @@ if __name__ == '__main__':
     @retry_or_reconfig(err_header="[Stage 6 | Input collection ERROR]", config_loader=config_loader)
     def stage_6_collect_input(config: Config) -> StageSixInput:
         if config.start_from > STAGE_ONE:
-            return StageSixInput(artifacts_folder=config.artifacts_folder,
-                                 video_bits_folder=config.stage_6.video_bits_folder,
-                                 entries_video_options=load_entries_video_options_from_db(),
-                                 overwrite=config.stage_6.overwrite_video_bits,
-                                 stitch_final_video=config.stitch_final_video,
-                                 final_video_name=config.stage_6.final_video_name,
-                                 transition_options=TransitionOptions(config.stage_6.presentation_duration,
-                                                                      config.stage_6.transition_duration,
-                                                                      cast(TransitionType,
-                                                                           config.stage_6.transition_type)),
-                                 quiet_ffmpeg=config.stage_6.quiet_ffmpeg,
-                                 quiet_ffmpeg_final_video=config.stage_6.quiet_ffmpeg_final_video)
+            return StageSixInput(load_entries_video_options_from_db())
         else:
-            return state_manager.produce_stage_6_input(artifacts_folder=config.artifacts_folder,
-                                                       video_bits_folder=config.stage_6.video_bits_folder,
-                                                       overwrite_video_bits=config.stage_6.overwrite_video_bits,
-                                                       stitch_final_video=config.stitch_final_video,
-                                                       final_video_name=config.stage_6.final_video_name,
-                                                       presentation_duration=config.stage_6.presentation_duration,
-                                                       transition_duration=config.stage_6.transition_duration,
-                                                       transition_type=cast(TransitionType,
-                                                                            config.stage_6.transition_type),
-                                                       quiet_ffmpeg=config.stage_6.quiet_ffmpeg,
-                                                       quiet_ffmpeg_final_video=config.stage_6.quiet_ffmpeg_final_video)
+            return state_manager.produce_stage_6_input()
 
 
     @stage(err_header="[Stage 6 | Execution ERROR]",
            config_loader=config_loader,
            data_collector=stage_6_collect_input)
     def stage_6_do_execute(config: Config, stage_input: StageSixInput) -> StageSixOutput:
-        result = execute_stage_6(artifacts_folder=config.artifacts_folder,
-                                 video_bits_folder=config.stage_6.video_bits_folder,
-                                 entries_video_options=stage_input.entries_video_options,
-                                 overwrite=config.stage_6.overwrite_video_bits,
-                                 stitch_final_video=config.stitch_final_video,
-                                 final_video_name=config.stage_6.final_video_name,
-                                 transition_options=TransitionOptions(config.stage_6.presentation_duration,
-                                                                      config.stage_6.transition_duration,
-                                                                      cast(TransitionType,
-                                                                           config.stage_6.transition_type)),
-                                 quiet_ffmpeg=config.stage_6.quiet_ffmpeg,
-                                 quiet_ffmpeg_final_video=config.stage_6.quiet_ffmpeg_final_video)
+        entries_video_options = stage_input.entries_video_options
+
+        result = execute_stage_6(config, stage_input)
 
         print("")
         print("[STAGE 6 SUMMARY | Video Generation]")
-        print(f"  # Loaded entries: {len(stage_input.entries_video_options)}")
+        print(f"  # Loaded entries: {len(entries_video_options)}")
         print("")
         if result.entries_missing_sources:
             print(f"  Entries missing source files: ['{"', '".join(result.entries_missing_sources)}']")

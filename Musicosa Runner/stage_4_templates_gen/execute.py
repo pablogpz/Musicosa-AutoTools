@@ -3,21 +3,24 @@ from os import path
 
 from validators import url as validate_url, ValidationError
 
+from common.config.config import Config
 from common.custom_types import StageException
 from common.model.models import SettingKeys
 from common.model.settings import is_setting_set
 from stage_4_templates_gen.constants import MAX_GEN_RETRY_ATTEMPTS
-from stage_4_templates_gen.custom_types import Template, StageFourOutput
+from stage_4_templates_gen.custom_types import StageFourOutput, StageFourInput
 from stage_4_templates_gen.logic.generate_templates import generate_templates
 
 
-def execute(templates_api_url: str,
-            presentations_api_url: str,
-            artifacts_folder: str,
-            templates: list[Template],
-            retry_attempts: int,
-            overwrite_templates: bool,
-            overwrite_presentations: bool) -> StageFourOutput:
+def execute(config: Config, stage_input: StageFourInput) -> StageFourOutput:
+    templates_api_url = config.stage_4.templates_api_url
+    presentations_api_url = config.stage_4.presentations_api_url
+    artifacts_folder = config.artifacts_folder
+    retry_attempts = config.stage_4.gen_retry_attempts
+    overwrite_templates = config.stage_4.overwrite_templates
+    overwrite_presentations = config.stage_4.overwrite_presentations
+    templates = stage_input.templates
+
     if not is_setting_set(SettingKeys.FRAME_WIDTH_PX):
         raise StageException(f"Setting '{SettingKeys.FRAME_WIDTH_PX}' not set")
 

@@ -10,6 +10,7 @@ from common.db.peewee_helpers import bulk_pack
 from common.model.models import Entry, Scoring, VideoOptions, Contestant, SpecialEntryTopic
 from common.naming.identifiers import generate_contestant_uuid5, generate_entry_uuid5
 from common.time.utils import parse_time
+from stage_1_validation.custom_types import StageOneInput
 from stage_1_validation.execute import execute
 from stage_1_validation.stage_input import get_submissions_from_forms_folder, get_valid_titles, \
     get_special_topics_from_db
@@ -46,7 +47,7 @@ if __name__ == "__main__":
     # Stage execution
 
     try:
-        result = execute(submissions=submissions, valid_titles=valid_titles, special_entry_topics=special_entry_topics)
+        result = execute(StageOneInput(submissions, valid_titles, special_entry_topics))
     except StageException as err:
         print(f"[Stage 1 | Execution] {err}")
         exit(1)
@@ -59,7 +60,8 @@ if __name__ == "__main__":
 
     contestants_by_name: dict[str, Contestant] = {}
     for sub in submissions:
-        contestants_by_name[sub.name] = Contestant(id=generate_contestant_uuid5(sub.name).hex, name=sub.name,
+        contestants_by_name[sub.name] = Contestant(id=generate_contestant_uuid5(sub.name).hex,
+                                                   name=sub.name,
                                                    avatar=None)
 
     entries_by_name: dict[str, Entry] = {}

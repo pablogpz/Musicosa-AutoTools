@@ -4,6 +4,7 @@ from peewee import PeeweeException
 
 from common.config.loader import load_config
 from common.custom_types import StageException
+from stage_5_videoclips_acquisition.custom_types import StageFiveInput
 from stage_5_videoclips_acquisition.execute import execute
 from stage_5_videoclips_acquisition.stage_input import load_entries_from_db
 
@@ -21,9 +22,6 @@ if __name__ == "__main__":
         print(err)
         exit(1)
 
-    artifacts_folder = config.artifacts_folder
-    quiet_ffmpeg = config.stage_5.quiet_ffmpeg
-
     # Data retrieval
 
     try:
@@ -35,7 +33,7 @@ if __name__ == "__main__":
     # Execution
 
     try:
-        result = execute(artifacts_folder=artifacts_folder, quiet_ffmpeg=quiet_ffmpeg, entries=entries)
+        result = execute(config, StageFiveInput(entries))
     except StageException as err:
         print(f"[Stage 5 | Execution] {err}")
         exit(1)

@@ -1,11 +1,13 @@
 from common.custom_types import StageException
 from common.model.models import SettingKeys
 from common.model.settings import is_setting_set
-from stage_2_ranking.custom_types import StageTwoOutput, Musicosa
+from stage_2_ranking.custom_types import StageTwoOutput, StageTwoInput
 from stage_2_ranking.logic.ranking import rank_musicosa
 
 
-def execute(musicosa: Musicosa) -> StageTwoOutput:
+def execute(stage_input: StageTwoInput) -> StageTwoOutput:
+    musicosa = stage_input.musicosa
+
     if not is_setting_set(SettingKeys.RANKING_SIGNIFICANT_DECIMAL_DIGITS):
         raise StageException(f"Setting '{SettingKeys.RANKING_SIGNIFICANT_DECIMAL_DIGITS}' not set")
 

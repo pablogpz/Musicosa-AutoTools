@@ -2,6 +2,7 @@ from common.custom_types import StageException
 from common.db.database import db
 from common.db.peewee_helpers import bulk_pack
 from common.model.models import Contestant, Entry, ContestantStats, EntryStats
+from stage_2_ranking.custom_types import StageTwoInput
 from stage_2_ranking.execute import execute
 from stage_2_ranking.stage_input import load_musicosa_from_db
 
@@ -18,7 +19,7 @@ if __name__ == "__main__":
     # Stage execution
 
     try:
-        result = execute(musicosa=musicosa)
+        result = execute(StageTwoInput(musicosa))
     except StageException as err:
         print(f"[Stage 2 | Execution] {err}")
         exit(1)

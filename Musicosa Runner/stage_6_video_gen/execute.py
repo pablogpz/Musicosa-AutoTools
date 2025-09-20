@@ -2,25 +2,29 @@ import os
 from os import path
 from typing import get_args
 
+from common.config.config import Config
 from common.constants import VIDEO_FORMAT
 from common.custom_types import StageException
 from common.model.models import SettingKeys
 from common.model.settings import is_setting_set
-from stage_6_video_gen.custom_types import EntryVideoOptions, StageSixOutput, TransitionOptions, \
-    TransitionType
+from stage_6_video_gen.custom_types import TransitionOptions, StageSixInput, StageSixOutput, TransitionType
 from stage_6_video_gen.logic.generate_final_video import generate_final_video
 from stage_6_video_gen.logic.generate_video_bits import generate_video_bit_collection
 
 
-def execute(artifacts_folder: str,
-            video_bits_folder: str,
-            entries_video_options: list[EntryVideoOptions],
-            overwrite: bool,
-            stitch_final_video: bool,
-            final_video_name: str,
-            transition_options: TransitionOptions,
-            quiet_ffmpeg: bool,
-            quiet_ffmpeg_final_video: bool) -> StageSixOutput:
+def execute(config: Config, stage_input: StageSixInput) -> StageSixOutput:
+    artifacts_folder = config.artifacts_folder
+    video_bits_folder = config.stage_6.video_bits_folder
+    overwrite = config.stage_6.overwrite_video_bits
+    stitch_final_video = config.stitch_final_video
+    final_video_name = config.stage_6.final_video_name
+    transition_options = TransitionOptions(config.stage_6.presentation_duration,
+                                           config.stage_6.transition_duration,
+                                           TransitionType(config.stage_6.transition_type))
+    quiet_ffmpeg = config.stage_6.quiet_ffmpeg
+    quiet_ffmpeg_final_video = config.stage_6.quiet_ffmpeg_final_video
+    entries_video_options = stage_input.entries_video_options
+
     if not is_setting_set(SettingKeys.VALIDATION_ENTRY_VIDEO_DURATION_SECONDS):
         raise StageException(f"Setting '{SettingKeys.VALIDATION_ENTRY_VIDEO_DURATION_SECONDS}' not set")
 
