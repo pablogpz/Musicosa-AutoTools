@@ -91,12 +91,13 @@ if __name__ == "__main__":
                                                   timestamp_end=parse_time(end)))
 
     try:
-        with db.atomic():
+        with db.atomic() as tx:
             Contestant.ORM.insert_many(bulk_pack(contestants_by_name.values())).execute()
             Entry.ORM.insert_many(bulk_pack(entries_by_name.values())).execute()
             Scoring.ORM.insert_many(bulk_pack(scoring_entries)).execute()
             VideoOptions.ORM.insert_many(bulk_pack(video_options)).execute()
     except PeeweeException as err:
+        tx.rollback()
         print(f"[Stage 1 | Data persistence] {err}")
         exit(1)
 

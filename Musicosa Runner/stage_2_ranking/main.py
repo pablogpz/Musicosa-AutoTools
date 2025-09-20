@@ -35,7 +35,7 @@ if __name__ == "__main__":
     entries_by_title = dict([(entry.title, entry) for entry in entries])
 
     try:
-        with db.atomic():
+        with db.atomic() as tx:
             (ContestantStats.ORM
              .insert_many(bulk_pack(
                 [ContestantStats(contestant=contestants_by_name[stat.contestant.name],
@@ -53,6 +53,7 @@ if __name__ == "__main__":
                  for stat in entries_stats]))
              .execute())
     except Exception as err:
+        tx.rollback()
         print(f"[Stage 2 | Data persistence] {err}")
         exit(1)
 

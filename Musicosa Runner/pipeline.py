@@ -378,12 +378,11 @@ class PipelineStateManager:
 
             s2_contestants.append(
                 S2_Contestant(name=contestant.name,
-                              scores=[S2_Score(entry_title=scoring.entry.title, value=scoring.score)
-                                      for scoring in contestant_scorings]))
+                              scores=[S2_Score(scoring.entry.title, scoring.score) for scoring in contestant_scorings]))
 
-        s2_entries = [S2_Entry(title=entry.title, author_name=entry.author.name) for entry in self.entries]
+        s2_entries = [S2_Entry(entry.title, entry.author.name) for entry in self.entries]
 
-        return StageTwoInput(musicosa=S2_Musicosa(contestants=s2_contestants, entries=s2_entries))
+        return StageTwoInput(S2_Musicosa(s2_contestants, s2_entries))
 
     def register_stage_2_output(self, stage_output: StageTwoOutput) -> None:
         self.contestant_stats_collection.extend(
@@ -415,10 +414,8 @@ class PipelineStateManager:
                   if stat.entry.id not in entry_ids_with_video_options]))
 
         return StageThreeInput(
-            musicosa=S3_Musicosa(unfulfilled_contestants=unfulfilled_contestants,
-                                 avatars=self.avatars,
-                                 entries_index_of_unfulfilled_templates=entries_index_of_unfulfilled_templates,
-                                 entries_index_of_unfulfilled_video_options=entries_index_of_unfulfilled_video_options))
+            S3_Musicosa(unfulfilled_contestants, self.avatars, entries_index_of_unfulfilled_templates,
+                        entries_index_of_unfulfilled_video_options))
 
     def register_stage_3_output(self, stage_output: StageThreeOutput) -> None:
         if stage_output.avatar_pairings:
@@ -461,9 +458,7 @@ class PipelineStateManager:
                               overwrite_presentations=overwrite_presentations)
 
     def produce_stage_5_input(self, artifacts_folder: str, quiet_ffmpeg: bool) -> StageFiveInput:
-        return StageFiveInput(artifacts_folder=artifacts_folder,
-                              quiet_ffmpeg=quiet_ffmpeg,
-                              entries=self.entries)
+        return StageFiveInput(artifacts_folder, quiet_ffmpeg, self.entries)
 
     def produce_stage_6_input(self, artifacts_folder: str,
                               video_bits_folder: str,
@@ -550,9 +545,7 @@ if __name__ == '__main__':
         valid_titles = get_valid_titles(config.stage_1.forms_folder, config.stage_1.valid_titles_file)
         special_entry_topics = get_special_topics_from_db()
 
-        return StageOneInput(submissions=submissions,
-                             valid_titles=valid_titles,
-                             special_entry_topics=special_entry_topics)
+        return StageOneInput(submissions, valid_titles, special_entry_topics)
 
 
     @stage(err_header="[Stage 1 | Execution ERROR]",
@@ -605,7 +598,7 @@ if __name__ == '__main__':
     @retry(err_header="[Stage 2 | Input collection ERROR]")
     def stage_2_collect_input() -> StageTwoInput:
         if config.start_from == STAGE_TWO:
-            return StageTwoInput(musicosa=load_s2_musicosa_from_db())
+            return StageTwoInput(load_s2_musicosa_from_db())
         else:
             return state_manager.produce_stage_2_input()
 
@@ -642,7 +635,7 @@ if __name__ == '__main__':
     @retry(err_header="[Stage 3 | Input collection ERROR]")
     def stage_3_collect_input() -> StageThreeInput:
         if config.start_from >= STAGE_TWO:
-            return StageThreeInput(musicosa=load_s3_musicosa_from_db())
+            return StageThreeInput(load_s3_musicosa_from_db())
         else:
             return state_manager.produce_stage_3_input()
 
@@ -751,8 +744,7 @@ if __name__ == '__main__':
                                   quiet_ffmpeg=config.stage_5.quiet_ffmpeg,
                                   entries=load_entries_from_db())
         else:
-            return state_manager.produce_stage_5_input(artifacts_folder=config.artifacts_folder,
-                                                       quiet_ffmpeg=config.stage_5.quiet_ffmpeg)
+            return state_manager.produce_stage_5_input(config.artifacts_folder, config.stage_5.quiet_ffmpeg)
 
 
     @stage(err_header="[Stage 5 | Execution ERROR]",

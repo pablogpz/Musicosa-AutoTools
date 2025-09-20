@@ -108,7 +108,7 @@ def generate_unfulfilled_avatar_pairings(unfulfilled_contestants: list[Contestan
         else:
             avatar = available_avatars[int(choice) - 1]
 
-        pairings.append(AvatarPairing(contestant=contestant, avatar=avatar))
+        pairings.append(AvatarPairing(contestant, avatar))
 
         print(f"'{contestant.name}' assigned to avatar '{avatar.image_filename}'")
 
@@ -186,6 +186,7 @@ def generate_unfulfilled_templates(entries_sequence_number_index: dict[int, Entr
 
     while len(templates) != len(entries_sequence_number_index):
         missing_templates = get_missing_templates()
+
         print("")
         print(f"{len(missing_templates)} remaining template(s) ({format_sequence_numbers(missing_templates)})")
 
@@ -327,6 +328,7 @@ def generate_unfulfilled_video_options(entries_sequence_number_index: dict[int, 
 
     while len(video_options) != len(entries_sequence_number_index):
         missing_options = get_missing_options()
+
         print("")
         print(f"{len(missing_options)} remaining video option(s) ({format_sequence_numbers(missing_options)})")
 
@@ -337,7 +339,6 @@ def generate_unfulfilled_video_options(entries_sequence_number_index: dict[int, 
                              x: f"Invalid selection '{x}' (Use a valid index, range, omit a boundary or leave empty)",
                          indentation_level=2))
         print("")
-
         print(f"Setting values for {len(selection)} video options(s)...")
 
         video_timestamp = better_input("Videoclip segment ([HH:]MM:SS)-([HH:]MM:SS)",

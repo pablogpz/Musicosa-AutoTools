@@ -12,6 +12,6 @@ def execute(musicosa: Musicosa) -> StageTwoOutput:
     if not musicosa:
         raise StageException("Musicosa data is empty")
 
-    contestants_stats, entries_stats = rank_musicosa(musicosa=musicosa)
+    contestants_stats, entries_stats = rank_musicosa(musicosa)
 
-    return StageTwoOutput(contestants_stats=contestants_stats, entries_stats=entries_stats)
+    return StageTwoOutput(contestants_stats, entries_stats)

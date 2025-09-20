@@ -78,7 +78,7 @@ def generate_final_video(artifacts_folder: str,
 
             timeline_cursor = start_of_audio_track + video_bit_duration
 
-        # Compile FFMpeg command
+        # Compile FFmpeg command
 
         fragment_path = f"{final_video_folder}/{final_video_name}.fragment-{fragment_id}.{VIDEO_FORMAT}"
 
@@ -111,7 +111,7 @@ def generate_final_video(artifacts_folder: str,
         recompiled_cmd.append(f"-filter_complex_script {filtergraph_script}")
         recompiled_cmd.extend(cmd_output)
 
-        # Execute compiled FFMpeg command
+        # Execute compiled FFmpeg command
 
         try:
             ffmpeg_exit_code = system(" ".join(recompiled_cmd))
@@ -148,7 +148,7 @@ def generate_final_video(artifacts_folder: str,
 
         os.rename(final_video_fragments_files[0], final_video_path)
     else:
-        # If multiple fragments concat them with FFMpeg 'concat' filter
+        # If multiple fragments concat them with FFmpeg 'concat' filter
         concat_list_file = f"{final_video_folder}/concat.list"
         with open(concat_list_file, "w") as f:
             f.write("\n".join([f"file '{basename(frag_file)}'" for frag_file in final_video_fragments_files]))

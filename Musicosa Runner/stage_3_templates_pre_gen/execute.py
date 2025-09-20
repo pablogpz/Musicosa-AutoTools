@@ -20,8 +20,4 @@ def execute(musicosa: Musicosa) -> StageThreeOutput:
     generation_settings = generate_unfulfilled_generation_settings()
     video_options = generate_unfulfilled_video_options(musicosa.entries_index_of_unfulfilled_video_options)
 
-    return StageThreeOutput(avatar_pairings=avatar_pairings,
-                            frame_settings=frame_settings,
-                            templates=templates,
-                            generation_settings=generation_settings,
-                            video_options=video_options)
+    return StageThreeOutput(avatar_pairings, frame_settings, templates, generation_settings, video_options)

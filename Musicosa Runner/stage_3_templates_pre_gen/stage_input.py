@@ -38,7 +38,7 @@ def load_entries_index_of_unfulfilled_video_options_from_db() -> dict[int, Entry
 
 
 def load_musicosa_from_db() -> Musicosa:
-    return Musicosa(unfulfilled_contestants=load_unfulfilled_contestants_from_db(),
-                    avatars=load_avatars_from_db(),
-                    entries_index_of_unfulfilled_templates=load_entries_index_of_unfulfilled_templates_from_db(),
-                    entries_index_of_unfulfilled_video_options=load_entries_index_of_unfulfilled_video_options_from_db())
+    return Musicosa(load_unfulfilled_contestants_from_db(),
+                    load_avatars_from_db(),
+                    load_entries_index_of_unfulfilled_templates_from_db(),
+                    load_entries_index_of_unfulfilled_video_options_from_db())

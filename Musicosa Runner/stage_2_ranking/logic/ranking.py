@@ -37,7 +37,10 @@ def rank_musicosa(musicosa: Musicosa) -> tuple[list[ContestantStats], list[Entry
 
     # Ranking algorithm
 
-    entry_stats_collection = [EntryStats(entry, entries_avg_scores_by_title[entry.title], None, None)
+    entry_stats_collection = [EntryStats(entry,
+                                         entries_avg_scores_by_title[entry.title],
+                                         ranking_place=None,
+                                         ranking_sequence=None)
                               for entry in
                               musicosa.entries]
     entry_stats_collection.sort(key=lambda stat: stat.avg_score)

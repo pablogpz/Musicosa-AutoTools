@@ -51,18 +51,17 @@ def execute(artifacts_folder: str,
     if transition_options.presentation_duration <= 0:
         raise StageException(
             f"presentation_duration ({transition_options.presentation_duration}) must be a positive integer")
+
     if transition_options.transition_duration <= 0:
         raise StageException(
             f"transition_duration ({transition_options.transition_duration}) must be a positive integer")
+
     if transition_options.type not in get_args(TransitionType):
         raise StageException(f"transition_type ({transition_options.type}) must be one of [{get_args(TransitionType)}]")
 
     generated, missing_sources, failed_to_generate = (
-        generate_video_bit_collection(artifacts_folder=artifacts_folder,
-                                      video_bits_folder=video_bits_folder,
-                                      overwrite=overwrite,
-                                      quiet_ffmpeg=quiet_ffmpeg,
-                                      entry_video_options=entries_video_options))
+        generate_video_bit_collection(artifacts_folder, video_bits_folder, overwrite, quiet_ffmpeg,
+                                      entries_video_options))
 
     final_video_path = None
 
@@ -78,15 +77,12 @@ def execute(artifacts_folder: str,
                   f"{len(entries_video_options) - len(generated_or_existing_video_bits)}"
                   f" missing video bits")
         else:
-            final_video_path = generate_final_video(artifacts_folder=artifacts_folder,
-                                                    video_bits_folder=video_bits_folder,
-                                                    final_video_folder=video_bits_folder,
-                                                    final_video_name=final_video_name,
-                                                    quiet_ffmpeg=quiet_ffmpeg_final_video,
-                                                    vid_opts=entries_video_options,
-                                                    transition_options=transition_options)
+            final_video_path = generate_final_video(artifacts_folder,
+                                                    video_bits_folder,
+                                                    video_bits_folder,
+                                                    final_video_name,
+                                                    quiet_ffmpeg_final_video,
+                                                    entries_video_options,
+                                                    transition_options)
 
-    return StageSixOutput(generated_video_bit_files=generated,
-                          entries_missing_sources=missing_sources,
-                          failed_video_bits=failed_to_generate,
-                          final_video_file=final_video_path)
+    return StageSixOutput(generated, missing_sources, failed_to_generate, final_video_path)

@@ -22,8 +22,6 @@ def execute(submissions: list[ContestantSubmission], valid_titles: list[str],
     if not valid_titles:
         raise StageException("Valid entry titles list is empty")
 
-    validation_errors = validate_contestant_submission_collection(submissions=submissions,
-                                                                  valid_titles=valid_titles,
-                                                                  special_entry_topics=special_entry_topics)
+    validation_errors = validate_contestant_submission_collection(submissions, valid_titles, special_entry_topics)
 
-    return StageOneOutput(validation_errors=validation_errors)
+    return StageOneOutput(validation_errors)

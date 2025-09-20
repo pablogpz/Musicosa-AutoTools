@@ -13,9 +13,6 @@ def better_input(user_message: str,
         inner_user_input = input(f"{indentation}-> {user_message}{f" [{default}]" if default else ""}> ")
         return inner_user_input.strip() if inner_user_input else default
 
-    if validate is None:
-        return prompt()
-
     def format_error(error_value: str) -> str:
         if callable(error_message):
             return error_message(error_value)
@@ -23,6 +20,10 @@ def better_input(user_message: str,
             return f"{error_message or "Invalid input"} (got '{error_value}')"
 
     user_input = prompt()
+
+    if validate is None:
+        return user_input
+
     while not validate(user_input):
         print(f"{indentation}{format_error(user_input)}")
         user_input = prompt()

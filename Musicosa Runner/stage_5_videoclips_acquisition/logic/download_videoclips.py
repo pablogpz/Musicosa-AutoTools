@@ -6,7 +6,6 @@ import yt_dlp
 from ffmpeg.exceptions import FFMpegError
 
 from common.constants import VIDEO_FORMAT
-from common.custom_types import StageException
 from common.model.models import Entry
 from common.naming.slugify import slugify
 
@@ -16,9 +15,7 @@ def download_all_videoclips(entries: list[Entry], artifacts_folder: str, quiet_f
     acquired_videoclip_titles: list[str] = []
     failed_videoclip_titles: list[str] = []
 
-    # TODO: Move this check to 'execute.py'
-    if not (patched_ffmpeg_path := getenv("PATCHED_FFMPEG_PATH", "")):
-        raise StageException("Patched ffmpeg path not set in env var 'PATCHED_FFMPEG_PATH'")
+    patched_ffmpeg_path = getenv("PATCHED_FFMPEG_PATH", "")
 
     ytdl_base_options = {
         "quiet": True,
@@ -35,7 +32,7 @@ def download_all_videoclips(entries: list[Entry], artifacts_folder: str, quiet_f
     }
 
     with yt_dlp.YoutubeDL(ytdl_options) as ytdl:
-        ytdl.add_post_processor(MP4RemuxPostProcessor(quiet_ffmpeg=quiet_ffmpeg))
+        ytdl.add_post_processor(MP4RemuxPostProcessor(quiet_ffmpeg))
 
         for entry in entries:
 

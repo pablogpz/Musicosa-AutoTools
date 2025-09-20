@@ -63,12 +63,10 @@ def validate_contestant_submission(submission: ContestantSubmission,
     validation_errors: list[str] = []
 
     if len(entries) != entry_count:
-        validation_errors.append(
-            f"Submission entries count mismatch ({len(entries)}) (Should be {entry_count})")
+        validation_errors.append(f"Submission entries count mismatch ({len(entries)}) (Should be {entry_count})")
 
     if (authored_entries_count := len([entry for entry in entries if entry.is_author])) != rounds_count:
-        validation_errors.append(
-            f"Author claims count mismatch ({authored_entries_count}) (Should be {rounds_count})")
+        validation_errors.append(f"Author claims count mismatch ({authored_entries_count}) (Should be {rounds_count})")
 
     if duplicates := find_duplicates([entry.title for entry in entries]):
         for title, count in duplicates:

@@ -1,5 +1,5 @@
 import os
-from os import path
+from os import path, getenv
 
 from common.custom_types import StageException
 from common.model.models import Entry
@@ -8,6 +8,9 @@ from stage_5_videoclips_acquisition.logic.download_videoclips import download_al
 
 
 def execute(artifacts_folder: str, quiet_ffmpeg: bool, entries: list[Entry]) -> StageFiveOutput:
+    if not getenv("PATCHED_FFMPEG_PATH", ""):
+        raise StageException("Patched FFmpeg path not set in environment variable 'PATCHED_FFMPEG_PATH'")
+
     if not artifacts_folder:
         raise StageException("No artifacts folder provided")
 
@@ -17,7 +20,6 @@ def execute(artifacts_folder: str, quiet_ffmpeg: bool, entries: list[Entry]) -> 
     if entries is None:
         raise StageException("No entries provided")
 
-    acquired, failed_to_acquire = download_all_videoclips(entries=entries, artifacts_folder=artifacts_folder,
-                                                          quiet_ffmpeg=quiet_ffmpeg)
+    acquired, failed_to_acquire = download_all_videoclips(entries, artifacts_folder, quiet_ffmpeg)
 
-    return StageFiveOutput(acquired_videoclip_titles=acquired, failed_videoclip_titles=failed_to_acquire)
+    return StageFiveOutput(acquired, failed_to_acquire)

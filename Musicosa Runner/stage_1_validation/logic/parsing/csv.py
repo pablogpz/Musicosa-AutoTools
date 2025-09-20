@@ -21,14 +21,17 @@ def parse_contestant_form_csv(form_file: str) -> ContestantSubmission:
     entries: list[ContestantSubmissionEntry] = []
     contestant_name = basename(form_file).rsplit('.', 1)[0]
 
-    with open(form_file, "r", encoding="UTF-8") as file:
-        for csv_line in file:
-            try:
-                entries.append(parse_entry_csv(csv_line))
-            except StageException as err:
-                raise StageException(f"[{contestant_name}] {err}") from err
+    try:
+        with open(form_file, "r", encoding="UTF-8") as file:
+            for csv_line in file:
+                try:
+                    entries.append(parse_entry_csv(csv_line))
+                except StageException as err:
+                    raise StageException(f"[{contestant_name}] {err}") from err
+    except IOError as err:
+        raise StageException(f"Error opening CSV form file '{form_file}': {err}")
 
-    return ContestantSubmission(name=contestant_name, entries=entries)
+    return ContestantSubmission(contestant_name, entries)
 
 
 def parse_entry_csv(entry_line: str) -> ContestantSubmissionEntry:
@@ -47,8 +50,8 @@ def parse_entry_csv(entry_line: str) -> ContestantSubmissionEntry:
     is_author = line[2].strip() != ""
 
     if not is_author:
-        return ContestantSubmissionEntry(title=title, score=score, is_author=is_author, video_timestamp=None,
-                                         video_url=None, special_topic=None)
+        return ContestantSubmissionEntry(title, score, is_author, video_timestamp=None, video_url=None,
+                                         special_topic=None)
 
     video_url = line[3].strip() or None
 
@@ -65,5 +68,4 @@ def parse_entry_csv(entry_line: str) -> ContestantSubmissionEntry:
     else:
         special_topic = None
 
-    return ContestantSubmissionEntry(title=title, score=score, is_author=is_author, video_timestamp=video_timestamp,
-                                     video_url=video_url, special_topic=special_topic)
+    return ContestantSubmissionEntry(title, score, is_author, video_timestamp, video_url, special_topic)
