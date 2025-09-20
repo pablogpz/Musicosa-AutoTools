@@ -23,7 +23,7 @@ python pipeline.py
 
 ### Environment
 
-See `.env.example` to provide the mandatory env vars
+See `.env.example` to provide the mandatory environment variables
 
 ## Configuration
 

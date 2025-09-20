@@ -20,4 +20,4 @@ def execute(award_forms: list[AwardForm],
 
     validation_errors = validate_award_form_collection(award_forms, valid_award_slugs, award_count, member_count)
 
-    return StageOneOutput(validation_errors=validation_errors)
+    return StageOneOutput(validation_errors)

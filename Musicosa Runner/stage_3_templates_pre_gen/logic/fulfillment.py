@@ -78,6 +78,7 @@ def generate_unfulfilled_templates(nominations_sequence_number_index: dict[int, 
 
     while len(templates) != len(nominations_sequence_number_index):
         missing_templates = get_missing_templates()
+
         print("")
         print(f"{len(missing_templates)} remaining template(s) ({format_sequence_numbers(missing_templates)})")
 

@@ -63,9 +63,10 @@ if __name__ == "__main__":
                                                                                           award.award_slug).hex,
                                  score=cast_vote.score))
     try:
-        with db.atomic():
+        with db.atomic() as tx:
             CastVote.ORM.insert_many([vote.__data__ for vote in raw_cast_votes]).execute()  # CAREFUL!
     except PeeweeException as err:
+        tx.rollback()
         print(f"[Stage 1 | Data persistence] {err}")
         exit(1)
 

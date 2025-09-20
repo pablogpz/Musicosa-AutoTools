@@ -33,9 +33,10 @@ if __name__ == "__main__":
                                 ranking_sequence=stat.ranking_sequence))
 
     try:
-        with db.atomic():
+        with db.atomic() as tx:
             NominationStats.ORM.insert_many([stat.__data__ for stat in raw_nominations_stats]).execute()  # CAREFUL!
     except Exception as err:
+        tx.rollback()
         print(f"[Stage 2 | Data persistence] {err}")
         exit(1)
 

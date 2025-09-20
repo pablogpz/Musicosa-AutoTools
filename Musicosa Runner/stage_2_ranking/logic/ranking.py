@@ -25,7 +25,10 @@ def rank_award(award: Award, significant_decimal_digits: int) -> list[Nomination
 
     # Nomination's ranking algorithm
 
-    nomination_stats_collection = [NominationStats(nomination.id, nominations_avg_scores_by_id[nomination.id], 0, 0)
+    nomination_stats_collection = [NominationStats(nomination.id,
+                                                   nominations_avg_scores_by_id[nomination.id],
+                                                   ranking_place=0,
+                                                   ranking_sequence=0)
                                    for nomination in award.nominations]
     nomination_stats_collection.sort(key=lambda stat: stat.avg_score)
 

@@ -4,7 +4,7 @@ from datetime import time
 def validate_time_str(time_str: str) -> bool:
     timestamp_bits = time_str.split(":")
 
-    if not (len(timestamp_bits) == 2 or len(timestamp_bits) == 3):
+    if not len(timestamp_bits) in [2, 3]:
         return False
 
     try:
@@ -24,7 +24,7 @@ def parse_time(time_str: str) -> time | None:
 def time_str_zfill(time_str: str) -> str | None:
     time_bits = time_str.split(":")
 
-    if not (len(time_bits) == 2 or len(time_bits) == 3):
+    if not len(time_bits) in [2, 3]:
         return None
 
     if len(time_bits) == 2:

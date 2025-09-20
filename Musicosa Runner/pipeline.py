@@ -287,8 +287,8 @@ class PipelineStateManager:
         for award in award_forms:
             for submission in award.submissions:
                 for cast_vote in submission.cast_votes:
-                    nomination_id = generate_nomination_uuid5_from_nomination_str(cast_vote.nomination,
-                                                                                  award.award_slug).hex
+                    nomination_id = (
+                        generate_nomination_uuid5_from_nomination_str(cast_vote.nomination, award.award_slug).hex)
                     self.cast_votes.append(
                         CastVote(member=self.members_by_name[submission.name],
                                  nomination=self.nominations_by_id[nomination_id],
@@ -378,10 +378,7 @@ if __name__ == '__main__':
         awards_count = get_award_count()
         members_count = get_member_count()
 
-        return StageOneInput(award_forms=award_forms,
-                             valid_award_slugs=valid_award_slugs,
-                             award_count=awards_count,
-                             member_count=members_count)
+        return StageOneInput(award_forms, valid_award_slugs, awards_count, members_count)
 
 
     @stage(err_header="[Stage 1 | Execution ERROR]",
@@ -442,7 +439,7 @@ if __name__ == '__main__':
 
     @retry(err_header="[Stage 2 | Input collection ERROR]")
     def stage_2_collect_input() -> StageTwoInput:
-        return StageTwoInput(tfa=load_s2_tfa_from_db())
+        return StageTwoInput(load_s2_tfa_from_db())
 
 
     @configless_stage(err_header="[Stage 2 | Execution ERROR]", data_collector=stage_2_collect_input)
@@ -485,12 +482,12 @@ if __name__ == '__main__':
 
     @retry(err_header="[Stage 3 | Input collection ERROR]")
     def stage_3_collect_input() -> StageThreeInput:
-        return StageThreeInput(tfa=load_s3_tfa_from_db())
+        return StageThreeInput(load_s3_tfa_from_db())
 
 
     @configless_stage(err_header="[Stage 3 | Execution ERROR]", data_collector=stage_3_collect_input)
     def stage_3_do_execute(stage_input: StageThreeInput) -> StageThreeOutput:
-        result = execute_stage_3(tfa=stage_input.tfa)
+        result = execute_stage_3(stage_input.tfa)
 
         print("")
         print("[STAGE 3 SUMMARY | Templates Pre-Generation]")

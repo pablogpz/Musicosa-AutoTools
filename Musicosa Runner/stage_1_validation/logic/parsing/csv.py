@@ -20,23 +20,26 @@ def parse_award_form_csv(form_file: str) -> AwardForm:
     award_slug = basename(form_file).removesuffix('.csv')
     submissions: list[MemberSubmission] = []
 
-    with open(form_file, 'r', encoding='UTF-8-SIG') as file:
-        lines = file.readlines()
-        header_line = lines[0]
-        submission_lines = lines[1:]
+    try:
+        with open(form_file, "r", encoding="UTF-8-SIG") as file:
+            lines = file.readlines()
+            header_line = lines[0]
+            submission_lines = lines[1:]
 
-        headers = [header.replace('"', '').strip() for header in header_line.split(f"\"{CSV_SEPARATOR}\"")]
+            headers = [header.replace('"', '').strip() for header in header_line.split(f"\"{CSV_SEPARATOR}\"")]
 
-        for submission_line in submission_lines:
-            submission_values = {k: v for (k, v)
-                                 in zip(headers, [unquote(v) for v in submission_line.split(CSV_SEPARATOR)])
-                                 if k not in CSV_UNUSED_HEADERS}
-            try:
-                submissions.append(parse_member_submission(submission_values))
-            except StageException as err:
-                raise StageException(f"[{award_slug}] {err}") from err
+            for line in submission_lines:
+                submission_values = {k: v for (k, v)
+                                     in zip(headers, [unquote(v) for v in line.split(CSV_SEPARATOR)])
+                                     if k not in CSV_UNUSED_HEADERS}
+                try:
+                    submissions.append(parse_member_submission(submission_values))
+                except StageException as err:
+                    raise StageException(f"[{award_slug}] {err}") from err
+    except IOError as err:
+        raise StageException(f"Error opening CSV form file '{form_file}': {err}")
 
-        return AwardForm(award_slug, submissions)
+    return AwardForm(award_slug, submissions)
 
 
 def parse_member_submission(submission_values: dict[str, str]) -> MemberSubmission:

@@ -11,4 +11,4 @@ def execute(tfa: TFA) -> StageThreeOutput:
     frame_settings = generate_unfulfilled_frame_settings()
     templates = generate_unfulfilled_templates(tfa.nominations_index_of_unfulfilled_templates)
 
-    return StageThreeOutput(frame_settings=frame_settings, templates=templates)
+    return StageThreeOutput(frame_settings, templates)
