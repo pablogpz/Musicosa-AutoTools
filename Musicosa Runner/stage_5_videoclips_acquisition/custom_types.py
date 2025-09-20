@@ -5,8 +5,6 @@ from common.model.models import Videoclip
 
 @dataclass
 class StageFiveInput:
-    artifacts_folder: str
-    quiet_ffmpeg: bool
     videoclips: list[Videoclip]
 
 

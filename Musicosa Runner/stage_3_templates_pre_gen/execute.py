@@ -1,10 +1,12 @@
 from common.custom_types import StageException
-from stage_3_templates_pre_gen.custom_types import StageThreeOutput, TFA
+from stage_3_templates_pre_gen.custom_types import StageThreeInput, StageThreeOutput
 from stage_3_templates_pre_gen.logic.fulfillment import generate_unfulfilled_frame_settings, \
     generate_unfulfilled_templates
 
 
-def execute(tfa: TFA) -> StageThreeOutput:
+def execute(stage_input: StageThreeInput) -> StageThreeOutput:
+    tfa = stage_input.tfa
+
     if not tfa:
         raise StageException("TFA data is empty")
 

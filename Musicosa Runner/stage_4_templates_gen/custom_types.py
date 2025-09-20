@@ -12,13 +12,7 @@ class Template:
 
 @dataclass
 class StageFourInput:
-    templates_api_url: str
-    presentations_api_url: str
-    artifacts_folder: str
     templates: list[Template]
-    retry_attempts: int
-    overwrite_templates: bool
-    overwrite_presentations: bool
 
 
 @dataclass

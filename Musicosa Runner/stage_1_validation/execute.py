@@ -1,14 +1,14 @@
 from common.custom_types import StageException
 from common.model.models import SettingKeys
 from common.model.settings import is_setting_set
-from stage_1_validation.custom_types import StageOneOutput, AwardForm
+from stage_1_validation.custom_types import StageOneOutput, StageOneInput
 from stage_1_validation.logic.validation import validate_award_form_collection
 
 
-def execute(award_forms: list[AwardForm],
-            valid_award_slugs: list[str],
-            award_count: int,
-            member_count: int) -> StageOneOutput:
+def execute(stage_input: StageOneInput) -> StageOneOutput:
+    award_forms, valid_award_slugs, award_count, member_count = (
+        stage_input.award_forms, stage_input.valid_award_slugs, stage_input.award_count, stage_input.member_count)
+
     if not is_setting_set(SettingKeys.VALIDATION_SCORE_MIN_VALUE):
         raise StageException(f"Setting '{SettingKeys.VALIDATION_SCORE_MIN_VALUE}' not set")
 

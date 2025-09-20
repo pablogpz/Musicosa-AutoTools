@@ -7,6 +7,7 @@ from common.custom_types import StageException
 from common.db.database import db
 from common.model.models import CastVote
 from common.naming.identifiers import generate_member_uuid5, generate_nomination_uuid5_from_nomination_str
+from stage_1_validation.custom_types import StageOneInput
 from stage_1_validation.execute import execute
 from stage_1_validation.stage_input import parse_award_forms_folder, get_valid_award_slugs, get_award_count, \
     get_member_count
@@ -41,8 +42,7 @@ if __name__ == "__main__":
     # Stage execution
 
     try:
-        result = execute(award_forms=award_forms, valid_award_slugs=valid_award_slugs, award_count=award_count,
-                         member_count=member_count)
+        result = execute(StageOneInput(award_forms, valid_award_slugs, award_count, member_count))
     except StageException as err:
         print(f"[Stage 1 | Execution] {err}")
         exit(1)

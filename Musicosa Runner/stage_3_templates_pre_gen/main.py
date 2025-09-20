@@ -2,6 +2,7 @@ from common.custom_types import StageException
 from common.db.database import db
 from common.db.peewee_helpers import bulk_pack
 from common.model.models import Setting, Template
+from stage_3_templates_pre_gen.custom_types import StageThreeInput
 from stage_3_templates_pre_gen.execute import execute
 from stage_3_templates_pre_gen.stage_input import load_tfa_from_db
 
@@ -18,7 +19,7 @@ if __name__ == "__main__":
     # Execution
 
     try:
-        result = execute(tfa=tfa)
+        result = execute(StageThreeInput(tfa))
     except StageException as err:
         print(f"[Stage 3 | Execution] {err}")
         exit(1)

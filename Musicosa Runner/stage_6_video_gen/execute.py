@@ -2,21 +2,25 @@ import os
 from os import path
 from typing import get_args
 
+from common.config.config import Config
 from common.custom_types import StageException
-from stage_6_video_gen.custom_types import NominationVideoOptions, StageSixOutput, TransitionOptions, \
-    TransitionType
+from stage_6_video_gen.custom_types import StageSixOutput, StageSixInput, TransitionType, TransitionOptions
 from stage_6_video_gen.logic.generate_final_video import generate_final_video_collection
 from stage_6_video_gen.logic.generate_video_bits import generate_video_bit_collection
 
 
-def execute(artifacts_folder: str,
-            video_bits_folder: str,
-            nominations_video_options: list[NominationVideoOptions],
-            overwrite: bool,
-            stitch_final_video: bool,
-            transition_options: TransitionOptions,
-            quiet_ffmpeg: bool,
-            quiet_ffmpeg_final_video: bool) -> StageSixOutput:
+def execute(config: Config, stage_input: StageSixInput) -> StageSixOutput:
+    artifacts_folder = config.artifacts_folder
+    video_bits_folder = config.stage_6.video_bits_folder
+    overwrite = config.stage_6.overwrite_video_bits
+    stitch_final_video = config.stitch_final_video
+    transition_options = TransitionOptions(config.stage_6.presentation_duration,
+                                           config.stage_6.transition_duration,
+                                           TransitionType(config.stage_6.transition_type))
+    quiet_ffmpeg = config.stage_6.quiet_ffmpeg
+    quiet_ffmpeg_final_video = config.stage_6.quiet_ffmpeg_final_video
+    nominations_video_options = stage_input.nominations_video_options
+
     if not artifacts_folder:
         raise StageException("No artifacts folder provided")
 

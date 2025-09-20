@@ -4,6 +4,7 @@ from peewee import PeeweeException
 
 from common.config.loader import load_config
 from common.custom_types import StageException
+from stage_4_templates_gen.custom_types import StageFourInput
 from stage_4_templates_gen.execute import execute
 from stage_4_templates_gen.stage_input import load_templates_from_db
 
@@ -21,18 +22,10 @@ if __name__ == "__main__":
         print(err)
         exit(1)
 
-    generate_presentations = config.stitch_final_video
-    templates_api_url = config.stage_4.templates_api_url
-    presentations_api_url = config.stage_4.presentations_api_url
-    artifacts_folder = config.artifacts_folder
-    generation_retry_attempts = config.stage_4.gen_retry_attempts
-    overwrite_templates = config.stage_4.overwrite_templates
-    overwrite_presentations = config.stage_4.overwrite_presentations
-
     # Data retrieval
 
     try:
-        templates = load_templates_from_db(generate_presentations)
+        templates = load_templates_from_db(generate_presentations=config.stitch_final_video)
     except PeeweeException as err:
         print(f"[Stage 4 | Data Retrieval] Failed to load templates UUIDs from database: {err}")
         exit(1)
@@ -40,13 +33,7 @@ if __name__ == "__main__":
     # Execution
 
     try:
-        result = execute(templates_api_url=templates_api_url,
-                         presentations_api_url=presentations_api_url,
-                         artifacts_folder=artifacts_folder,
-                         templates=templates,
-                         retry_attempts=generation_retry_attempts,
-                         overwrite_templates=overwrite_templates,
-                         overwrite_presentations=overwrite_presentations)
+        result = execute(config, StageFourInput(templates))
     except StageException as err:
         print(f"[Stage 4 | Execution] {err}")
         exit(1)

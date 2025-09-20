@@ -1,6 +1,7 @@
 from common.custom_types import StageException
 from common.db.database import db
 from common.model.models import NominationStats
+from stage_2_ranking.custom_types import StageTwoInput
 from stage_2_ranking.execute import execute
 from stage_2_ranking.stage_input import load_tfa_from_db
 
@@ -17,7 +18,7 @@ if __name__ == "__main__":
     # Stage execution
 
     try:
-        result = execute(tfa=tfa)
+        result = execute(StageTwoInput(tfa))
     except StageException as err:
         print(f"[Stage 2 | Execution] {err}")
         exit(1)

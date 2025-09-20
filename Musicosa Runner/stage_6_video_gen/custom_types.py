@@ -81,14 +81,7 @@ class TransitionOptions:
 
 @dataclass
 class StageSixInput:
-    artifacts_folder: str
-    video_bits_folder: str
     nominations_video_options: list[NominationVideoOptions]
-    overwrite: bool
-    stitch_final_video: bool
-    transition_options: TransitionOptions
-    quiet_ffmpeg: bool
-    quiet_ffmpeg_final_video: bool
 
 
 @dataclass
