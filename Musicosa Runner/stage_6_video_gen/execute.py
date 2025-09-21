@@ -1,6 +1,6 @@
 import os
 from os import path
-from typing import get_args
+from typing import get_args, cast
 
 from common.config.config import Config
 from common.constants import VIDEO_FORMAT
@@ -20,7 +20,7 @@ def execute(config: Config, stage_input: StageSixInput) -> StageSixOutput:
     final_video_name = config.stage_6.final_video_name
     transition_options = TransitionOptions(config.stage_6.presentation_duration,
                                            config.stage_6.transition_duration,
-                                           TransitionType(config.stage_6.transition_type))
+                                           cast(TransitionType, config.stage_6.transition_type))
     quiet_ffmpeg = config.stage_6.quiet_ffmpeg
     quiet_ffmpeg_final_video = config.stage_6.quiet_ffmpeg_final_video
     entries_video_options = stage_input.entries_video_options

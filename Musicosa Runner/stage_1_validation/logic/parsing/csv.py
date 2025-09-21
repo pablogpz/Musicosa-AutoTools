@@ -50,7 +50,7 @@ def parse_entry_csv(entry_line: str) -> ContestantSubmissionEntry:
     is_author = line[2].strip() != ""
 
     if not is_author:
-        return ContestantSubmissionEntry(title, score, is_author, video_timestamp=None, video_url=None,
+        return ContestantSubmissionEntry(title, score, is_author, video_url=None, video_timestamp=None,
                                          special_topic=None)
 
     video_url = line[3].strip() or None
@@ -68,4 +68,4 @@ def parse_entry_csv(entry_line: str) -> ContestantSubmissionEntry:
     else:
         special_topic = None
 
-    return ContestantSubmissionEntry(title, score, is_author, video_timestamp, video_url, special_topic)
+    return ContestantSubmissionEntry(title, score, is_author, video_url, video_timestamp, special_topic)

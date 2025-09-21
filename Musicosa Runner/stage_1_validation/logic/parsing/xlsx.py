@@ -52,7 +52,7 @@ def parse_contestant_form_xlsx(form_file: str,
 
         if not is_author:
             submission_entries.append(
-                ContestantSubmissionEntry(title, score, is_author, video_timestamp=None, video_url=None,
+                ContestantSubmissionEntry(title, score, is_author, video_url=None, video_timestamp=None,
                                           special_topic=None))
             continue
 
@@ -69,7 +69,7 @@ def parse_contestant_form_xlsx(form_file: str,
         special_topic = parse_special_topic_str(raw_special_topic) if raw_special_topic else None
 
         submission_entries.append(
-            ContestantSubmissionEntry(title, score, is_author, video_timestamp, video_url, special_topic))
+            ContestantSubmissionEntry(title, score, is_author, video_url, video_timestamp, special_topic))
     workbook.close()
 
     return ContestantSubmission(contestant_name, submission_entries)
