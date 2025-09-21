@@ -45,7 +45,7 @@ class PipelineStep[D, O](Protocol):
 
 
 type ConfigLoader = Callable[[], Config]
-type DataCollector[D] = Callable[[Config], D]
+type DataCollector[D] = Callable[[Config], D] | Callable[[], D]
 
 # PIPELINE STEP FLOW GATE Controls
 
@@ -107,6 +107,13 @@ def flow_gate[D, O](
         if data_collector is None:
             raise RuntimeError(f"Step function '{step}' supports data reloading but does not provide a data collector")
 
+    def adapted_data_collector(config: Config):
+        # Adapt for data collectors with and without config dependency
+        if len(inspect.getfullargspec(data_collector).args) > 0:
+            return data_collector(config)
+        else:
+            return data_collector()
+
     # Step execution
 
     config_arg, reloadable_data_arg, *other_args = step_args
@@ -121,9 +128,9 @@ def flow_gate[D, O](
                     f"  {'\n  '.join([f"[{k}] {v}" for k, v in GATE_MESSAGES.items() if k in error_controls])}"
                     f"\n")
 
-    choice = CONTINUE
-
     while True:
+        choice = CONTINUE
+
         try:
             step_result = step(config_arg, reloadable_data_arg, *other_args, **step_kwargs)
 
@@ -150,7 +157,7 @@ def flow_gate[D, O](
             config_arg = config_loader()
 
         if choice == RELOAD_DATA or choice == RELOAD_CONFIG_AND_DATA:
-            reloadable_data_arg = data_collector(config_arg)
+            reloadable_data_arg = adapted_data_collector(config_arg)
 
     return step_result
 
@@ -202,7 +209,7 @@ class RetryReconfigPipelineStep[O](Protocol):
 
 def retry_or_reconfig[O](
         config_loader: ConfigLoader,
-        err_header: str | None = None,
+        err_header: str | None = None
 ) -> Callable[[PipelineStep[None, O]], RetryReconfigPipelineStep[O]]:
     decorator = flow_gate_decorator(controls={RETRY, RELOAD_CONFIG, ABORT},
                                     err_header=err_header,
@@ -222,7 +229,7 @@ def retry_or_reconfig[O](
 def stage[D, O](
         config_loader: ConfigLoader,
         data_collector: DataCollector[D],
-        err_header: str | None = None,
+        err_header: str | None = None
 ) -> Callable[[PipelineStep[D, O]], PipelineStep[D, O]]:
     return flow_gate_decorator(controls={CONTINUE, RETRY, RELOAD_CONFIG, RELOAD_DATA, RELOAD_CONFIG_AND_DATA, ABORT},
                                err_header=err_header,
@@ -281,7 +288,7 @@ class PipelineStateManager:
         self.members_by_name = dict([(member.name, member) for member in members])
 
         nominations = [nomination.to_domain() for nomination in Nomination.ORM.select()]
-        self.members_by_name = dict([(nomination.id, nomination) for nomination in nominations])
+        self.nominations_by_id = dict([(nomination.id, nomination) for nomination in nominations])
 
     def register_award_forms(self, award_forms: list[AwardForm]) -> None:
         for award in award_forms:
