@@ -1,6 +1,6 @@
 from common.custom_types import Stage, STAGE_ONE
 
-DEFAULT_CONFIG_FILE_NAME = "musicosa.config.toml"
+DEFAULT_CONFIG_FILE_NAME = "config.toml"
 
 # Global defaults
 DEFAULT_ARTIFACTS_FOLDER = "artifacts"
