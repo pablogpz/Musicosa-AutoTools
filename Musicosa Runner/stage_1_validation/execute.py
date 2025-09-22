@@ -16,7 +16,7 @@ def execute(stage_input: StageOneInput) -> StageOneOutput:
         raise StageException(f"Setting '{SettingKeys.VALIDATION_SCORE_MAX_VALUE}' not set")
 
     if len(valid_award_slugs) == 0:
-        raise StageException('Valid award slugs not provided')
+        raise StageException("Valid award slugs not provided")
 
     validation_errors = validate_award_form_collection(award_forms, valid_award_slugs, award_count, member_count)
 

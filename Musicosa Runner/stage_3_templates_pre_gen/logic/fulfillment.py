@@ -7,19 +7,19 @@ from stage_3_templates_pre_gen.logic.helpers import parse_sequence_selection_of_
     format_sequence_numbers, validate_sequence_selection
 
 
-def generate_unfulfilled_frame_settings() -> list[Setting] | None:
+def fulfill_unfulfilled_frame_settings() -> list[Setting]:
     frame_settings: list[Setting] = []
 
     print("")
-    print("[Frame Settings]")
+    print(".: FRAME SETTINGS :.")
     print("")
 
     if not is_setting_set(SettingKeys.FRAME_WIDTH_PX):
-        print("  Frame width not set...")
+        print("Frame width not set...")
         total_width = better_input("Width of the frame where assets get rendered (px)",
                                    lambda x: x.isdigit() and int(x) > 0,
                                    error_message=lambda x: f"Invalid width '{x}' (Must be a positive number)",
-                                   indentation_level=4)
+                                   indent_level=1)
 
         frame_settings.append(Setting(group_key=SettingGroupKeys.FRAME,
                                       setting=FrameSettingNames.WIDTH_PX,
@@ -29,11 +29,11 @@ def generate_unfulfilled_frame_settings() -> list[Setting] | None:
         print("Frame width set ✔")
 
     if not is_setting_set(SettingKeys.FRAME_HEIGHT_PX):
-        print("  Frame height not set...")
+        print("Frame height not set...")
         total_height = better_input("Height of the frame where assets get rendered (px)",
                                     lambda x: x.isdigit() and int(x) > 0,
                                     error_message=lambda x: f"Invalid height '{x}' (Must be a positive number)",
-                                    indentation_level=4)
+                                    indent_level=1)
 
         frame_settings.append(Setting(group_key=SettingGroupKeys.FRAME,
                                       setting=FrameSettingNames.HEIGHT_PX,
@@ -42,23 +42,23 @@ def generate_unfulfilled_frame_settings() -> list[Setting] | None:
     else:
         print("Frame height set ✔")
 
-    return frame_settings or None
+    return frame_settings
 
 
-def generate_unfulfilled_templates(nominations_sequence_number_index: dict[int, Nomination]) -> list[Template] | None:
+def fulfill_unfulfilled_templates(nominations_sequence_number_index: dict[int, Nomination]) -> list[Template]:
     templates: dict[int, Template] = {}
 
     print("")
-    print("[Nomination Templates]")
+    print(".: NOMINATION TEMPLATES :.")
     print("")
 
     if len(nominations_sequence_number_index) > 0:
-        print(f"  Missing nomination templates: "
+        print(f"Missing nomination templates: "
               f"[{format_sequence_numbers(list(nominations_sequence_number_index.keys()))}]")
 
     if len(nominations_sequence_number_index) == 0:
         print("All nominations have a template assigned ✔")
-        return None
+        return []
 
     def get_missing_templates() -> list[int]:
         return [seq_num for seq_num in nominations_sequence_number_index.keys() if seq_num not in templates]
@@ -87,7 +87,7 @@ def generate_unfulfilled_templates(nominations_sequence_number_index: dict[int, 
                          validate_selection,
                          error_message=lambda
                              x: f"Invalid selection '{x}' (Use a valid index, range, omit a boundary or leave empty)",
-                         indentation_level=2))
+                         indent_level=1))
 
         print("")
         print(f"Setting values for {len(selection)} template(s)...")
@@ -96,35 +96,35 @@ def generate_unfulfilled_templates(nominations_sequence_number_index: dict[int, 
                                     lambda x: re.match(r"^\d+([.]\d+)?$", x) is not None,
                                     default=last_avatar_scale,
                                     error_message=lambda x: f"Invalid scale factor '{x}' (Must be a numeric factor)",
-                                    indentation_level=2)
+                                    indent_level=1)
         last_avatar_scale = avatar_scale
 
         video_width = better_input("Videoclip width (px)",
                                    lambda x: x.isdigit() and int(x) > 0,
                                    default=last_video_width,
                                    error_message=lambda x: f"Invalid width '{x}' (Must be a positive number)",
-                                   indentation_level=2)
+                                   indent_level=1)
         last_video_width = video_width
 
         video_height = better_input("Videoclip height (px)",
                                     lambda x: x.isdigit() and int(x) > 0,
                                     default=last_video_height,
                                     error_message=lambda x: f"Invalid height '{x}' (Must be a positive number)",
-                                    indentation_level=2)
+                                    indent_level=1)
         last_video_height = video_height
 
         video_top = better_input("Videoclip absolute top position (px)",
                                  lambda x: x.isdigit() and int(x) >= 0,
                                  default=last_video_top,
                                  error_message=lambda x: f"Invalid position '{x}' (Must be a non-negative number)",
-                                 indentation_level=2)
+                                 indent_level=1)
         last_video_top = video_top
 
         video_left = better_input("Videoclip absolute left position (px)",
                                   lambda x: x.isdigit() and int(x) >= 0,
                                   default=last_video_left,
                                   error_message=lambda x: f"Invalid position '{x}' (Must be a non-negative number)",
-                                  indentation_level=2)
+                                  indent_level=1)
         last_video_left = video_left
 
         for sequence_number in selection:

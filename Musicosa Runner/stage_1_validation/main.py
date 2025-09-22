@@ -23,7 +23,7 @@ if __name__ == "__main__":
     try:
         config = load_config(args.config_file.strip() if args.config_file else None)
     except FileNotFoundError | IOError | TypeError as err:
-        print(err)
+        print(f"[Stage 1 | Configuration] {err}")
         exit(1)
 
     award_forms_folder = config.stage_1.award_forms_folder

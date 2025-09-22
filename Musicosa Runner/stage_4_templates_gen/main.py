@@ -19,7 +19,7 @@ if __name__ == "__main__":
     try:
         config = load_config(args.config_file.strip() if args.config_file else None)
     except FileNotFoundError | IOError | TypeError as err:
-        print(err)
+        print(f"[Stage 4 | Configuration] {err}")
         exit(1)
 
     # Data retrieval
@@ -27,7 +27,7 @@ if __name__ == "__main__":
     try:
         templates = load_templates_from_db(generate_presentations=config.stitch_final_video)
     except PeeweeException as err:
-        print(f"[Stage 4 | Data Retrieval] Failed to load templates UUIDs from database: {err}")
+        print(f"[Stage 4 | Data Retrieval] {err}")
         exit(1)
 
     # Execution
@@ -47,5 +47,5 @@ if __name__ == "__main__":
     print(f"  # Successfully generated templates: "
           f"{len(result.generated_templates_slugs) if result.generated_templates_slugs else 0}")
 
-    if result.failed_templates_uuids:
-        print(f"  Failed to generate templates ['{"', '".join(result.failed_templates_uuids)}']")
+    if result.failed_templates_ids:
+        print(f"  Failed to generate templates ['{"', '".join(result.failed_templates_ids)}']")

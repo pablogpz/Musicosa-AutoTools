@@ -13,5 +13,5 @@ db = SqliteDatabase(db_path, pragmas={"foreign_keys": 1})
 try:
     db.connect()
 except OperationalError as err:
-    print(f"[DB ERROR] Error connecting to database: {err}")
+    print(f"[DB ERROR] Could not connect to database. Cause: {err}")
     exit(1)

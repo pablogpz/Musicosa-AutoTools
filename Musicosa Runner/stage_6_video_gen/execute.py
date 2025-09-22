@@ -30,22 +30,22 @@ def execute(config: Config, stage_input: StageSixInput) -> StageSixOutput:
     if not video_bits_folder:
         raise StageException("No video bits folder provided")
 
-    if not path.isdir(video_bits_folder):
-        os.makedirs(video_bits_folder)
-
     if transition_options.presentation_duration <= 0:
         raise StageException(
-            f"presentation_duration ({transition_options.presentation_duration}) must be a positive integer")
+            f"Presentation duration ({transition_options.presentation_duration}) must be a positive integer")
 
     if transition_options.transition_duration <= 0:
         raise StageException(
-            f"transition_duration ({transition_options.transition_duration}) must be a positive integer")
+            f"Transition duration ({transition_options.transition_duration}) must be a positive integer")
 
     if transition_options.type not in get_args(TransitionType):
-        raise StageException(f"transition_type ({transition_options.type}) must be one of [{get_args(TransitionType)}]")
+        raise StageException(f"Transition type ({transition_options.type}) must be one of [{get_args(TransitionType)}]")
 
     if nominations_video_options is None:
         raise StageException("No video options provided")
+
+    if not path.isdir(video_bits_folder):
+        os.makedirs(video_bits_folder)
 
     generated, missing_sources, failed_to_generate = generate_video_bit_collection(artifacts_folder,
                                                                                    video_bits_folder,

@@ -48,21 +48,21 @@ def download_all_videoclips(videoclips: list[Videoclip], artifacts_folder: str, 
 
             try:
                 error_code = ytdl.download([videoclip.url])
+                if error_code:
+                    print(f"[DOWNLOAD FAILED] {videoclip_friendly_name} (Error code: {error_code})")
+                    failed_videoclip_titles.append(videoclip_friendly_name)
             except yt_dlp.DownloadError as err:
-                print(f"[DOWNLOAD FAILED] {videoclip_friendly_name}: {err}")
+                print(f"[DOWNLOAD FAILED] {videoclip_friendly_name}. Cause: {err}")
                 failed_videoclip_titles.append(videoclip_friendly_name)
                 continue
             except FFMpegError as err:
-                print(f"[POST-PROCESS][REMUX FAILED] {videoclip_friendly_name}: {err}")
+                print(f"[POST-PROCESS][REMUX FAILED] {videoclip_friendly_name}. Cause: {err}")
                 failed_videoclip_titles.append(videoclip_friendly_name)
                 continue
 
             if not error_code:
                 print(f"[DOWNLOAD END] {videoclip_friendly_name}")
                 acquired_videoclip_titles.append(videoclip_friendly_name)
-            else:
-                print(f"[DOWNLOAD FAILED] {videoclip_friendly_name} (Error code: {error_code})")
-                failed_videoclip_titles.append(videoclip_friendly_name)
 
     return acquired_videoclip_titles or None, failed_videoclip_titles or None
 
@@ -91,7 +91,8 @@ class MP4RemuxPostProcessor(yt_dlp.postprocessor.PostProcessor):
              .output(filename=remuxed_videoclip_path, vcodec="copy")
              .run(quiet=self.quiet_ffmpeg, overwrite_output=True))
         except FFMpegError as err:
-            raise FFMpegError(f"Failed to remux videoclip '{basename(downloaded_videoclip_path)}': {err}") from err
+            raise FFMpegError(
+                f"Failed to remux videoclip '{basename(downloaded_videoclip_path)}'. Cause: {err}") from err
 
         print(f"[POST-PROCESS][REMUX END] Remuxed videoclip '{basename(remuxed_videoclip_path)}'")
 

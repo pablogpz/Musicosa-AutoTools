@@ -3,10 +3,11 @@ from os import path
 
 import ffmpeg
 from ffmpeg.exceptions import FFMpegError
-from ffmpeg_normalize import FFmpegNormalize, FFmpegNormalizeError
+from ffmpeg_normalize import FFmpegNormalize
 from math import ceil
 
 from common.constants import TEMPLATE_IMG_FORMAT, VIDEO_FORMAT
+from common.formatting.tabulate import tab
 from common.naming.slugify import slugify
 from common.time.utils import parse_time, time_to_seconds
 from stage_6_video_gen.constants import VIDEO_FPS, VIDEO_CODEC, VIDEO_BITRATE, NORMALIZATION_LOUDNESS_RANGE_TARGET, \
@@ -39,13 +40,13 @@ def generate_video_bit_collection(
 
         source_template = f"{artifacts_folder}/{slugify(vid_opts.template_friendly_name)}.{TEMPLATE_IMG_FORMAT}"
         if not path.isfile(source_template):
-            print(f"[MISSING SOURCE - Template] {vid_opts.template_friendly_name}")
+            print(f"[SKIPPING] Missing template source for '{vid_opts.template_friendly_name}'")
             nominations_missing_sources.append(vid_opts.template_friendly_name)
             continue
 
         source_videoclip = f"{artifacts_folder}/{slugify(vid_opts.videoclip_friendly_name)}.{VIDEO_FORMAT}"
         if not path.isfile(source_videoclip):
-            print(f"[MISSING SOURCE - Videoclip] {vid_opts.videoclip_friendly_name}")
+            print(f"[SKIPPING] Missing videoclip source for '{vid_opts.videoclip_friendly_name}'")
             nominations_missing_sources.append(vid_opts.videoclip_friendly_name)
             continue
 
@@ -70,11 +71,11 @@ def generate_video_bit(videoclip_path: str, vid_opts: NominationVideoOptions, te
     videoclip_duration_seconds = get_video_duration_seconds(videoclip_path)
 
     if timestamp_start_seconds < videoclip_duration_seconds < timestamp_end_seconds:
-        print("  [WARNING] End timestamp exceeds videoclip duration. "
-              "End video will be trimmed till the end of the videoclip")
+        print(tab(1, "[WARNING] End timestamp exceeds videoclip duration. "
+                     "End video will be trimmed at the end of the videoclip"))
 
     if videoclip_duration_seconds <= timestamp_start_seconds:
-        print("  [WARNING] Start timestamp exceeds videoclip duration. Using full video")
+        print(tab(1, "[WARNING] Start timestamp exceeds videoclip duration. Defaulting to trim from the start"))
         ffmpeg_time_code_args = {"ss": 0, "t": videoclip_duration_seconds}
 
     try:
@@ -111,10 +112,10 @@ def generate_video_bit(videoclip_path: str, vid_opts: NominationVideoOptions, te
         normalizer.add_media_file(video_bit_path, video_bit_path)
         try:
             normalizer.run_normalization()
-        except FFmpegNormalizeError as err:
-            print(f"[WARNING] Error normalising audio track of video bit ({video_bit_path}): {err}")
+        except Exception as err:
+            print(tab(1, f"[WARNING] Error normalising audio track of video bit ({video_bit_path}): {err}"))
     except FFMpegError as err:
-        print(f"[GENERATION FAILED] {vid_opts.template_friendly_name}: {err}")
+        print(f"[GENERATION FAILED] {vid_opts.template_friendly_name}. Cause: {err}")
         raise
 
     return video_bit_path

@@ -10,7 +10,7 @@ def validate_award_form_collection(award_forms: list[AwardForm],
     validation_errors: list[str] = []
 
     if len(award_forms) != award_count:
-        validation_errors.append(f"Awards count mismatch ({len(award_forms)}) (Should be {award_count})")
+        validation_errors.append(f"Award count mismatch ({len(award_forms)}) (Should be {award_count})")
 
     for award_form in award_forms:
         if errors := validate_award_form(award_form, valid_award_slugs, member_count):
@@ -26,7 +26,7 @@ def validate_award_form(award_form: AwardForm, valid_award_slugs: list[str], mem
         validation_errors.append(f"Invalid award slug '{award_form.award_slug}'")
 
     if len(award_form.submissions) != member_count:
-        validation_errors.append(f"Members count mismatch ({len(award_form.submissions)}) (Should be {member_count})")
+        validation_errors.append(f"Member count mismatch ({len(award_form.submissions)}) (Should be {member_count})")
 
     for submission in award_form.submissions:
         if errors := validate_member_submission(submission):
@@ -56,6 +56,6 @@ def validate_member_submission(submission: MemberSubmission) -> list[str] | None
 
 def validate_score(score: float, min_score: float, max_score: float) -> str | None:
     if not isinstance(score, float) or not (min_score <= score <= max_score):
-        return f"Invalid score ({score})"
+        return f"Invalid score '{score}' (Should be a number between {min_score} and {max_score})"
 
     return None

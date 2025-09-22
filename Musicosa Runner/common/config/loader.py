@@ -14,15 +14,15 @@ def load_config(config_file: str | None = None) -> Config:
         elif path.isfile(f"../{DEFAULT_CONFIG_FILE_NAME}"):
             config_file = f"../{DEFAULT_CONFIG_FILE_NAME}"
         else:
-            raise FileNotFoundError("Default config file not found")
+            raise FileNotFoundError("Default config file not found in working directory or parent directory")
     elif not path.isfile(config_file):
-        raise FileNotFoundError(f"Config file '{config_file}' not found")
+        raise FileNotFoundError(f"Provided config file '{config_file}' not found")
 
     with open(config_file, "r") as config:
         try:
             config_contents = config.read()
         except IOError as err:
-            raise IOError(f"Couldn't read config file contents: {err}") from err
+            raise IOError(f"Couldn't read config file contents. Cause: {err}") from err
 
     config_dict = tomllib.loads(config_contents, parse_float=float)
 
@@ -35,4 +35,4 @@ def load_config(config_file: str | None = None) -> Config:
                       stage_5=StageFiveConfig(**config_dict["stage_5"]),
                       stage_6=StageSixConfig(**config_dict["stage_6"]))
     except TypeError as err:
-        raise TypeError(f"Couldn't parse config file: {err}") from err
+        raise TypeError(f"Couldn't parse config file. Cause: {err}") from err

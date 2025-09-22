@@ -14,6 +14,9 @@ def execute(stage_input: StageTwoInput) -> StageTwoOutput:
     if not tfa:
         raise StageException("TFA data is empty")
 
+    if len(tfa.awards) == 0:
+        raise StageException("Award list is empty")
+
     nomination_stats = rank_tfa(tfa)
 
     return StageTwoOutput(nomination_stats)

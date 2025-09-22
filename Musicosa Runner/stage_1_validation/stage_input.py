@@ -8,7 +8,7 @@ def parse_award_forms_folder(forms_folder: str) -> list[AwardForm]:
     try:
         award_forms = parse_award_forms_csv_folder(forms_folder)
     except Exception as err:
-        raise StageException(f"Award forms parsing error: {err}") from err
+        raise StageException(f"Error parsing award forms: {err}") from err
 
     return award_forms
 

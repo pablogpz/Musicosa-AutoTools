@@ -10,14 +10,14 @@ from stage_1_validation.logic.parsing.utils import parse_score_str, unquote
 def parse_award_forms_csv_folder(forms_folder: str) -> list[AwardForm]:
     award_forms: list[AwardForm] = []
 
-    for form_file in [f for f in os.listdir(forms_folder) if f.endswith('.csv')]:
+    for form_file in [f for f in os.listdir(forms_folder) if f.endswith(".csv")]:
         award_forms.append(parse_award_form_csv(f"{forms_folder}/{form_file}"))
 
     return award_forms
 
 
 def parse_award_form_csv(form_file: str) -> AwardForm:
-    award_slug = basename(form_file).removesuffix('.csv')
+    award_slug = basename(form_file).removesuffix(".csv")
     submissions: list[MemberSubmission] = []
 
     try:
@@ -26,7 +26,7 @@ def parse_award_form_csv(form_file: str) -> AwardForm:
             header_line = lines[0]
             submission_lines = lines[1:]
 
-            headers = [header.replace('"', '').strip() for header in header_line.split(f"\"{CSV_SEPARATOR}\"")]
+            headers = [header.replace('"', "").strip() for header in header_line.split(f"\"{CSV_SEPARATOR}\"")]
 
             for line in submission_lines:
                 submission_values = {k: v for (k, v)
@@ -37,7 +37,7 @@ def parse_award_form_csv(form_file: str) -> AwardForm:
                 except StageException as err:
                     raise StageException(f"[{award_slug}] {err}") from err
     except IOError as err:
-        raise StageException(f"Error opening CSV form file '{form_file}': {err}")
+        raise StageException(f"Error opening CSV form file '{form_file}'. Cause: {err}")
 
     return AwardForm(award_slug, submissions)
 
@@ -50,7 +50,7 @@ def parse_member_submission(submission_values: dict[str, str]) -> MemberSubmissi
         try:
             score = parse_score_str(score_str) / 100
         except ValueError as err:
-            raise StageException(f"[{member_name}] [{nominee}] Error parsing score value '{score_str}'") from err
+            raise StageException(f"[{member_name}][{nominee}] Error parsing score value '{score_str}'") from err
 
         cast_votes.append(CastVote(nominee, score))
 

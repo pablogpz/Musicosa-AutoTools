@@ -13,13 +13,13 @@ def bulk_pack(collection: Iterable) -> list[dict[Any, Any]]:
 
     for item in collection:
         if not isinstance(item, DomainModel):
-            raise TypeError(f"Collection contains an item ({item}) that isn't a domain model")
+            raise TypeError(f"Collection contains an item that isn't a domain model ('{item}')")
 
         orm_entity = item.to_orm()
 
         if not getattr(orm_entity, '__data__', None):
             # Fucked around and found out (:
-            raise TypeError(f"ORM entity '{orm_entity}' doesn't '__data__'")
+            raise TypeError(f"ORM entity '{orm_entity}' doesn't store its data in '__data__'")
 
         bulk_data.append(orm_entity.__data__)
 
