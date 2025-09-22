@@ -5,7 +5,7 @@ from common.custom_types import TemplateType
 
 @dataclass
 class Template:
-    uuid: str
+    id: str
     entry_title: str
     types: TemplateType
 
@@ -18,4 +18,4 @@ class StageFourInput:
 @dataclass
 class StageFourOutput:
     generated_template_titles: list[str] | None
-    failed_template_uuids: list[str] | None
+    failed_template_ids: list[str] | None

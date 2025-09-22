@@ -40,7 +40,7 @@ def execute(config: Config, stage_input: StageFourInput) -> StageFourOutput:
         os.makedirs(artifacts_folder)
 
     if templates is None:
-        raise StageException("No templates UUIDs provided")
+        raise StageException("No templates provided")
 
     if not (0 < retry_attempts <= MAX_GEN_RETRY_ATTEMPTS):
         raise StageException(

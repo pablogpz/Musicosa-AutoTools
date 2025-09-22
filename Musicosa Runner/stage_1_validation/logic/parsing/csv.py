@@ -38,14 +38,14 @@ def parse_entry_csv(entry_line: str) -> ContestantSubmissionEntry:
     line = entry_line.strip().split(CSV_SEPARATOR)
 
     if len(line) != CSV_FIELDS_COUNT:
-        raise StageException(f"Fields count mismatch ({line})")
+        raise StageException(f"Field count mismatch ('{line}')")
 
     title = line[0].strip()
 
     try:
         score = parse_score_str(line[1])
     except ValueError as err:
-        raise StageException(f"[{title}] Error parsing score value '{line[1]}'") from err
+        raise StageException(f"[{title}] Error parsing score value '{line[1]}': {err}") from err
 
     is_author = line[2].strip() != ""
 

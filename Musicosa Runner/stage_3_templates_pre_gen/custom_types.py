@@ -13,8 +13,8 @@ class AvatarPairing:
 class Musicosa:
     unfulfilled_contestants: list[Contestant]
     avatars: list[Avatar]
-    entries_index_of_unfulfilled_templates: dict[int, Entry]
-    entries_index_of_unfulfilled_video_options: dict[int, Entry]
+    entries_index_unfulfilled_templates: dict[int, Entry]
+    entries_index_unfulfilled_video_options: dict[int, Entry]
 
 
 @dataclass
@@ -24,8 +24,8 @@ class StageThreeInput:
 
 @dataclass
 class StageThreeOutput:
-    avatar_pairings: list[AvatarPairing] | None
-    frame_settings: list[Setting] | None
-    templates: list[Template] | None
-    generation_settings: list[Setting] | None
-    video_options: list[VideoOptions] | None
+    avatar_pairings: list[AvatarPairing]
+    frame_settings: list[Setting]
+    templates: list[Template]
+    generation_settings: list[Setting]
+    video_options: list[VideoOptions]

@@ -19,7 +19,7 @@ if __name__ == "__main__":
     try:
         config = load_config(args.config_file.strip() if args.config_file else None)
     except FileNotFoundError | IOError | TypeError as err:
-        print(err)
+        print(f"[Stage 5 | Configuration] {err}")
         exit(1)
 
     # Data retrieval

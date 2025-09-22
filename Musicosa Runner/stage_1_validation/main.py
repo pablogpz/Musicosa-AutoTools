@@ -26,7 +26,7 @@ if __name__ == "__main__":
     try:
         config = load_config(args.config_file.strip() if args.config_file else None)
     except FileNotFoundError | IOError | TypeError as err:
-        print(err)
+        print(f"[Stage 1 | Configuration] {err}")
         exit(1)
 
     forms_folder = config.stage_1.forms_folder
@@ -64,23 +64,23 @@ if __name__ == "__main__":
                                                    name=sub.name,
                                                    avatar=None)
 
-    entries_by_name: dict[str, Entry] = {}
+    entries_by_title: dict[str, Entry] = {}
     for sub in submissions:
         for entry in sub.entries:
             if entry.is_author:
                 # noinspection PyTypeChecker
                 special_topic = SpecialEntryTopic(designation=entry.special_topic) if entry.special_topic else None
-                entries_by_name[entry.title] = Entry(id=generate_entry_uuid5(entry.title).hex,
-                                                     title=entry.title,
-                                                     author=contestants_by_name[sub.name],
-                                                     video_url=entry.video_url,
-                                                     special_topic=special_topic)
+                entries_by_title[entry.title] = Entry(id=generate_entry_uuid5(entry.title).hex,
+                                                      title=entry.title,
+                                                      author=contestants_by_name[sub.name],
+                                                      video_url=entry.video_url,
+                                                      special_topic=special_topic)
 
     scoring_entries: list[Scoring] = []
     for sub in submissions:
         for entry in sub.entries:
             scoring_entries.append(Scoring(contestant=contestants_by_name[sub.name],
-                                           entry=entries_by_name[entry.title],
+                                           entry=entries_by_title[entry.title],
                                            score=entry.score))
 
     video_options: list[VideoOptions] = []
@@ -88,14 +88,14 @@ if __name__ == "__main__":
         for entry in sub.entries:
             if entry.video_timestamp:
                 start, end = entry.video_timestamp.split(VIDEO_TIMESTAMP_SEPARATOR)
-                video_options.append(VideoOptions(entry=entries_by_name[entry.title],
+                video_options.append(VideoOptions(entry=entries_by_title[entry.title],
                                                   timestamp_start=parse_time(start),
                                                   timestamp_end=parse_time(end)))
 
     try:
         with db.atomic() as tx:
             Contestant.ORM.insert_many(bulk_pack(contestants_by_name.values())).execute()
-            Entry.ORM.insert_many(bulk_pack(entries_by_name.values())).execute()
+            Entry.ORM.insert_many(bulk_pack(entries_by_title.values())).execute()
             Scoring.ORM.insert_many(bulk_pack(scoring_entries)).execute()
             VideoOptions.ORM.insert_many(bulk_pack(video_options)).execute()
     except PeeweeException as err:

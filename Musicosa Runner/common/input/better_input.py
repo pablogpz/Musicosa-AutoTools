@@ -1,17 +1,17 @@
 from typing import Callable
 
+from common.formatting.tabulate import tab
+
 
 def better_input(user_message: str,
                  validate: Callable[[str], bool] | None = None,
                  /, *,
                  default: str = "",
                  error_message: str | Callable[[str], str] | None = None,
-                 indentation_level: int = 0) -> str:
-    indentation = " " * indentation_level
-
+                 indent_level: int = 0) -> str:
     def prompt() -> str:
-        inner_user_input = input(f"{indentation}-> {user_message}{f" [{default}]" if default else ""}> ")
-        return inner_user_input.strip() if inner_user_input else default
+        user_input = input(tab(indent_level, f"-> {user_message}{f" [{default}]" if default else ""}> "))
+        return user_input.strip() if user_input else default
 
     def format_error(error_value: str) -> str:
         if callable(error_message):
@@ -25,7 +25,7 @@ def better_input(user_message: str,
         return user_input
 
     while not validate(user_input):
-        print(f"{indentation}{format_error(user_input)}")
+        print(tab(indent_level, f"{format_error(user_input)}"))
         user_input = prompt()
 
     return user_input

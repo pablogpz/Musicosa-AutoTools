@@ -7,7 +7,7 @@ from ffmpeg import AudioStream, VideoStream
 from ffmpeg.exceptions import FFMpegError
 from ffmpeg.filters import xfade, amix, concat
 
-from common.constants import VIDEO_FORMAT, PRESENTATION_FILE_SUFFIX, TEMPLATE_IMG_FORMAT
+from common.constants import VIDEO_FORMAT, PRESENTATION_IMG_FILE_SUFFIX, TEMPLATE_IMG_FORMAT
 from common.custom_types import StageException
 from common.naming.slugify import slugify
 from stage_6_video_gen.constants import VIDEO_FPS, TRANSITION_FADE_DURATION_SECONDS, ENTRIES_PER_FRAGMENT
@@ -36,7 +36,7 @@ def generate_final_video(artifacts_folder: str,
             # Check video sources
 
             presentation_file = \
-                f"{artifacts_folder}/{slugify(video_option.entry_title)}-{PRESENTATION_FILE_SUFFIX}.{TEMPLATE_IMG_FORMAT}"
+                f"{artifacts_folder}/{slugify(video_option.entry_title)}-{PRESENTATION_IMG_FILE_SUFFIX}.{TEMPLATE_IMG_FORMAT}"
             video_bit_file = f"{video_bits_folder}/{video_option.sequence_number}.{VIDEO_FORMAT}"
 
             if not path.isfile(presentation_file):
@@ -91,7 +91,8 @@ def generate_final_video(artifacts_folder: str,
                                   b="6000k")
                           .compile(overwrite_output=True))
         except FFMpegError as err:
-            raise StageException(f"Failed to compile ffmpeg command for fragment '{fragment_id}': {err}") from err
+            raise StageException(
+                f"Failed to compile ffmpeg command for fragment '{fragment_id}'. Cause: {err}") from err
 
         filtergraph_arg_idx = ffmpeg_cmd.index("-filter_complex")
 
@@ -118,16 +119,15 @@ def generate_final_video(artifacts_folder: str,
             os.remove(filtergraph_script)
 
             if ffmpeg_exit_code == 0:
-                print(f"[FINAL VIDEO FRAGMENT #{fragment_id} GENERATED]"
-                      f" At '{fragment_path}' from {len(vid_opts)} clips")
+                print(f"[FRAGMENT #{fragment_id}] Fragment generated at '{fragment_path}' from {len(vid_opts)} clips")
             else:
-                raise StageException(f"An error occurred while executing ffmpeg. Exit code is ({ffmpeg_exit_code})")
+                raise StageException(f"An error occurred while executing ffmpeg. Exit code: {ffmpeg_exit_code}")
         except RuntimeError as err:
-            raise StageException(f"Failed to generate final video fragment ({fragment_id}): {err}") from err
+            raise StageException(f"Failed to generate final video fragment #{fragment_id}. Cause: {err}") from err
 
         return fragment_path
 
-    print(f"[GENERATING FINAL VIDEO] '{final_video_name}.{VIDEO_FORMAT}'")
+    print(f"[FINAL VIDEO] Generating final video '{final_video_name}.{VIDEO_FORMAT}'")
 
     sorted_vid_opts = sorted(vid_opts, key=lambda x: x.sequence_number, reverse=True)
 
@@ -160,7 +160,7 @@ def generate_final_video(artifacts_folder: str,
                 f" -f concat -safe 0 -i {concat_list_file}"
                 f" -c:v copy {final_video_path}")
         except RuntimeError as err:
-            raise StageException(f"Failed to concatenate final video fragments: {err}") from err
+            raise StageException(f"Failed to concatenate final video fragments. Cause: {err}") from err
 
         if ffmpeg_exit_code == 0:
             os.remove(concat_list_file)

@@ -46,7 +46,8 @@ def parse_contestant_form_xlsx(form_file: str,
         try:
             score = parse_score_str(str(raw_score))
         except ValueError as err:
-            raise StageException(f"[{contestant_name}] [{title}] Error parsing score value '{raw_score}'") from err
+            raise StageException(
+                f"[{contestant_name}][{title}] Error parsing score value '{raw_score}': {err}") from err
 
         is_author = raw_is_author.strip() != "" if raw_is_author else False
 
@@ -62,7 +63,7 @@ def parse_contestant_form_xlsx(form_file: str,
             try:
                 video_timestamp = parse_video_timestamp_str(raw_video_timestamp)
             except ValueError as err:
-                raise StageException(f"[{contestant_name}] [{title}] {err}") from err
+                raise StageException(f"[{contestant_name}][{title}] {err}") from err
         else:
             video_timestamp = None
 

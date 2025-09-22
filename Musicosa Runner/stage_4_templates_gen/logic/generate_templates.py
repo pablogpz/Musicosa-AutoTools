@@ -3,8 +3,9 @@ from os.path import basename
 
 from playwright.sync_api import Response, sync_playwright
 
-from common.constants import TEMPLATE_IMG_FORMAT, PRESENTATION_FILE_SUFFIX
+from common.constants import TEMPLATE_IMG_FORMAT, PRESENTATION_IMG_FILE_SUFFIX
 from common.custom_types import TemplateType
+from common.formatting.tabulate import tab
 from common.model.models import SettingKeys
 from common.model.settings import get_setting_by_key
 from common.naming.slugify import slugify
@@ -28,10 +29,9 @@ def generate_templates(templates_api_url: str,
         print(f"[LOADING TEMPLATE] {url}")
         return page.goto(url)
 
-    def take_screenshot(path: str) -> bool:
+    def take_screenshot(path: str) -> None:
         print(f"[GENERATING TEMPLATE] {basename(path)}")
         page.screenshot(path=path, full_page=True)
-        return True
 
     def generate_template(template_path: str, template_url: str, overwrite: bool) -> bool | None:
         if not overwrite and path.isfile(template_path):
@@ -44,11 +44,11 @@ def generate_templates(templates_api_url: str,
             take_screenshot(template_path)
             return True
         elif response.status == 404:
-            print(f"[TEMPLATE NOT FOUND] {template.entry_title}")
+            print(f"[GENERATION FAILED] Not found: {template.entry_title}")
             return False
         else:
-            print(f"[GENERATION FAILED] {template} (HTTP status code: {response.status})")
-            print(f"  Re-attempting to generate up to {retry_attempts} times")
+            print(f"[GENERATION FAILED] {template.entry_title} (HTTP status code: {response.status})")
+            print(tab(1, f"Re-attempting to generate up to {retry_attempts} times"))
 
             for attempt in range(1, retry_attempts + 1):
                 response = load_template_page(template_url)
@@ -73,14 +73,14 @@ def generate_templates(templates_api_url: str,
 
             if TemplateType.ENTRY in template.types:
                 template_path = f"{artifacts_folder}/{slugify(template.entry_title)}.{TEMPLATE_IMG_FORMAT}"
-                template_url = f"{templates_api_url}/{template.uuid}"
+                template_url = f"{templates_api_url}/{template.id}"
 
                 entry_result = generate_template(template_path, template_url, overwrite_templates)
 
             if TemplateType.PRESENTATION in template.types:
                 template_path = \
-                    f"{artifacts_folder}/{slugify(template.entry_title)}-{PRESENTATION_FILE_SUFFIX}.{TEMPLATE_IMG_FORMAT}"
-                template_url = f"{presentations_api_url}/{template.uuid}"
+                    f"{artifacts_folder}/{slugify(template.entry_title)}-{PRESENTATION_IMG_FILE_SUFFIX}.{TEMPLATE_IMG_FORMAT}"
+                template_url = f"{presentations_api_url}/{template.id}"
 
                 presentation_result = generate_template(template_path, template_url, overwrite_presentations)
 
@@ -91,7 +91,7 @@ def generate_templates(templates_api_url: str,
                 if entry_result and presentation_result:
                     generated_template_titles.append(template.entry_title)
                 else:
-                    failed_template_uuids.append(template.uuid)
+                    failed_template_uuids.append(template.id)
 
         browser.close()
 

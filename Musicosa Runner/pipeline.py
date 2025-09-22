@@ -11,6 +11,7 @@ from common.constants import VIDEO_TIMESTAMP_SEPARATOR
 from common.custom_types import TemplateType, STAGE_ONE, STAGE_TWO, STAGE_THREE, STAGE_FOUR, STAGE_FIVE, STAGE_SIX
 from common.db.database import db
 from common.db.peewee_helpers import bulk_pack
+from common.formatting.tabulate import tab
 from common.input.better_input import better_input
 from common.model.metadata import get_metadata_by_field
 from common.model.models import Contestant, Avatar, Entry, Scoring, VideoOptions, Template, Setting, ContestantStats, \
@@ -122,13 +123,14 @@ def flow_gate[D, O](
     config_arg, reloadable_data_arg, *other_args = step_args
     step_result = None
 
-    on_success_msg = (f"-|Pipeline Step Gate|-\n"
-                      f"  {'\n  '.join([f"[{k}] {v}" for k, v in GATE_MESSAGES.items() if k in controls])}"
+    ask_to_continue_on_success = CONTINUE in controls
+    on_success_msg = (f"< Pipeline Step Gate >\n"
+                      f"{"\n".join([tab(1, f"[{k}] {v}") for k, v in GATE_MESSAGES.items() if k in controls])}"
                       f"\n")
 
     error_controls = {ctrl for ctrl in controls if ctrl in ALLOWED_CONTROLS_ON_ERROR}
-    on_error_msg = (f"-|Action required|-\n"
-                    f"  {'\n  '.join([f"[{k}] {v}" for k, v in GATE_MESSAGES.items() if k in error_controls])}"
+    on_error_msg = (f"< (!) Action required >\n"
+                    f"{"\n".join([tab(1, f"[{k}] {v}") for k, v in GATE_MESSAGES.items() if k in error_controls])}"
                     f"\n")
 
     while True:
@@ -137,7 +139,7 @@ def flow_gate[D, O](
         try:
             step_result = step(config_arg, reloadable_data_arg, *other_args, **step_kwargs)
 
-            if CONTINUE in controls:
+            if ask_to_continue_on_success:
                 choice = better_input(on_success_msg,
                                       lambda x: x in controls,
                                       error_message=lambda x: f"Invalid choice '{x}'")
@@ -627,7 +629,7 @@ if __name__ == '__main__':
         print(f"  # Entry video options fulfilled: {len(result.video_options) if result.video_options else 0}")
 
         print("")
-        print(" [!] Database checkpoint ahead")
+        print(" (!) Database checkpoint ahead")
         print("")
 
         return result
@@ -644,11 +646,12 @@ if __name__ == '__main__':
     if config.start_from <= STAGE_THREE:
         print("")
         print("Checkpointing state to database...")
+        print("")
 
         try:
             state_manager.checkpoint()
         except RuntimeError as err:
-            print(f"Database checkpoint failed: {err}")
+            print(f"Database checkpoint failed. Cause: {err}")
             print("Aborting...")
             exit(1)
 
@@ -680,8 +683,8 @@ if __name__ == '__main__':
         print("")
         print(f"  # Successfully generated templates: "
               f"{len(result.generated_template_titles) if result.generated_template_titles else 0}")
-        if result.failed_template_uuids:
-            print(f"  Failed to generate templates ['{"', '".join(result.failed_template_uuids)}']")
+        if result.failed_template_ids:
+            print(f"  Failed to generate templates ['{"', '".join(result.failed_template_ids)}']")
         print("")
 
         return result
@@ -764,3 +767,4 @@ if __name__ == '__main__':
 
     print("")
     print("Pipeline execution completed ✔")
+    print("")
