@@ -5,6 +5,7 @@ from common.model.models import Setting, Template
 from stage_3_templates_pre_gen.custom_types import StageThreeInput
 from stage_3_templates_pre_gen.execute import execute
 from stage_3_templates_pre_gen.stage_input import load_tfa_from_db
+from stage_3_templates_pre_gen.summary import stage_summary
 
 if __name__ == "__main__":
 
@@ -37,10 +38,6 @@ if __name__ == "__main__":
         print(f"[Stage 3 | Data persistence] {err}")
         exit(1)
 
-    # Execution feedback
+    # Stage execution summary
 
-    print("")
-    print("[STAGE 3 SUMMARY | Templates Pre-Generation]")
-    print("")
-    print(f"  # Frame settings set: {len(result.frame_settings) if result.frame_settings else 0}")
-    print(f"  # Entry templates fulfilled: {len(result.templates) if result.templates else 0}")
+    print(stage_summary(result))

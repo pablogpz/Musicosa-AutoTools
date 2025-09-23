@@ -29,4 +29,4 @@ class StageOneInput:
 
 @dataclass
 class StageOneOutput:
-    validation_errors: list[str] | None
+    validation_errors: list[str]

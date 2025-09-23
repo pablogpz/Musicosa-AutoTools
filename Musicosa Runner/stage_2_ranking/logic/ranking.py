@@ -1,6 +1,7 @@
 from functools import reduce
 from random import randint
 
+from common.formatting.tabulate import tab
 from common.model.models import SettingKeys
 from common.model.settings import get_setting_by_key
 from stage_2_ranking.custom_types import TFA, Award, Nomination, NominationStats
@@ -65,7 +66,7 @@ def rank_award(award: Award, significant_decimal_digits: int) -> list[Nomination
 
 def calculate_nomination_avg_score(nomination: Nomination, significant_decimal_digits: int) -> float:
     if len(nomination.votes) == 0:
-        print(f"[WARNING] Nomination '{nomination.id}' has no votes")
+        print(tab(1, f"[WARNING] Nomination '{nomination.id}' has no votes"))
         return 0
 
     return round(

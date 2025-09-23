@@ -21,6 +21,8 @@ def execute(config: Config, stage_input: StageSixInput) -> StageSixOutput:
     quiet_ffmpeg_final_video = config.stage_6.quiet_ffmpeg_final_video
     nominations_video_options = stage_input.nominations_video_options
 
+    award_final_video_paths = None
+
     if not artifacts_folder:
         raise StageException("No artifacts folder provided")
 
@@ -47,13 +49,11 @@ def execute(config: Config, stage_input: StageSixInput) -> StageSixOutput:
     if not path.isdir(video_bits_folder):
         os.makedirs(video_bits_folder)
 
-    generated, missing_sources, failed_to_generate = generate_video_bit_collection(artifacts_folder,
-                                                                                   video_bits_folder,
-                                                                                   overwrite,
-                                                                                   quiet_ffmpeg,
-                                                                                   nominations_video_options)
-
-    award_final_video_paths = None
+    missing_templates, missing_videoclips, generation_result = generate_video_bit_collection(artifacts_folder,
+                                                                                             video_bits_folder,
+                                                                                             overwrite,
+                                                                                             quiet_ffmpeg,
+                                                                                             nominations_video_options)
 
     if stitch_final_video:
         award_final_video_paths = generate_final_video_collection(artifacts_folder,
@@ -62,4 +62,4 @@ def execute(config: Config, stage_input: StageSixInput) -> StageSixOutput:
                                                                   nominations_video_options,
                                                                   transition_options)
 
-    return StageSixOutput(generated, missing_sources, failed_to_generate, award_final_video_paths)
+    return StageSixOutput(missing_templates, missing_videoclips, generation_result, award_final_video_paths)

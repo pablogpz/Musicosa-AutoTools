@@ -12,6 +12,6 @@ def load_templates_from_db(generate_presentations: bool) -> list[S4_Template]:
                         slugify(f"{template.nomination.award.slug}"
                                 f"-{template.nomination.game_title}"
                                 f"{f"-{template.nomination.nominee}" if template.nomination.nominee else ''}"),
-                        TemplateType.ENTRY if not generate_presentations else (
-                                TemplateType.ENTRY | TemplateType.PRESENTATION))
+                        TemplateType.NOMINATION if not generate_presentations else (
+                                TemplateType.NOMINATION | TemplateType.PRESENTATION))
             for template in templates]

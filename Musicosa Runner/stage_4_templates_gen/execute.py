@@ -28,16 +28,13 @@ def execute(config: Config, stage_input: StageFourInput) -> StageFourOutput:
         raise StageException(f"Setting '{SettingKeys.FRAME_HEIGHT_PX}' not set")
 
     if isinstance(validate_url(templates_api_url, simple_host=True), ValidationError):
-        raise StageException(f"Invalid entry templates API URL '{templates_api_url}'")
+        raise StageException(f"Invalid nomination templates API URL '{templates_api_url}'")
 
     if isinstance(validate_url(presentations_api_url, simple_host=True), ValidationError):
         raise StageException(f"Invalid presentation templates API URL '{presentations_api_url}'")
 
     if not artifacts_folder:
         raise StageException("No artifacts folder provided")
-
-    if not path.isdir(artifacts_folder):
-        os.makedirs(artifacts_folder)
 
     if templates is None:
         raise StageException("No templates provided")
@@ -46,12 +43,15 @@ def execute(config: Config, stage_input: StageFourInput) -> StageFourOutput:
         raise StageException(
             f"Invalid retry attempts value '{retry_attempts}' (Should be between 1 and {MAX_GEN_RETRY_ATTEMPTS})")
 
-    generated, failed_to_generate = generate_templates(templates_api_url,
-                                                       presentations_api_url,
-                                                       templates,
-                                                       artifacts_folder,
-                                                       retry_attempts,
-                                                       overwrite_templates,
-                                                       overwrite_presentations)
+    if not path.isdir(artifacts_folder):
+        os.makedirs(artifacts_folder)
 
-    return StageFourOutput(generated, failed_to_generate)
+    nomination_templates, presentation_templates = generate_templates(templates_api_url,
+                                                                      presentations_api_url,
+                                                                      templates,
+                                                                      artifacts_folder,
+                                                                      retry_attempts,
+                                                                      overwrite_templates,
+                                                                      overwrite_presentations)
+
+    return StageFourOutput(nomination_templates, presentation_templates)

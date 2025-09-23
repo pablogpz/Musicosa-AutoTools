@@ -3,7 +3,7 @@ from typing import Literal
 
 
 class TemplateType(Flag):
-    ENTRY = auto()
+    NOMINATION = auto()
     PRESENTATION = auto()
 
 

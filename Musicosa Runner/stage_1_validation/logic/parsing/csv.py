@@ -50,7 +50,7 @@ def parse_member_submission(submission_values: dict[str, str]) -> MemberSubmissi
         try:
             score = parse_score_str(score_str) / 100
         except ValueError as err:
-            raise StageException(f"[{member_name}][{nominee}] Error parsing score value '{score_str}'") from err
+            raise StageException(f"[{member_name}] [{nominee}] Error parsing score value '{score_str}'") from err
 
         cast_votes.append(CastVote(nominee, score))
 

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, NamedTuple
 
 
 @dataclass
@@ -84,9 +84,14 @@ class StageSixInput:
     nominations_video_options: list[NominationVideoOptions]
 
 
+class VideoGenerationResult(NamedTuple):
+    generated_video_bit_files: list[str]
+    skipped_video_bit_titles: list[str]
+    failed_video_bit_titles: list[str]
+
 @dataclass
 class StageSixOutput:
-    generated_video_bit_files: list[str] | None
-    nominations_missing_sources: list[str] | None
-    failed_video_bits: list[str] | None
+    missing_templates: list[str]
+    missing_videoclips: list[str]
+    video_generation_result: VideoGenerationResult
     final_videos_files: list[str] | None

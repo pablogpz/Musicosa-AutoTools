@@ -20,22 +20,28 @@ from stage_1_validation.custom_types import AwardForm, StageOneOutput, StageOneI
 from stage_1_validation.execute import execute as execute_stage_1
 from stage_1_validation.stage_input import parse_award_forms_folder, get_award_count, get_member_count, \
     get_valid_award_slugs
+from stage_1_validation.summary import stage_summary as stage_1_summary
 from stage_2_ranking.custom_types import StageTwoOutput, StageTwoInput
 from stage_2_ranking.execute import execute as execute_stage_2
 from stage_2_ranking.stage_input import load_tfa_from_db as load_s2_tfa_from_db
+from stage_2_ranking.summary import stage_summary as stage_2_summary
 from stage_3_templates_pre_gen.custom_types import StageThreeOutput, StageThreeInput
 from stage_3_templates_pre_gen.execute import execute as execute_stage_3
 from stage_3_templates_pre_gen.stage_input import load_tfa_from_db as load_s3_tfa_from_db
+from stage_3_templates_pre_gen.summary import stage_summary as stage_3_summary
 from stage_4_templates_gen.custom_types import StageFourOutput, StageFourInput
 from stage_4_templates_gen.execute import execute as execute_stage_4
 from stage_4_templates_gen.stage_input import load_templates_from_db
+from stage_4_templates_gen.summary import stage_summary as stage_4_summary
 from stage_5_videoclips_acquisition.custom_types import StageFiveOutput, StageFiveInput
 from stage_5_videoclips_acquisition.execute import execute as execute_stage_5
 from stage_5_videoclips_acquisition.stage_input import load_videoclips_from_db
+from stage_5_videoclips_acquisition.summary import stage_summary as stage_5_summary
 from stage_6_video_gen.custom_types import StageSixOutput, \
     StageSixInput
 from stage_6_video_gen.execute import execute as execute_stage_6
 from stage_6_video_gen.stage_input import load_video_options_from_db
+from stage_6_video_gen.summary import stage_summary as stage_6_summary
 
 
 # PIPELINE STEP FLOW GATE Types
@@ -394,32 +400,18 @@ if __name__ == '__main__':
            config_loader=config_loader,
            data_collector=stage_1_collect_input)
     def stage_1_do_execute(config: Config, stage_input: StageOneInput) -> StageOneOutput:
-        award_forms, valid_award_slugs, awards_count, members_count = (
-            stage_input.award_forms, stage_input.valid_award_slugs, stage_input.award_count, stage_input.member_count)
-
         result = execute_stage_1(stage_input)
 
-        print("")
-        print("[STAGE 1 SUMMARY | Submissions Validation]")
-        print(f"  Award forms folder: '{config.stage_1.award_forms_folder}'")
-        print(f"  Valid award slugs: {valid_award_slugs}")
-        print(f"  Awards count: {awards_count}")
-        print(f"  Members count: {members_count}")
-        print("")
-        print(f"  # Award forms loaded: {len(award_forms)}")
-
-        print("Validation errors:")
-        if result.validation_errors:
-            for validation_error in result.validation_errors:
-                print(f"  {validation_error}")
-        else:
-            print("  All submissions are valid ✔")
-        print("")
+        print(stage_1_summary(config, stage_input))
 
         return result
 
 
     if config.start_from <= STAGE_ONE:
+        print("")
+        print("[STAGE 1 | Submission Validation]")
+        print("")
+
         stage_1_input = stage_1_collect_input(config)
         stage_1_do_execute(config, stage_1_input)
 
@@ -427,6 +419,7 @@ if __name__ == '__main__':
 
         print("")
         print("Saving cast votes to database...")
+        print("")
 
         try:
             state_manager.save_cast_votes()
@@ -436,7 +429,6 @@ if __name__ == '__main__':
             exit(1)
 
         print("Save done ✔")
-        print("")
 
 
     # STAGE 2
@@ -448,21 +440,18 @@ if __name__ == '__main__':
 
     @configless_stage(err_header="[Stage 2 | Execution ERROR]", data_collector=stage_2_collect_input)
     def stage_2_do_execute(stage_input: StageTwoInput) -> StageTwoOutput:
-        tfa = stage_input.tfa
-
         result = execute_stage_2(stage_input)
 
-        print("")
-        print("[STAGE 2 SUMMARY | TFA Ranking]")
-        print(f"  # Awards loaded: {len(tfa.awards)}")
-        print("")
-        print(f"  # Ranked nominations: {len(result.nomination_stats)}")
-        print("")
+        print(stage_2_summary(stage_input, result))
 
         return result
 
 
     if config.start_from <= STAGE_TWO:
+        print("")
+        print("[STAGE 2 | Ranking]")
+        print("")
+
         stage_2_input = stage_2_collect_input()
         stage_2_result = stage_2_do_execute(stage_2_input)
 
@@ -470,6 +459,7 @@ if __name__ == '__main__':
 
         print("")
         print("Saving nomination stats to database...")
+        print("")
 
         try:
             state_manager.save_nomination_stats()
@@ -479,7 +469,6 @@ if __name__ == '__main__':
             exit(1)
 
         print("Save done ✔")
-        print("")
 
 
     # STAGE 3
@@ -493,16 +482,16 @@ if __name__ == '__main__':
     def stage_3_do_execute(stage_input: StageThreeInput) -> StageThreeOutput:
         result = execute_stage_3(stage_input)
 
-        print("")
-        print("[STAGE 3 SUMMARY | Templates Pre-Generation]")
-        print("")
-        print(f"  # Frame settings set: {len(result.frame_settings) if result.frame_settings else 0}")
-        print(f"  # Entry templates fulfilled: {len(result.templates) if result.templates else 0}")
+        print(stage_3_summary(result))
 
         return result
 
 
     if config.start_from <= STAGE_THREE:
+        print("")
+        print("[STAGE 3 | Templates Pre-Generation Fulfillment]")
+        print("")
+
         stage_3_input = stage_3_collect_input()
         stage_3_result = stage_3_do_execute(stage_3_input)
 
@@ -520,7 +509,6 @@ if __name__ == '__main__':
             exit(1)
 
         print("Save done ✔")
-        print("")
 
 
     # STAGE 4
@@ -536,21 +524,16 @@ if __name__ == '__main__':
     def stage_4_do_execute(config: Config, stage_input: StageFourInput) -> StageFourOutput:
         result = execute_stage_4(config, stage_input)
 
-        print("")
-        print("[STAGE 4 SUMMARY | Templates Generation]")
-        print(f"  # Templates to generate: {len(stage_input.templates)}")
-        print("")
-        print(f"  # Successfully generated templates: "
-              f"{len(result.generated_templates_slugs) if result.generated_templates_slugs else 0}")
-
-        if result.failed_templates_ids:
-            print(f"  Failed to generate templates ['{"', '".join(result.failed_templates_ids)}']")
-        print("")
+        print(stage_4_summary(config, stage_input, result))
 
         return result
 
 
     if config.start_from <= STAGE_FOUR:
+        print("")
+        print("[STAGE 4 | Templates Generation]")
+        print("")
+
         stage_4_do_execute(config, stage_4_collect_input(config))
 
 
@@ -569,21 +552,16 @@ if __name__ == '__main__':
 
         result = execute_stage_5(config, stage_input)
 
-        print("")
-        print("[STAGE 5 SUMMARY | Videoclips Acquisition]")
-        print(f"  # Videoclips: {len(videoclips)}")
-        print("")
-        print(
-            f"  # Acquired videoclips: {len(result.acquired_videoclip_titles) if result.acquired_videoclip_titles else 0}")
-
-        if result.failed_videoclip_titles:
-            print(f"  Failed to acquire videoclips for: ['{"', '".join(result.failed_videoclip_titles)}']")
-        print("")
+        print(stage_5_summary(stage_input, result))
 
         return result
 
 
     if config.start_from <= STAGE_FIVE:
+        print("")
+        print("[STAGE 5 | Videoclips Acquisition]")
+        print("")
+
         stage_5_do_execute(config, stage_5_collect_input())
 
 
@@ -598,22 +576,9 @@ if __name__ == '__main__':
            config_loader=config_loader,
            data_collector=stage_6_collect_input)
     def stage_6_do_execute(config: Config, stage_input: StageSixInput) -> StageSixOutput:
-        nominations_video_options = stage_input.nominations_video_options
-
         result = execute_stage_6(config, stage_input)
 
-        print("")
-        print("[STAGE 6 SUMMARY | Video Generation]")
-        print(f"  # Loaded nominations: {len(nominations_video_options)}")
-        print("")
-
-        if result.nominations_missing_sources:
-            print(f"  Nominations missing source files: ['{"', '".join(result.nominations_missing_sources)}']")
-        print(f"  # Generated video bits: "
-              f"{len(result.generated_video_bit_files) if result.generated_video_bit_files else 0}")
-        if result.failed_video_bits:
-            print(f"  Failed video bits: ['{"', '".join(result.failed_video_bits)}']")
-        print("")
+        print(stage_6_summary(config, stage_input, result))
 
         if config.stitch_final_video:
             print(f"  Final video files: '{result.final_videos_files}'")
@@ -622,6 +587,10 @@ if __name__ == '__main__':
 
 
     if config.start_from <= STAGE_SIX:
+        print("")
+        print("[STAGE 6 | Video Generation]")
+        print("")
+
         stage_6_do_execute(config, stage_6_collect_input())
 
     print("")

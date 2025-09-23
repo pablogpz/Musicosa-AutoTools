@@ -4,7 +4,7 @@ from os import path, getenv
 from common.config.config import Config
 from common.custom_types import StageException
 from stage_5_videoclips_acquisition.custom_types import StageFiveOutput, StageFiveInput
-from stage_5_videoclips_acquisition.logic.download_videoclips import download_all_videoclips
+from stage_5_videoclips_acquisition.logic.download_videoclips import download_videoclips_collection
 
 
 def execute(config: Config, stage_input: StageFiveInput) -> StageFiveOutput:
@@ -23,6 +23,6 @@ def execute(config: Config, stage_input: StageFiveInput) -> StageFiveOutput:
     if videoclips is None:
         raise StageException("No videoclips provided")
 
-    acquired, failed_to_acquire = download_all_videoclips(videoclips, artifacts_folder, quiet_ffmpeg)
+    download_result = download_videoclips_collection(videoclips, artifacts_folder, quiet_ffmpeg)
 
-    return StageFiveOutput(acquired, failed_to_acquire)
+    return StageFiveOutput(download_result)

@@ -11,6 +11,7 @@ from stage_1_validation.custom_types import StageOneInput
 from stage_1_validation.execute import execute
 from stage_1_validation.stage_input import parse_award_forms_folder, get_valid_award_slugs, get_award_count, \
     get_member_count
+from stage_1_validation.summary import stage_summary
 
 if __name__ == "__main__":
 
@@ -39,10 +40,12 @@ if __name__ == "__main__":
         print(f"[Stage 1 | Data retrieval] {err}")
         exit(1)
 
+    stage_input = StageOneInput(award_forms, valid_award_slugs, award_count, member_count)
+
     # Stage execution
 
     try:
-        result = execute(StageOneInput(award_forms, valid_award_slugs, award_count, member_count))
+        result = execute(stage_input)
     except StageException as err:
         print(f"[Stage 1 | Execution] {err}")
         exit(1)
@@ -70,13 +73,6 @@ if __name__ == "__main__":
         print(f"[Stage 1 | Data persistence] {err}")
         exit(1)
 
-    # Execution feedback
+    # Stage execution summary
 
-    print("")
-    print("[STAGE 1 SUMMARY | Submissions Validation]")
-    print(f"  Award forms folder: '{award_forms_folder}'")
-    print(f"  Valid award slugs: {valid_award_slugs}")
-    print(f"  Awards count: {award_count}")
-    print(f"  Members count: {member_count}")
-    print("")
-    print(f"  # Award forms loaded: {len(award_forms)}")
+    print(stage_summary(config, stage_input))

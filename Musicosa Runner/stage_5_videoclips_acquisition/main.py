@@ -7,6 +7,7 @@ from common.custom_types import StageException
 from stage_5_videoclips_acquisition.custom_types import StageFiveInput
 from stage_5_videoclips_acquisition.execute import execute
 from stage_5_videoclips_acquisition.stage_input import load_videoclips_from_db
+from stage_5_videoclips_acquisition.summary import stage_summary
 
 if __name__ == "__main__":
 
@@ -30,22 +31,16 @@ if __name__ == "__main__":
         print(f"[Stage 5 | Data retrieval] {err}")
         exit(1)
 
+    stage_input = StageFiveInput(videoclips)
+
     # Execution
 
     try:
-        result = execute(config, StageFiveInput(videoclips))
+        result = execute(config, stage_input)
     except StageException as err:
         print(f"[Stage 5 | Execution] {err}")
         exit(1)
 
-    # Execution feedback
+    # Stage execution summary
 
-    print("")
-    print("[STAGE 5 SUMMARY | Videoclips Acquisition]")
-    print(f"  # Videoclips: {len(videoclips)}")
-    print("")
-    print(
-        f"  # Acquired videoclips: {len(result.acquired_videoclip_titles) if result.acquired_videoclip_titles else 0}")
-
-    if result.failed_videoclip_titles:
-        print(f"  Failed to acquire videoclips for: ['{"', '".join(result.failed_videoclip_titles)}']")
+    print(stage_summary(stage_input, result))

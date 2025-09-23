@@ -4,6 +4,7 @@ from common.model.models import NominationStats
 from stage_2_ranking.custom_types import StageTwoInput
 from stage_2_ranking.execute import execute
 from stage_2_ranking.stage_input import load_tfa_from_db
+from stage_2_ranking.summary import stage_summary
 
 if __name__ == "__main__":
 
@@ -15,10 +16,12 @@ if __name__ == "__main__":
         print(f"[Stage 2 | Data retrieval] {err}")
         exit(1)
 
+    stage_input = StageTwoInput(tfa)
+
     # Stage execution
 
     try:
-        result = execute(StageTwoInput(tfa))
+        result = execute(stage_input)
     except StageException as err:
         print(f"[Stage 2 | Execution] {err}")
         exit(1)
@@ -41,10 +44,6 @@ if __name__ == "__main__":
         print(f"[Stage 2 | Data persistence] {err}")
         exit(1)
 
-    # Execution feedback
+    # Stage execution summary
 
-    print("")
-    print("[STAGE 2 SUMMARY | TFA Ranking]")
-    print(f"  # Awards loaded: {len(tfa.awards)}")
-    print("")
-    print(f"  # Ranked nominations: {len(result.nomination_stats)}")
+    print(stage_summary(stage_input, result))
