@@ -37,7 +37,7 @@ def parse_award_form_csv(form_file: str) -> AwardForm:
                 except StageException as err:
                     raise StageException(f"[{award_slug}] {err}") from err
     except IOError as err:
-        raise StageException(f"Error opening CSV form file '{form_file}'. Cause: {err}")
+        raise StageException(f"Error opening CSV form file '{form_file}': {err}")
 
     return AwardForm(award_slug, submissions)
 

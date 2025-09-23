@@ -6,7 +6,7 @@ from stage_1_validation.custom_types import AwardForm, MemberSubmission
 def validate_award_form_collection(award_forms: list[AwardForm],
                                    valid_award_slugs: list[str],
                                    award_count: int,
-                                   member_count: int) -> list[str]:
+                                   member_count: int) -> list[str] | None:
     validation_errors: list[str] = []
 
     if len(award_forms) != award_count:
@@ -16,10 +16,10 @@ def validate_award_form_collection(award_forms: list[AwardForm],
         if errors := validate_award_form(award_form, valid_award_slugs, member_count):
             validation_errors.extend(errors)
 
-    return [err_msg for err_msg in validation_errors]
+    return [err_msg for err_msg in validation_errors] or None
 
 
-def validate_award_form(award_form: AwardForm, valid_award_slugs: list[str], member_count: int) -> list[str]:
+def validate_award_form(award_form: AwardForm, valid_award_slugs: list[str], member_count: int) -> list[str] | None:
     validation_errors: list[str] = []
 
     if award_form.award_slug not in valid_award_slugs:
@@ -32,10 +32,10 @@ def validate_award_form(award_form: AwardForm, valid_award_slugs: list[str], mem
         if errors := validate_member_submission(submission):
             validation_errors.extend(errors)
 
-    return [err_msg for err_msg in validation_errors]
+    return [err_msg for err_msg in validation_errors] or None
 
 
-def validate_member_submission(submission: MemberSubmission) -> list[str]:
+def validate_member_submission(submission: MemberSubmission) -> list[str] | None:
     validation_errors: list[str] = []
 
     if not submission.name:
@@ -51,7 +51,7 @@ def validate_member_submission(submission: MemberSubmission) -> list[str]:
         if error := validate_score(cast_vote.score, min_score, max_score):
             validation_errors.append(f"[{cast_vote.nomination}] {error}")
 
-    return [f"[{submission.name}] {err_msg}" for err_msg in validation_errors]
+    return [f"[{submission.name}] {err_msg}" for err_msg in validation_errors] or None
 
 
 def validate_score(score: float, min_score: float, max_score: float) -> str | None:
