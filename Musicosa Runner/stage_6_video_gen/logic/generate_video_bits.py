@@ -60,7 +60,7 @@ def generate_video_bit_collection(
             video_bit = generate_video_bit(source_videoclip, vid_opts, source_template, video_bit_path, quiet_ffmpeg)
             generated_video_bit_files.append(video_bit)
         except FFMpegError as err:
-            print(f"[FAILED #{idx + 1}] '{vid_opts.entry_title}'. Cause: {err}")
+            print(f"[FAILED #{idx + 1}] {vid_opts.entry_title}. Cause: {err}")
             failed_video_bit_titles.append(vid_opts.entry_title)
 
     return missing_templates, missing_videoclips, VideoGenerationResult(generated_video_bit_files,
@@ -80,14 +80,14 @@ def generate_video_bit(
     override_duration_value = get_setting_by_key(
         SettingKeys.GENERATION_VIDEOCLIPS_OVERRIDE_DURATION_UP_TO_X_SECONDS).value
 
-    videoclip_duration = get_video_duration_seconds(videoclip_path)
+    videoclip_duration_seconds = get_video_duration_seconds(videoclip_path)
 
     # Top video bits duration override and check if the timestamps are within the videoclip duration
 
     if vid_opts.sequence_number <= override_top_n:
         if override_duration_value == VIDEOCLIPS_OVERRIDE_DURATION_LIMIT:
             ffmpeg_time_code_args = {}
-        elif videoclip_duration < override_duration_value:
+        elif videoclip_duration_seconds < override_duration_value:
             print(tab(1, "[WARNING] Top videoclip duration is less than the override duration value. "
                          "End video will be rendered to its original duration"))
             ffmpeg_time_code_args = {}
@@ -99,13 +99,13 @@ def generate_video_bit(
 
         ffmpeg_time_code_args = {"ss": vid_opts.timestamp.start, "to": vid_opts.timestamp.end}
 
-        if timestamp_start_seconds < videoclip_duration < timestamp_end_seconds:
+        if timestamp_start_seconds < videoclip_duration_seconds < timestamp_end_seconds:
             print(tab(1, "[WARNING] End timestamp exceeds videoclip duration. "
                          "End video will be trimmed at the end of the videoclip"))
 
-        if videoclip_duration <= timestamp_start_seconds:
+        if videoclip_duration_seconds <= timestamp_start_seconds:
             print(tab(1, "[WARNING] Start timestamp exceeds videoclip duration. "
-                         "Defaulting to trim from the start"))
+                         "Defaulting to trimming from the start"))
             ffmpeg_time_code_args = {"ss": 0, "t": default_duration}
 
     # Generate video bit

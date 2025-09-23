@@ -73,7 +73,7 @@ def execute(config: Config, stage_input: StageSixInput) -> StageSixOutput:
         existing_video_bit_count = len(generated) + len(skipped)
 
         if len(entries_video_options) != existing_video_bit_count:
-            print(f"[SKIPPING FINAL VIDEO GENERATION] There are "
+            print(f"[SKIPPING FINAL VIDEO] There are "
                   f"{len(entries_video_options) - existing_video_bit_count}"
                   f" missing video bits")
         else:

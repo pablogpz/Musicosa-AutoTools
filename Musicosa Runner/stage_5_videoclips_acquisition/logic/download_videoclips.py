@@ -12,9 +12,9 @@ from common.naming.slugify import slugify
 from stage_5_videoclips_acquisition.custom_types import VideoclipsDownloadResult
 
 
-def download_all_videoclips(entries: list[Entry],
-                            artifacts_folder: str,
-                            quiet_ffmpeg: bool) -> VideoclipsDownloadResult:
+def download_videoclip_collection(entries: list[Entry],
+                                  artifacts_folder: str,
+                                  quiet_ffmpeg: bool) -> VideoclipsDownloadResult:
     downloaded_videoclip_titles: list[str] = []
     skipped_videoclip_titles: list[str] = []
     failed_videoclip_titles: list[str] = []

@@ -17,7 +17,10 @@ def stage_summary(config: Config, stage_input: StageFourInput, stage_output: Sta
     f("[STAGE 4 SUMMARY | Templates Generation]")
     f("")
     f(f"# Templates to generate: {len(templates) if not config.stitch_final_video else len(templates) * 2}")
-    f(f"# Total generated or skipped templates: {len(generated_entries) + len(skipped_entries) + len(generated_presentations) + len(skipped_presentations)}")
+    f(f"# Total generated or skipped templates: {len(generated_entries)
+                                                 + len(skipped_entries)
+                                                 + len(generated_presentations)
+                                                 + len(skipped_presentations)}")
     f("")
     f(f"# Successfully generated ENTRY templates: {len(generated_entries)}")
     if len(skipped_entries) > 0:
