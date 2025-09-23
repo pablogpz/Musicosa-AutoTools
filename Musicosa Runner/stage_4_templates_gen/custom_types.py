@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import NamedTuple
 
 from common.custom_types import TemplateType
 
@@ -10,6 +11,12 @@ class Template:
     types: TemplateType
 
 
+class TemplateGenerationResult(NamedTuple):
+    generated: list[str]
+    skipped: list[str]
+    failed: list[str]
+
+
 @dataclass
 class StageFourInput:
     templates: list[Template]
@@ -17,5 +24,5 @@ class StageFourInput:
 
 @dataclass
 class StageFourOutput:
-    generated_template_titles: list[str] | None
-    failed_template_ids: list[str] | None
+    entry_templates_result: TemplateGenerationResult
+    presentation_templates_result: TemplateGenerationResult

@@ -5,6 +5,7 @@ from common.model.models import Contestant, Entry, ContestantStats, EntryStats
 from stage_2_ranking.custom_types import StageTwoInput
 from stage_2_ranking.execute import execute
 from stage_2_ranking.stage_input import load_musicosa_from_db
+from stage_2_ranking.summary import stage_summary
 
 if __name__ == "__main__":
 
@@ -16,10 +17,12 @@ if __name__ == "__main__":
         print(f"[Stage 2 | Data retrieval] {err}")
         exit(1)
 
+    stage_input = StageTwoInput(musicosa)
+
     # Stage execution
 
     try:
-        result = execute(StageTwoInput(musicosa))
+        result = execute(stage_input)
     except StageException as err:
         print(f"[Stage 2 | Execution] {err}")
         exit(1)
@@ -58,14 +61,6 @@ if __name__ == "__main__":
         print(f"[Stage 2 | Data persistence] {err}")
         exit(1)
 
-    # Execution feedback
+    # Stage execution summary
 
-    print("")
-    print("[STAGE 2 SUMMARY | Musicosa Ranking]")
-    print(f"  # Contestants loaded: {len(musicosa.contestants)}")
-    print(f"  # Entries loaded: {len(musicosa.entries)}")
-    print("")
-    contestant_stats_display = [(stat.contestant.name, stat.avg_given_score, stat.avg_received_score)
-                                for stat in contestants_stats]
-    print(f"  Contestant stats (name, avg_given_score, avg_received_score): {contestant_stats_display}")
-    print(f"  # Ranked entries: {len(entries_stats)}")
+    print(stage_summary(stage_input, result))

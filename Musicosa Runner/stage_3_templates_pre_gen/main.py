@@ -5,6 +5,7 @@ from common.model.models import Avatar, Contestant, Setting, Template, VideoOpti
 from stage_3_templates_pre_gen.custom_types import StageThreeInput
 from stage_3_templates_pre_gen.execute import execute
 from stage_3_templates_pre_gen.stage_input import load_musicosa_from_db
+from stage_3_templates_pre_gen.summary import stage_summary
 
 if __name__ == "__main__":
 
@@ -59,14 +60,6 @@ if __name__ == "__main__":
         print(f"[Stage 3 | Data persistence] {err}")
         exit(1)
 
-    # Execution feedback
+    # Stage execution summary
 
-    print("")
-    print("[STAGE 3 SUMMARY | Templates Pre-Generation]")
-    print("")
-    print(f"  # Paired contestants to avatars: {len(result.avatar_pairings) if result.avatar_pairings else 0}")
-    print(f"  # Frame settings set: {len(result.frame_settings) if result.frame_settings else 0}")
-    print(f"  # Entry templates fulfilled: {len(result.templates) if result.templates else 0}")
-    print(f"  # Generation general settings set: "
-          f"{len(result.generation_settings) if result.generation_settings else 0}")
-    print(f"  # Entry video options fulfilled: {len(result.video_options) if result.video_options else 0}")
+    print(stage_summary(result))

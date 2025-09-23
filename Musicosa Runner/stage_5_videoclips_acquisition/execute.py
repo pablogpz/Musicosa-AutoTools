@@ -23,6 +23,6 @@ def execute(config: Config, stage_input: StageFiveInput) -> StageFiveOutput:
     if entries is None:
         raise StageException("No entries provided")
 
-    acquired, failed_to_acquire = download_all_videoclips(entries, artifacts_folder, quiet_ffmpeg)
+    download_result = download_all_videoclips(entries, artifacts_folder, quiet_ffmpeg)
 
-    return StageFiveOutput(acquired, failed_to_acquire)
+    return StageFiveOutput(download_result)

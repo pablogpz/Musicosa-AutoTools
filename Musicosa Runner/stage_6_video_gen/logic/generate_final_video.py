@@ -91,8 +91,7 @@ def generate_final_video(artifacts_folder: str,
                                   b="6000k")
                           .compile(overwrite_output=True))
         except FFMpegError as err:
-            raise StageException(
-                f"Failed to compile ffmpeg command for fragment '{fragment_id}'. Cause: {err}") from err
+            raise StageException(f"Bad ffmpeg command for fragment '{fragment_id}'. Cause: {err}") from err
 
         filtergraph_arg_idx = ffmpeg_cmd.index("-filter_complex")
 
@@ -127,7 +126,7 @@ def generate_final_video(artifacts_folder: str,
 
         return fragment_path
 
-    print(f"[FINAL VIDEO] Generating final video '{final_video_name}.{VIDEO_FORMAT}'")
+    print(f"[GENERATING] Generating final video '{final_video_name}.{VIDEO_FORMAT}'")
 
     sorted_vid_opts = sorted(vid_opts, key=lambda x: x.sequence_number, reverse=True)
 

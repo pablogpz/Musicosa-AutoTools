@@ -22,23 +22,30 @@ from stage_1_validation.custom_types import ContestantSubmission, StageOneOutput
 from stage_1_validation.execute import execute as execute_stage_1
 from stage_1_validation.stage_input import get_submissions_from_forms_folder, get_valid_titles, \
     get_special_topics_from_db
+from stage_1_validation.summary import stage_summary as stage_1_summary
 from stage_2_ranking.custom_types import Musicosa as S2_Musicosa, Contestant as S2_Contestant, \
     Entry as S2_Entry, Score as S2_Score, StageTwoOutput, StageTwoInput
 from stage_2_ranking.execute import execute as execute_stage_2
 from stage_2_ranking.stage_input import load_musicosa_from_db as load_s2_musicosa_from_db
+from stage_2_ranking.summary import stage_summary as stage_2_summary
 from stage_3_templates_pre_gen.custom_types import Musicosa as S3_Musicosa, StageThreeOutput, StageThreeInput
 from stage_3_templates_pre_gen.execute import execute as execute_stage_3
 from stage_3_templates_pre_gen.stage_input import load_musicosa_from_db as load_s3_musicosa_from_db, \
     load_avatars_from_db
+from stage_3_templates_pre_gen.summary import stage_summary as stage_3_summary
 from stage_4_templates_gen.custom_types import StageFourOutput, StageFourInput, Template as S4_Template
 from stage_4_templates_gen.execute import execute as execute_stage_4
 from stage_4_templates_gen.stage_input import load_templates_from_db
+from stage_4_templates_gen.summary import stage_summary as stage_4_summary
 from stage_5_videoclips_acquisition.custom_types import StageFiveOutput, StageFiveInput
 from stage_5_videoclips_acquisition.execute import execute as execute_stage_5
 from stage_5_videoclips_acquisition.stage_input import load_entries_from_db
+from stage_5_videoclips_acquisition.summary import stage_summary as stage_5_summary
 from stage_6_video_gen.custom_types import EntryVideoOptions, Timestamp, StageSixOutput, StageSixInput
 from stage_6_video_gen.execute import execute as execute_stage_6
 from stage_6_video_gen.stage_input import load_entries_video_options_from_db
+from stage_6_video_gen.summary import stage_summary as stage_6_summary
+from time import sleep
 
 
 # PIPELINE STEP FLOW GATE Types
@@ -529,38 +536,18 @@ if __name__ == '__main__':
            config_loader=config_loader,
            data_collector=stage_1_collect_input)
     def stage_1_do_execute(config: Config, stage_input: StageOneInput) -> StageOneOutput:
-        submissions, valid_titles, special_entry_topics = (
-            stage_input.submissions, stage_input.valid_titles, stage_input.special_entry_topics)
-
         result = execute_stage_1(stage_input)
 
-        print("")
-        print("[STAGE 1 SUMMARY | Submissions Validation]")
-        print(f"  Submission forms folder: '{config.stage_1.forms_folder}'")
-        print(f"  # Submission forms loaded: {len(submissions)}")
-        print(f"  Valid titles file: '{config.stage_1.valid_titles_file}'")
-        print("")
-        print("Validation errors:")
-        if result.validation_errors:
-            for validation_error in result.validation_errors:
-                print(f"  {validation_error}")
-        else:
-            print("  All submissions are valid ✔")
-        print("")
-        contestant_names = [sub.name for sub in submissions]
-        print(f"Contestants ({len(contestant_names)}): {", ".join(contestant_names)}")
-        for index, name in enumerate(contestant_names):
-            if len(submissions[index].entries) >= 3:
-                print("")
-                print(f"[{name} ({len(submissions[index].entries)})] - Entries sample")
-                for entry in submissions[index].entries[0:3]:
-                    print(f"    {entry}")
-        print("")
+        print(stage_1_summary(config, stage_input))
 
         return result
 
 
     if config.start_from <= STAGE_ONE:
+        print("")
+        print("[STAGE 1 | Submission Validation]")
+        print("")
+
         stage_1_input = stage_1_collect_input(config)
         stage_1_do_execute(config, stage_1_input)
 
@@ -579,25 +566,18 @@ if __name__ == '__main__':
 
     @configless_stage(err_header="[Stage 2 | Execution ERROR]", data_collector=stage_2_collect_input)
     def stage_2_do_execute(stage_input: StageTwoInput) -> StageTwoOutput:
-        musicosa = stage_input.musicosa
-
         result = execute_stage_2(stage_input)
 
-        print("")
-        print("[STAGE 2 SUMMARY | Musicosa Ranking]")
-        print(f"  # Contestants loaded: {len(musicosa.contestants)}")
-        print(f"  # Entries loaded: {len(musicosa.entries)}")
-        print("")
-        contestant_stats_display = [(stat.contestant.name, stat.avg_given_score, stat.avg_received_score)
-                                    for stat in result.contestants_stats]
-        print(f"  Contestant stats (name, avg_given_score, avg_received_score): {contestant_stats_display}")
-        print(f"  # Ranked entries: {len(result.entries_stats)}")
-        print("")
+        print(stage_2_summary(stage_input, result))
 
         return result
 
 
     if config.start_from <= STAGE_TWO:
+        print("")
+        print("[STAGE 2 | Ranking]")
+        print("")
+
         stage_2_input = stage_2_collect_input()
         stage_2_result = stage_2_do_execute(stage_2_input)
 
@@ -618,24 +598,19 @@ if __name__ == '__main__':
     def stage_3_do_execute(stage_input: StageThreeInput) -> StageThreeOutput:
         result = execute_stage_3(stage_input)
 
-        print("")
-        print("[STAGE 3 SUMMARY | Templates Pre-Generation]")
-        print("")
-        print(f"  # Paired contestants to avatars: {len(result.avatar_pairings) if result.avatar_pairings else 0}")
-        print(f"  # Frame settings set: {len(result.frame_settings) if result.frame_settings else 0}")
-        print(f"  # Entry templates fulfilled: {len(result.templates) if result.templates else 0}")
-        print(f"  # Generation general settings set: "
-              f"{len(result.generation_settings) if result.generation_settings else 0}")
-        print(f"  # Entry video options fulfilled: {len(result.video_options) if result.video_options else 0}")
-
-        print("")
-        print(" (!) Database checkpoint ahead")
-        print("")
+        print(stage_3_summary(result))
 
         return result
 
 
     if config.start_from <= STAGE_THREE:
+        print("")
+        print("[STAGE 3 | Templates Pre-Generation Fulfillment]")
+        print("")
+        print(tab(1, "(!) Database checkpoint ahead"))
+        print("")
+        sleep(1)
+
         stage_3_input = stage_3_collect_input()
         stage_3_result = stage_3_do_execute(stage_3_input)
 
@@ -673,24 +648,18 @@ if __name__ == '__main__':
            config_loader=config_loader,
            data_collector=stage_4_collect_input)
     def stage_4_do_execute(config: Config, stage_input: StageFourInput) -> StageFourOutput:
-        templates = stage_input.templates
-
         result = execute_stage_4(config, stage_input)
 
-        print("")
-        print("[STAGE 4 SUMMARY | Templates Generation]")
-        print(f"  # Templates to generate: {len(templates)}")
-        print("")
-        print(f"  # Successfully generated templates: "
-              f"{len(result.generated_template_titles) if result.generated_template_titles else 0}")
-        if result.failed_template_ids:
-            print(f"  Failed to generate templates ['{"', '".join(result.failed_template_ids)}']")
-        print("")
+        print(stage_4_summary(config, stage_input, result))
 
         return result
 
 
     if config.start_from <= STAGE_FOUR:
+        print("")
+        print("[STAGE 4 | Templates Generation]")
+        print("")
+
         stage_4_do_execute(config, stage_4_collect_input(config))
 
 
@@ -710,20 +679,16 @@ if __name__ == '__main__':
     def stage_5_do_execute(config: Config, stage_input: StageFiveInput) -> StageFiveOutput:
         result = execute_stage_5(config, stage_input)
 
-        print("")
-        print("[STAGE 5 SUMMARY | Videoclips Acquisition]")
-        print(f"  # Entries: {len(stage_input.entries)}")
-        print("")
-        print(
-            f"  # Acquired videoclips: {len(result.acquired_videoclip_titles) if result.acquired_videoclip_titles else 0}")
-        if result.failed_videoclip_titles:
-            print(f"  Failed to acquire videoclips for: ['{"', '".join(result.failed_videoclip_titles)}']")
-        print("")
+        print(stage_5_summary(stage_input, result))
 
         return result
 
 
     if config.start_from <= STAGE_FIVE:
+        print("")
+        print("[STAGE 5 | Videoclips Acquisition]")
+        print("")
+
         stage_5_do_execute(config, stage_5_collect_input(config))
 
 
@@ -741,28 +706,18 @@ if __name__ == '__main__':
            config_loader=config_loader,
            data_collector=stage_6_collect_input)
     def stage_6_do_execute(config: Config, stage_input: StageSixInput) -> StageSixOutput:
-        entries_video_options = stage_input.entries_video_options
-
         result = execute_stage_6(config, stage_input)
 
-        print("")
-        print("[STAGE 6 SUMMARY | Video Generation]")
-        print(f"  # Loaded entries: {len(entries_video_options)}")
-        print("")
-        if result.entries_missing_sources:
-            print(f"  Entries missing source files: ['{"', '".join(result.entries_missing_sources)}']")
-        print(f"  # Generated video bits: "
-              f"{len(result.generated_video_bit_files) if result.generated_video_bit_files else 0}")
-        if result.failed_video_bits:
-            print(f"  Failed video bits: ['{"', '".join(result.failed_video_bits)}']")
-        if config.stitch_final_video:
-            print(f"  Final video file: '{result.final_video_file}'")
-        print("")
+        print(stage_6_summary(config, stage_input, result))
 
         return result
 
 
     if config.start_from <= STAGE_SIX:
+        print("")
+        print("[STAGE 6 | Video Generation]")
+        print("")
+
         stage_6_do_execute(config, stage_6_collect_input(config))
 
     print("")

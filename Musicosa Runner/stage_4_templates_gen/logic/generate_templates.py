@@ -1,7 +1,8 @@
 from os import path
 from os.path import basename
 
-from playwright.sync_api import Response, sync_playwright
+import playwright.sync_api
+from playwright.sync_api import sync_playwright
 
 from common.constants import TEMPLATE_IMG_FORMAT, PRESENTATION_IMG_FILE_SUFFIX
 from common.custom_types import TemplateType
@@ -9,7 +10,7 @@ from common.formatting.tabulate import tab
 from common.model.models import SettingKeys
 from common.model.settings import get_setting_by_key
 from common.naming.slugify import slugify
-from stage_4_templates_gen.custom_types import Template
+from stage_4_templates_gen.custom_types import TemplateGenerationResult, Template
 
 
 def generate_templates(templates_api_url: str,
@@ -18,43 +19,51 @@ def generate_templates(templates_api_url: str,
                        artifacts_folder: str,
                        retry_attempts: int,
                        overwrite_templates: bool,
-                       overwrite_presentations: bool) -> tuple[list[str] | None, list[str] | None]:
-    generated_template_titles: list[str] = []
-    failed_template_uuids: list[str] = []
+                       overwrite_presentations: bool) -> tuple[TemplateGenerationResult, TemplateGenerationResult]:
+    generated_entry_template_titles: list[str] = []
+    generated_presentation_template_titles: list[str] = []
+    skipped_entry_template_titles: list[str] = []
+    skipped_presentation_template_titles: list[str] = []
+    failed_entry_template_ids: list[str] = []
+    failed_presentation_template_ids: list[str] = []
 
     frame_width: int = get_setting_by_key(SettingKeys.FRAME_WIDTH_PX).value
     frame_height: int = get_setting_by_key(SettingKeys.FRAME_HEIGHT_PX).value
 
-    def load_template_page(url: str) -> Response:
-        print(f"[LOADING TEMPLATE] {url}")
-        return page.goto(url)
+    def load_template_page(url: str, template_type: TemplateType) -> int:
+        print(f"[LOADING #{idx + 1}] {template_type.name.upper()} {url}")
+        try:
+            return page.goto(url).status
+        except playwright.sync_api.Error:
+            return 0
 
-    def take_screenshot(path: str) -> None:
-        print(f"[GENERATING TEMPLATE] {basename(path)}")
-        page.screenshot(path=path, full_page=True)
+    def take_screenshot(template_path: str, template_type: TemplateType) -> None:
+        print(f"[GENERATING #{idx + 1}] {template_type.name.upper()} {basename(template_path)}")
+        page.screenshot(path=template_path, full_page=True)
 
-    def generate_template(template_path: str, template_url: str, overwrite: bool) -> bool | None:
+    def generate_template(template_path: str, url: str, template_type: TemplateType, overwrite: bool) -> bool | None:
         if not overwrite and path.isfile(template_path):
-            print(f"[SKIPPING GENERATION] {template.entry_title}")
+            print(f"[SKIPPING #{idx + 1}] {template_type.name.upper()} {template.entry_title}")
             return None
 
-        response = load_template_page(template_url)
+        response = load_template_page(url, template_type)
 
-        if response.status == 200:
-            take_screenshot(template_path)
+        if response == 200:
+            take_screenshot(template_path, template_type)
             return True
-        elif response.status == 404:
-            print(f"[GENERATION FAILED] Not found: {template.entry_title}")
+        elif response == 404:
+            print(f"[FAILED #{idx + 1}] {template_type.name.upper()} Not found: {template.entry_title}")
             return False
         else:
-            print(f"[GENERATION FAILED] {template.entry_title} (HTTP status code: {response.status})")
+            print(f"[FAILED #{idx + 1}] {template_type.name.upper()} "
+                  f"{template.entry_title} (HTTP status code: {response})")
             print(tab(1, f"Re-attempting to generate up to {retry_attempts} times"))
 
             for attempt in range(1, retry_attempts + 1):
-                response = load_template_page(template_url)
+                response = load_template_page(url, template_type)
 
-                if response.status == 200:
-                    take_screenshot(template_path)
+                if response == 200:
+                    take_screenshot(template_path, template_type)
                     return True
 
                 if attempt == retry_attempts:
@@ -67,32 +76,39 @@ def generate_templates(templates_api_url: str,
         # noinspection PyTypeChecker
         page = browser.new_page(viewport={"width": frame_width, "height": frame_height})
 
-        for template in templates:
-            entry_result = None
-            presentation_result = None
-
+        for idx, template in enumerate(templates):
             if TemplateType.ENTRY in template.types:
                 template_path = f"{artifacts_folder}/{slugify(template.entry_title)}.{TEMPLATE_IMG_FORMAT}"
                 template_url = f"{templates_api_url}/{template.id}"
 
-                entry_result = generate_template(template_path, template_url, overwrite_templates)
+                generation = generate_template(template_path, template_url, TemplateType.ENTRY,
+                                               overwrite_templates)
+
+                if generation:
+                    generated_entry_template_titles.append(template.entry_title)
+                elif generation == False:
+                    failed_entry_template_ids.append(template.id)
+                elif generation is None:
+                    skipped_entry_template_titles.append(template.entry_title)
 
             if TemplateType.PRESENTATION in template.types:
                 template_path = \
                     f"{artifacts_folder}/{slugify(template.entry_title)}-{PRESENTATION_IMG_FILE_SUFFIX}.{TEMPLATE_IMG_FORMAT}"
                 template_url = f"{presentations_api_url}/{template.id}"
 
-                presentation_result = generate_template(template_path, template_url, overwrite_presentations)
+                generation = generate_template(template_path, template_url, TemplateType.PRESENTATION,
+                                               overwrite_presentations)
 
-            if entry_result is not None or presentation_result is not None:
-                entry_result = entry_result if entry_result is not None else True
-                presentation_result = presentation_result if presentation_result is not None else True
-
-                if entry_result and presentation_result:
-                    generated_template_titles.append(template.entry_title)
-                else:
-                    failed_template_uuids.append(template.id)
+                if generation:
+                    generated_presentation_template_titles.append(template.entry_title)
+                elif generation == False:
+                    failed_presentation_template_ids.append(template.id)
+                elif generation is None:
+                    skipped_presentation_template_titles.append(template.entry_title)
 
         browser.close()
 
-    return generated_template_titles or None, failed_template_uuids or None
+    return (TemplateGenerationResult(generated_entry_template_titles, skipped_entry_template_titles,
+                                     failed_entry_template_ids),
+            TemplateGenerationResult(generated_presentation_template_titles, skipped_presentation_template_titles,
+                                     failed_presentation_template_ids))

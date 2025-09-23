@@ -14,6 +14,7 @@ from stage_1_validation.custom_types import StageOneInput
 from stage_1_validation.execute import execute
 from stage_1_validation.stage_input import get_submissions_from_forms_folder, get_valid_titles, \
     get_special_topics_from_db
+from stage_1_validation.summary import stage_summary
 
 if __name__ == "__main__":
 
@@ -44,10 +45,12 @@ if __name__ == "__main__":
         print(f"[Stage 1 | Data retrieval] {err}")
         exit(1)
 
+    stage_input = StageOneInput(submissions, valid_titles, special_entry_topics)
+
     # Stage execution
 
     try:
-        result = execute(StageOneInput(submissions, valid_titles, special_entry_topics))
+        result = execute(stage_input)
     except StageException as err:
         print(f"[Stage 1 | Execution] {err}")
         exit(1)
@@ -103,20 +106,6 @@ if __name__ == "__main__":
         print(f"[Stage 1 | Data persistence] {err}")
         exit(1)
 
-    # Execution feedback
+    # Stage execution summary
 
-    print("")
-    print("[STAGE 1 SUMMARY | Submissions Validation]")
-    print(f"  Submission forms folder: '{forms_folder}'")
-    print(f"  Valid titles file: '{valid_titles_file}'")
-    print("")
-    print(f"  # Submission forms loaded: {len(submissions)}")
-    contestant_names = [sub.name for sub in submissions]
-    print(f"  Contestants ({len(contestant_names)}): {", ".join(contestant_names)}")
-    print("")
-    for index, name in enumerate(contestant_names):
-        if len(submissions[index].entries) >= 3:
-            print(f"[{name} ({len(submissions[index].entries)})] - Entries sample")
-            for entry in submissions[index].entries[0:3]:
-                print(f"    {entry}")
-            print("")
+    print(stage_summary(config, stage_input))

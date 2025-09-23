@@ -3,7 +3,6 @@ from os import path
 from typing import get_args, cast
 
 from common.config.config import Config
-from common.constants import VIDEO_FORMAT
 from common.custom_types import StageException
 from common.model.models import SettingKeys
 from common.model.settings import is_setting_set
@@ -24,6 +23,8 @@ def execute(config: Config, stage_input: StageSixInput) -> StageSixOutput:
     quiet_ffmpeg = config.stage_6.quiet_ffmpeg
     quiet_ffmpeg_final_video = config.stage_6.quiet_ffmpeg_final_video
     entries_video_options = stage_input.entries_video_options
+
+    final_video_path = None
 
     if not is_setting_set(SettingKeys.VALIDATION_ENTRY_VIDEO_DURATION_SECONDS):
         raise StageException(f"Setting '{SettingKeys.VALIDATION_ENTRY_VIDEO_DURATION_SECONDS}' not set")
@@ -63,22 +64,17 @@ def execute(config: Config, stage_input: StageSixInput) -> StageSixOutput:
     if not path.isdir(video_bits_folder):
         os.makedirs(video_bits_folder)
 
-    generated, missing_sources, failed_to_generate = (
+    missing_templates, missing_videoclips, generation_result = (
         generate_video_bit_collection(artifacts_folder, video_bits_folder, overwrite, quiet_ffmpeg,
                                       entries_video_options))
-
-    final_video_path = None
+    generated, skipped, _failed = generation_result
 
     if stitch_final_video:
-        existing_video_bits = [f"{video_bits_folder}/{entry.sequence_number}.{VIDEO_FORMAT}"
-                               for entry in entries_video_options
-                               if path.isfile(f"{video_bits_folder}/{entry.sequence_number}.{VIDEO_FORMAT}")]
+        existing_video_bit_count = len(generated) + len(skipped)
 
-        generated_or_existing_video_bits = {*(generated or []), *(existing_video_bits or [])}
-
-        if len(entries_video_options) != len(generated_or_existing_video_bits):
+        if len(entries_video_options) != existing_video_bit_count:
             print(f"[SKIPPING FINAL VIDEO GENERATION] There are "
-                  f"{len(entries_video_options) - len(generated_or_existing_video_bits)}"
+                  f"{len(entries_video_options) - existing_video_bit_count}"
                   f" missing video bits")
         else:
             final_video_path = generate_final_video(artifacts_folder,
@@ -89,4 +85,4 @@ def execute(config: Config, stage_input: StageSixInput) -> StageSixOutput:
                                                     entries_video_options,
                                                     transition_options)
 
-    return StageSixOutput(generated, missing_sources, failed_to_generate, final_video_path)
+    return StageSixOutput(missing_templates, missing_videoclips, generation_result, final_video_path)

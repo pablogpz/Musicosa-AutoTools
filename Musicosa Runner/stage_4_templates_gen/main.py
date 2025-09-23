@@ -7,6 +7,7 @@ from common.custom_types import StageException
 from stage_4_templates_gen.custom_types import StageFourInput
 from stage_4_templates_gen.execute import execute
 from stage_4_templates_gen.stage_input import load_templates_from_db
+from stage_4_templates_gen.summary import stage_summary
 
 if __name__ == "__main__":
 
@@ -30,21 +31,16 @@ if __name__ == "__main__":
         print(f"[Stage 4 | Data Retrieval] {err}")
         exit(1)
 
+    stage_input = StageFourInput(templates)
+
     # Execution
 
     try:
-        result = execute(config, StageFourInput(templates))
+        result = execute(config, stage_input)
     except StageException as err:
         print(f"[Stage 4 | Execution] {err}")
         exit(1)
 
-    # Execution feedback
+    # Stage execution summary
 
-    print("")
-    print("[STAGE 4 SUMMARY | Templates Generation]")
-    print(f"  # Templates to generate: {len(templates)}")
-    print("")
-    print(f"  # Successfully generated templates: "
-          f"{len(result.generated_template_titles) if result.generated_template_titles else 0}")
-    if result.failed_template_ids:
-        print(f"  Failed to generate templates ['{"', '".join(result.failed_template_ids)}']")
+    print(stage_summary(config, stage_input, result))

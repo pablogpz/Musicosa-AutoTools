@@ -14,7 +14,7 @@ from common.time.utils import parse_time, time_to_seconds
 from stage_6_video_gen.constants import VIDEO_FPS, VIDEO_CODEC, VIDEO_BITRATE, NORMALIZATION_TYPE, \
     NORMALIZATION_TARGET_LEVEL, NORMALIZATION_LOUDNESS_RANGE_TARGET, NORMALIZATION_AUDIO_CODEC, \
     NORMALIZATION_AUDIO_SAMPLE_RATE
-from stage_6_video_gen.custom_types import EntryVideoOptions
+from stage_6_video_gen.custom_types import VideoGenerationResult, EntryVideoOptions
 from stage_6_video_gen.logic.helpers import get_video_duration_seconds
 
 
@@ -24,43 +24,57 @@ def generate_video_bit_collection(
         overwrite: bool,
         quiet_ffmpeg: bool,
         entry_video_options: list[EntryVideoOptions]
-) -> tuple[list[str] | None, list[str] | None, list[str] | None]:
+) -> tuple[list[str], list[str], VideoGenerationResult]:
+    missing_templates: list[str] = []
+    missing_videoclips: list[str] = []
     generated_video_bit_files: list[str] = []
-    entries_missing_sources: list[str] = []
-    failed_video_bits: list[str] = []
+    skipped_video_bit_titles: list[str] = []
+    failed_video_bit_titles: list[str] = []
 
-    for vid_opts in entry_video_options:
+    for idx, vid_opts in enumerate(entry_video_options):
 
         video_bit_path = f"{video_bits_folder}/{vid_opts.sequence_number}.{VIDEO_FORMAT}"
         if not overwrite and path.isfile(video_bit_path):
-            print(f"[SKIPPING GENERATION] '{vid_opts.entry_title}'")
+            print(f"[SKIPPING #{idx + 1}] {vid_opts.entry_title}")
+            skipped_video_bit_titles.append(vid_opts.entry_title)
             continue
 
         source_template = f"{artifacts_folder}/{slugify(vid_opts.entry_title)}.{TEMPLATE_IMG_FORMAT}"
-        if not path.isfile(source_template):
-            print(f"[SKIPPING] Missing template source for '{vid_opts.entry_title}'")
-            entries_missing_sources.append(vid_opts.entry_title)
-            continue
+        template_is_missing = not path.isfile(source_template)
+        if template_is_missing:
+            print(f"[SKIPPING #{idx + 1}] Missing ENTRY TEMPLATE source for '{vid_opts.entry_title}'")
+            missing_templates.append(source_template)
 
         source_videoclip = f"{artifacts_folder}/{slugify(vid_opts.entry_title)}.{VIDEO_FORMAT}"
-        if not path.isfile(source_videoclip):
-            print(f"[SKIPPING] Missing videoclip source for '{vid_opts.entry_title}'")
-            entries_missing_sources.append(vid_opts.entry_title)
+        videoclip_is_missing = not path.isfile(source_videoclip)
+        if videoclip_is_missing:
+            print(f"[SKIPPING #{idx + 1}] Missing VIDEOCLIP source for '{vid_opts.entry_title}'")
+            missing_videoclips.append(source_videoclip)
+
+        if template_is_missing or videoclip_is_missing:
             continue
 
-        print(f"[GENERATING #{vid_opts.sequence_number}] '{vid_opts.entry_title}'")
+        print(f"[GENERATING #{idx + 1}] {vid_opts.entry_title}")
 
         try:
-            generated = generate_video_bit(source_videoclip, vid_opts, source_template, video_bit_path, quiet_ffmpeg)
-            generated_video_bit_files.append(generated)
-        except FFMpegError:
-            failed_video_bits.append(vid_opts.entry_title)
+            video_bit = generate_video_bit(source_videoclip, vid_opts, source_template, video_bit_path, quiet_ffmpeg)
+            generated_video_bit_files.append(video_bit)
+        except FFMpegError as err:
+            print(f"[FAILED #{idx + 1}] '{vid_opts.entry_title}'. Cause: {err}")
+            failed_video_bit_titles.append(vid_opts.entry_title)
 
-    return generated_video_bit_files or None, entries_missing_sources or None, failed_video_bits or None
+    return missing_templates, missing_videoclips, VideoGenerationResult(generated_video_bit_files,
+                                                                        skipped_video_bit_titles,
+                                                                        failed_video_bit_titles)
 
 
-def generate_video_bit(videoclip_path: str, vid_opts: EntryVideoOptions, template_path: str, video_bit_path: str,
-                       quiet_ffmpeg: bool = None) -> str:
+def generate_video_bit(
+        videoclip_path: str,
+        vid_opts: EntryVideoOptions,
+        template_path: str,
+        video_bit_path: str,
+        quiet_ffmpeg: bool = None
+) -> str:
     default_duration = get_setting_by_key(SettingKeys.VALIDATION_ENTRY_VIDEO_DURATION_SECONDS).value
     override_top_n = get_setting_by_key(SettingKeys.GENERATION_VIDEOCLIPS_OVERRIDE_TOP_N_DURATION).value
     override_duration_value = get_setting_by_key(
@@ -131,9 +145,8 @@ def generate_video_bit(videoclip_path: str, vid_opts: EntryVideoOptions, templat
         try:
             normalizer.run_normalization()
         except Exception as err:
-            print(tab(1, f"[WARNING] Error normalising audio track of video bit ({video_bit_path}): {err}"))
-    except FFMpegError as err:
-        print(f"[GENERATION FAILED] '{vid_opts.entry_title}'. Cause: {err}")
+            print(tab(1, f"[WARNING] Normalization anomaly for '{video_bit_path}': {err}"))
+    except FFMpegError:
         raise
 
     return video_bit_path

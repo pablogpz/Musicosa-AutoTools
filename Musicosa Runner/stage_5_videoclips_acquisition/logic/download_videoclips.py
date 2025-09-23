@@ -6,13 +6,17 @@ import yt_dlp
 from ffmpeg.exceptions import FFMpegError
 
 from common.constants import VIDEO_FORMAT
+from common.formatting.tabulate import tab
 from common.model.models import Entry
 from common.naming.slugify import slugify
+from stage_5_videoclips_acquisition.custom_types import VideoclipsDownloadResult
 
 
-def download_all_videoclips(entries: list[Entry], artifacts_folder: str, quiet_ffmpeg: bool) \
-        -> tuple[list[str] | None, list[str] | None]:
-    acquired_videoclip_titles: list[str] = []
+def download_all_videoclips(entries: list[Entry],
+                            artifacts_folder: str,
+                            quiet_ffmpeg: bool) -> VideoclipsDownloadResult:
+    downloaded_videoclip_titles: list[str] = []
+    skipped_videoclip_titles: list[str] = []
     failed_videoclip_titles: list[str] = []
 
     patched_ffmpeg_path = getenv("PATCHED_FFMPEG_PATH", "")
@@ -28,42 +32,41 @@ def download_all_videoclips(entries: list[Entry], artifacts_folder: str, quiet_f
     ytdl_options = {
         **ytdl_base_options,
         "format_sort": ["res:1080", "audio_channels:2"],  # Prefer sources up to 1080p resolution and stereo audio
-        "outtmpl": "",  # IMPORTANT: Leave here for the workaround to work
+        "outtmpl": "",  # IMPORTANT: Do not remove. It enables modifying the output template at runtime
     }
 
     with yt_dlp.YoutubeDL(ytdl_options) as ytdl:
         ytdl.add_post_processor(MP4RemuxPostProcessor(quiet_ffmpeg))
 
-        for entry in entries:
+        for idx, entry in enumerate(entries):
 
             if path.isfile(f"{artifacts_folder}/{slugify(entry.title)}.{VIDEO_FORMAT}"):
-                print(f"[SKIPPING DOWNLOAD] {entry.title}")
+                print(f"[SKIPPING #{idx + 1}] {entry.title}")
+                skipped_videoclip_titles.append(entry.title)
                 continue
 
             # WARNING: This is a workaround to allow changing the output template after YoutubeDL initialization
             ytdl.params["outtmpl"]["default"] = f"{artifacts_folder}/{slugify(entry.title)}.%(ext)s"
 
-            print(f"[DOWNLOAD START] {entry.title}")
+            print(f"[DOWNLOADING #{idx + 1}] {entry.title}")
 
             try:
                 error_code = ytdl.download([entry.video_url])
-                if error_code:
-                    print(f"[DOWNLOAD FAILED] {entry.title} (Error code: {error_code})")
-                    failed_videoclip_titles.append(entry.title)
             except yt_dlp.DownloadError as err:
-                print(f"[DOWNLOAD FAILED] {entry.title}. Cause: {err}")
+                print(f"[FAILED #{idx + 1}] {entry.title}. Cause: {err}")
                 failed_videoclip_titles.append(entry.title)
                 continue
-            except FFMpegError as err:
-                print(f"[POST-PROCESS][REMUX FAILED] {entry.title}. Cause: {err}")
+            except FFMpegError:
                 failed_videoclip_titles.append(entry.title)
                 continue
 
-            if not error_code:
-                print(f"[DOWNLOAD END] {entry.title}")
-                acquired_videoclip_titles.append(entry.title)
+            if error_code:
+                print(f"[FAILED #{idx + 1}] {entry.title} (Error code: {error_code})")
+                failed_videoclip_titles.append(entry.title)
+            else:
+                downloaded_videoclip_titles.append(entry.title)
 
-    return acquired_videoclip_titles or None, failed_videoclip_titles or None
+    return VideoclipsDownloadResult(downloaded_videoclip_titles, skipped_videoclip_titles, failed_videoclip_titles)
 
 
 class MP4RemuxPostProcessor(yt_dlp.postprocessor.PostProcessor):
@@ -77,12 +80,12 @@ class MP4RemuxPostProcessor(yt_dlp.postprocessor.PostProcessor):
         downloaded_videoclip_path = info["filepath"]
 
         if downloaded_videoclip_path.endswith(".mp4"):
-            print(f"[POST-PROCESS][SKIP REMUXING] Skipping '{basename(downloaded_videoclip_path)}'")
+            print(tab(1, f"[SKIPPING REMUX] Skipping '{basename(downloaded_videoclip_path)}'"))
             return [], info
 
         remuxed_videoclip_path = f"{downloaded_videoclip_path.rsplit(".", 1)[0]}.mp4"
 
-        print(f"[POST-PROCESS][REMUX START] Remuxing videoclip '{basename(downloaded_videoclip_path)}' to MP4")
+        print(tab(1, f"[REMUXING] Remuxing videoclip '{basename(downloaded_videoclip_path)}' to MP4"))
 
         try:
             (ffmpeg
@@ -90,10 +93,10 @@ class MP4RemuxPostProcessor(yt_dlp.postprocessor.PostProcessor):
              .output(filename=remuxed_videoclip_path, vcodec="copy")
              .run(quiet=self.quiet_ffmpeg, overwrite_output=True))
         except FFMpegError as err:
-            raise FFMpegError(
-                f"Failed to remux videoclip '{basename(downloaded_videoclip_path)}'. Cause: {err}") from err
-
-        print(f"[POST-PROCESS][REMUX END] Remuxed videoclip '{basename(remuxed_videoclip_path)}'")
+            print(tab(1,
+                      f"[REMUX FAILED] "
+                      f"Failed to remux videoclip '{basename(downloaded_videoclip_path)}'. Cause: {err}"))
+            raise
 
         safe_to_delete_files = [downloaded_videoclip_path]
         new_info = {**info, "filepath": remuxed_videoclip_path}

@@ -7,6 +7,7 @@ from common.custom_types import StageException
 from stage_6_video_gen.custom_types import StageSixInput
 from stage_6_video_gen.execute import execute
 from stage_6_video_gen.stage_input import load_entries_video_options_from_db
+from stage_6_video_gen.summary import stage_summary
 
 if __name__ == "__main__":
 
@@ -32,25 +33,16 @@ if __name__ == "__main__":
         print(f"[Stage 6 | Data retrieval] {err}")
         exit(1)
 
+    stage_input = StageSixInput(entries_video_options)
+
     # Execution
 
     try:
-        result = execute(config, StageSixInput(entries_video_options))
+        result = execute(config, stage_input)
     except StageException as err:
         print(f"[Stage 6 | Execution] {err}")
         exit(1)
 
-    # Execution feedback
+    # Stage execution summary
 
-    print("")
-    print("[STAGE 6 SUMMARY | Video Generation]")
-    print(f"  # Loaded entries: {len(entries_video_options)}")
-    print("")
-    if result.entries_missing_sources:
-        print(f"  Entries missing source files: ['{"', '".join(result.entries_missing_sources)}']")
-    print(f"  # Generated video bits: "
-          f"{len(result.generated_video_bit_files) if result.generated_video_bit_files else 0}")
-    if result.failed_video_bits:
-        print(f"  Failed video bits: ['{"', '".join(result.failed_video_bits)}']")
-    if stitch_final_video:
-        print(f"  Final video file: '{result.final_video_file}'")
+    print(stage_summary(config, stage_input, result))

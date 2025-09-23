@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import NamedTuple
 
 from common.model.models import Entry
 
@@ -8,7 +9,12 @@ class StageFiveInput:
     entries: list[Entry]
 
 
+class VideoclipsDownloadResult(NamedTuple):
+    downloaded_videoclip_titles: list[str]
+    skipped_videoclip_titles: list[str]
+    failed_videoclip_titles: list[str]
+
+
 @dataclass
 class StageFiveOutput:
-    acquired_videoclip_titles: list[str] | None
-    failed_videoclip_titles: list[str] | None
+    download_result: VideoclipsDownloadResult
