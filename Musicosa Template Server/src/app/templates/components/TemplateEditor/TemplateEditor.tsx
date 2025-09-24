@@ -107,7 +107,7 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
             scoring: resolvedScoreForContestant(authorName),
         },
         sequenceNumberInAuthorEntries: [SNAEntries, SNAEntriesOutOf],
-        sequenceNumberInSpecialTopic: [SNSTEntries, SNSTEntriesOutOf],
+        sequenceNumberInSpecialTopic: SNSTEntries && SNSTEntriesOutOf ? [SNSTEntries, SNSTEntriesOutOf] : undefined,
         contestants: Array.from({ length: contestantCount - 1 }, () => ({
             ...defaultResolvedContestant,
             scoring: resolvedScoreForContestant(defaultResolvedContestant.name),

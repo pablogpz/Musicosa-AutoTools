@@ -2,10 +2,12 @@ import { eq } from 'drizzle-orm'
 
 import db from '@/db/database'
 import { defaultEntryStats } from '@/db/defaults'
+import entriesRepository from '@/db/repositories/entries'
 import { entriesStats } from '@/db/schema'
 
 export type ResolvedPresentationProps = {
     rankingPlace: number
+    sequenceNumberInTie: [number, number] | undefined
 }
 
 export async function resolvePresentationProps(entryId: string): Promise<ResolvedPresentationProps | undefined> {
@@ -18,7 +20,10 @@ export async function resolvePresentationProps(entryId: string): Promise<Resolve
 
     if (entryStatsResult.length === 0) return undefined
 
+    const sequenceNumberInTie = await entriesRepository.getSequenceNumberInTie(entryId)
+
     return {
         rankingPlace: entryStatsResult[0].rankingPlace ?? defaultEntryStats.rankingPlace!,
+        sequenceNumberInTie,
     }
 }

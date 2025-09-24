@@ -41,9 +41,7 @@ export default function Template({
         </p>
     )
 
-    let specialTopicSequence, specialTopicSequenceOutOf
-    if (specialTopic && sequenceNumberInSpecialTopic)
-        [specialTopicSequence, specialTopicSequenceOutOf] = sequenceNumberInSpecialTopic
+    const [specialTopicSequence, specialTopicSequenceOutOf] = sequenceNumberInSpecialTopic || [undefined, undefined]
 
     const specialTopicPillComponent = specialTopic && (
         <p className={`text-2xl ${open_sans.className} font-thin p-2 mt-4 mr-7 bg-white rounded`}>
