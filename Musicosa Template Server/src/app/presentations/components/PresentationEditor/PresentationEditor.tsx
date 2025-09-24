@@ -3,6 +3,7 @@
 import React, { ChangeEvent, ChangeEventHandler, HTMLInputTypeAttribute, useState } from 'react'
 
 import { BaseFrameContainer } from '@/app/components/FrameContainer/BaseFrameContainer'
+import { defaultSequenceNumberInTie } from '@/app/presentations/common/withPresentationProps/defaults'
 import Presentation, { PresentationProps } from '@/app/presentations/components/Presentation/Presentation'
 import { defaultNominationStats } from '@/db/defaults'
 
@@ -53,8 +54,13 @@ export interface PresentationEditorProps {
 
 export default function PresentationEditor({ width, height }: PresentationEditorProps) {
     const [rankingPlace, setRankingPlace] = useState<number>(defaultNominationStats.rankingPlace!)
+    const [SNTie, setSNTie] = useState<number>(defaultSequenceNumberInTie![0])
+    const [SNTieOutOf, setSNTieOutOf] = useState<number>(defaultSequenceNumberInTie![1])
 
-    const presentationProps: PresentationProps = { rankingPlace }
+    const presentationProps: PresentationProps = {
+        rankingPlace,
+        sequenceNumberInTie: SNTie && SNTieOutOf ? [SNTie, SNTieOutOf] : undefined,
+    }
 
     const presentationParamInputs = [
         inputFactory(
@@ -64,6 +70,22 @@ export default function PresentationEditor({ width, height }: PresentationEditor
             'number',
             'Numeric ranking place ...',
             onChangeFactory((v) => setRankingPlace(v ? parseInt(v) : 0))
+        ),
+        inputFactory(
+            'sn-tie',
+            'Tie position',
+            SNTie,
+            'number',
+            'Current tie position ...',
+            onChangeFactory((v) => setSNTie(v ? parseInt(v) : 0))
+        ),
+        inputFactory(
+            'sn-tie-out-of',
+            'Tie group size',
+            SNTieOutOf,
+            'number',
+            'Tie group size ...',
+            onChangeFactory((v) => setSNTieOutOf(v ? parseInt(v) : 0))
         ),
     ]
 

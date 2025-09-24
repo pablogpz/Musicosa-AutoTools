@@ -42,7 +42,7 @@ const parseSettingResult = (setting: RawSetting): Setting =>
 const getSettingByKey = async <V extends SettingValueType>(
     settingKey: SettingKeys
 ): Promise<TypedSetting<V> | undefined> => {
-    if (!settingsCache.has(settingKey) || process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === 'development' || !settingsCache.has(settingKey)) {
         const [settingGroupKey, settingName] = settingKey.split(SETTING_KEY_SEPARATOR) as [
             SettingGroupKeys,
             SettingNames,

@@ -11,7 +11,7 @@ export interface MetadataRepository {
 const metadataCache: Map<MetadataFields, Metadata> = new Map()
 
 const getMetadataByField = async (field: MetadataFields): Promise<Metadata | undefined> => {
-    if (!metadataCache.has(field) || process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === 'development' || !metadataCache.has(field)) {
         const result = await db.select().from(metadata).where(eq(metadata.field, field))
 
         if (result.length == 0) return undefined
