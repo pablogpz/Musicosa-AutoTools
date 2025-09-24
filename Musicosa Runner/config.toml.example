@@ -13,6 +13,7 @@ overwrite_templates = true
 overwrite_presentations = true
 
 [stage_5]
+use_cookies = false
 quiet_ffmpeg = true
 
 [stage_6]
