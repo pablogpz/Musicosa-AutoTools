@@ -14,6 +14,7 @@ from stage_5_videoclips_acquisition.custom_types import VideoclipsDownloadResult
 
 def download_videoclip_collection(entries: list[Entry],
                                   artifacts_folder: str,
+                                  use_cookies: bool,
                                   quiet_ffmpeg: bool) -> VideoclipsDownloadResult:
     downloaded_videoclip_titles: list[str] = []
     skipped_videoclip_titles: list[str] = []
@@ -32,8 +33,12 @@ def download_videoclip_collection(entries: list[Entry],
     ytdl_options = {
         **ytdl_base_options,
         "format_sort": ["res:1080", "audio_channels:2"],  # Prefer sources up to 1080p resolution and stereo audio
-        "outtmpl": "",  # IMPORTANT: Do not remove. It enables modifying the output template at runtime
+        "outtmpl": "",  # (!) DO NOT REMOVE. It enables modifying the output template at runtime
     }
+
+    if use_cookies:
+        # noinspection PyTypeChecker
+        ytdl_options["cookiesfrombrowser"] = ("firefox",)  # For local use only
 
     with yt_dlp.YoutubeDL(ytdl_options) as ytdl:
         ytdl.add_post_processor(MP4RemuxPostProcessor(quiet_ffmpeg))

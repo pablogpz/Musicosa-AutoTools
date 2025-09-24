@@ -8,7 +8,8 @@ from stage_5_videoclips_acquisition.logic.download_videoclips import download_vi
 
 
 def execute(config: Config, stage_input: StageFiveInput) -> StageFiveOutput:
-    artifacts_folder, quiet_ffmpeg = (config.artifacts_folder, config.stage_5.quiet_ffmpeg)
+    artifacts_folder, use_cookies, quiet_ffmpeg = (
+        config.artifacts_folder, config.stage_5.use_cookies, config.stage_5.quiet_ffmpeg)
     entries = stage_input.entries
 
     if not getenv("PATCHED_FFMPEG_PATH", ""):
@@ -23,6 +24,6 @@ def execute(config: Config, stage_input: StageFiveInput) -> StageFiveOutput:
     if entries is None:
         raise StageException("No entries provided")
 
-    download_result = download_videoclip_collection(entries, artifacts_folder, quiet_ffmpeg)
+    download_result = download_videoclip_collection(entries, artifacts_folder, use_cookies, quiet_ffmpeg)
 
     return StageFiveOutput(download_result)
