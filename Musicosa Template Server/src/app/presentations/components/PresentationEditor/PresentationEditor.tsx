@@ -63,7 +63,7 @@ export default function PresentationEditor({ width, height }: PresentationEditor
             rankingPlace,
             'number',
             'Numeric ranking place ...',
-            onChangeFactory((v) => setRankingPlace(parseInt(v)))
+            onChangeFactory((v) => setRankingPlace(v ? parseInt(v) : 0))
         ),
     ]
 

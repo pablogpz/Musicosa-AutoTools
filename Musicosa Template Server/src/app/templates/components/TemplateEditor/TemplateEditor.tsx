@@ -3,11 +3,8 @@
 import React, { ChangeEvent, ChangeEventHandler, HTMLInputTypeAttribute, useState } from 'react'
 
 import { BaseFrameContainer } from '@/app/components/FrameContainer/BaseFrameContainer'
-import {
-    defaultResolvedCastVote,
-    defaultResolvedMember,
-    defaultTemplateSettingsProps,
-} from '@/app/templates/common/withTemplateProps/defaults'
+import { ResolvedCastVote } from '@/app/templates/common/withTemplateProps'
+import { defaultResolvedMember, defaultTemplateSettingsProps } from '@/app/templates/common/withTemplateProps/defaults'
 import Template, { TemplateProps } from '@/app/templates/components/Template/Template'
 import {
     defaultAward,
@@ -68,7 +65,9 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
     const INITIAL_MEMBERS_COUNT = 3
 
     const [membersCount, setMembersCount] = useState<number>(INITIAL_MEMBERS_COUNT)
-    const [score, setScore] = useState<number>(defaultCastVote.score)
+    const [defaultScore, setDefaultScore] = useState<number>(defaultCastVote.score)
+    const [scoresString, setScoresString] = useState<string>(defaultCastVote.score.toString())
+    const [scores, setScores] = useState<{ [key: string]: number }>({})
     const [gameTitle, setGameTitle] = useState<string>(defaultNomination.gameTitle)
     const [nominee, setNominee] = useState<string>(defaultNomination.nominee!)
     const [rankingPlace, setRankingPlace] = useState<number>(defaultNominationStats.rankingPlace!)
@@ -78,6 +77,14 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
     const [videoBoxHeightPx, setVideoBoxHeightPx] = useState<number>(defaultTemplate.videoBoxHeightPx)
     const [awardSlug, setAwardSlug] = useState<string>(defaultAward.slug)
     const [awardDesignation, setAwardDesignation] = useState<string>(defaultAward.designation)
+
+    const resolvedScoreForMember = (member: string): ResolvedCastVote => {
+        const score = scores[member] ?? defaultScore
+        return {
+            score: score,
+            formattedScore: formatNumberToDecimalPrecision(score, displayDecimalDigits),
+        }
+    }
 
     const templateProps: TemplateProps = {
         gameTitle: gameTitle,
@@ -90,11 +97,7 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
         award: { slug: awardSlug, designation: awardDesignation },
         members: Array.from({ length: membersCount }, () => ({
             ...defaultResolvedMember,
-            vote: {
-                ...defaultResolvedCastVote,
-                score,
-                formattedScore: formatNumberToDecimalPrecision(score, displayDecimalDigits),
-            },
+            vote: resolvedScoreForMember(defaultResolvedMember.name),
         })),
         scoreMinValue: defaultTemplateSettingsProps.scoreMinValue,
         scoreMaxValue: defaultTemplateSettingsProps.scoreMaxValue,
@@ -107,7 +110,7 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
             membersCount,
             'number',
             'Members count ...',
-            onChangeFactory((v) => setMembersCount(parseInt(v)))
+            onChangeFactory((v) => setMembersCount(v ? parseInt(v) : 0))
         ),
         inputFactory(
             'game-title',
@@ -131,7 +134,7 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
             rankingPlace,
             'number',
             'Numeric ranking place ...',
-            onChangeFactory((v) => setRankingPlace(parseInt(v)))
+            onChangeFactory((v) => setRankingPlace(v ? parseInt(v) : 0))
         ),
         inputFactory(
             'avg-score',
@@ -139,15 +142,46 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
             avgScore,
             'number',
             'Average score ...',
-            onChangeFactory((v) => setAvgScore(parseFloat(v)))
+            onChangeFactory((v) => setAvgScore(v ? parseFloat(v) : 0))
         ),
         inputFactory(
             'scores',
             'Scores',
-            score,
-            'number',
-            'Score of all contestants ...',
-            onChangeFactory((v) => setScore(parseFloat(v)))
+            scoresString,
+            'text',
+            '[Alice: 9.5, Bob: 8.0, 7.0] or 8.5 ...',
+            onChangeFactory((v: string): void => {
+                v = v ? v.trim() : ''
+
+                const scorePairs: { [key: string]: number } = {}
+                let rawDefaultScore: string | undefined = ''
+
+                const numberRegex = '\\d+[.,]?\\d*?'
+                const scorePairRegex = `^.+\\s*:\\s*${numberRegex}$`
+
+                if (v.startsWith('[') && v.endsWith(']')) {
+                    const rawScorePairs = v
+                        .slice(1, -1)
+                        .split(',')
+                        .map((x) => x.trim())
+                        .filter((x) => !!x)
+
+                    rawScorePairs
+                        .filter((x) => !!x.match(scorePairRegex))
+                        .forEach((pair) => {
+                            const [name, scoreString] = pair.split(':').map((x) => x.trim())
+                            scorePairs[name] = parseFloat(scoreString.replace(',', '.'))
+                        })
+
+                    rawDefaultScore = !rawScorePairs.at(-1)?.includes(':') ? rawScorePairs.at(-1) : ''
+                } else if (!v.startsWith('[') && !v.endsWith(']')) {
+                    rawDefaultScore = !!v.match(`^${numberRegex}$`) ? v : ''
+                }
+
+                setScoresString(v)
+                setScores(scorePairs)
+                setDefaultScore(rawDefaultScore ? parseFloat(rawDefaultScore.replace(',', '.')) : 0)
+            })
         ),
         inputFactory(
             'avatar-scale',
@@ -155,7 +189,7 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
             avatarScale,
             'number',
             'Avatar scale factor ...',
-            onChangeFactory((v) => setAvatarScale(parseFloat(v)))
+            onChangeFactory((v) => setAvatarScale(v ? parseFloat(v) : 0))
         ),
         inputFactory(
             'video-box-width',
@@ -163,7 +197,7 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
             videoBoxWidthPx,
             'number',
             'Video box width (px) ...',
-            onChangeFactory((v) => setVideoBoxWidthPx(parseInt(v)))
+            onChangeFactory((v) => setVideoBoxWidthPx(v ? parseInt(v) : 0))
         ),
         inputFactory(
             'video-box-height',
@@ -171,7 +205,7 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
             videoBoxHeightPx,
             'number',
             'Video box height (px) ...',
-            onChangeFactory((v) => setVideoBoxHeightPx(parseInt(v)))
+            onChangeFactory((v) => setVideoBoxHeightPx(v ? parseInt(v) : 0))
         ),
         inputFactory(
             'award-slug',
