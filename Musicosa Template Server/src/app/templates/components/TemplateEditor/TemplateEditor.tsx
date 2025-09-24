@@ -3,6 +3,7 @@
 import React, { ChangeEvent, ChangeEventHandler, HTMLInputTypeAttribute, useState } from 'react'
 
 import { BaseFrameContainer } from '@/app/components/FrameContainer/BaseFrameContainer'
+import { ResolvedScoring } from '@/app/templates/common/withTemplateProps'
 import {
     defaultAvgScoreDelta,
     defaultResolvedAuthor,
@@ -70,7 +71,9 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
     const [rankingPlace, setRankingPlace] = useState<number>(defaultEntryStats.rankingPlace!)
     const [authorName, setAuthorName] = useState<string>(defaultAuthor.name)
     const [avgScore, setAvgScore] = useState<number>(defaultEntryStats.avgScore!)
-    const [score, setScore] = useState<number>(defaultScoring.score)
+    const [defaultScore, setDefaultScore] = useState<number>(defaultScoring.score)
+    const [scoresString, setScoresString] = useState<string>(defaultScoring.score.toString())
+    const [scores, setScores] = useState<{ [key: string]: number }>({})
     const [avatarScale, setAvatarScale] = useState<number>(defaultTemplate.avatarScale)
     const [authorAvatarScale, setAuthorAvatarScale] = useState<number>(defaultTemplate.authorAvatarScale)
     const [videoBoxWidthPx, setVideoBoxWidthPx] = useState<number>(defaultTemplate.videoBoxWidthPx)
@@ -81,9 +84,12 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
     const [SNSTEntriesOutOf, setSNSTEntriesOutOf] = useState<number>(defaultSequenceNumberInSpecialTopic![1])
     const [avgScoreDelta, setAvgScoreDelta] = useState<number>(defaultAvgScoreDelta)
 
-    const scoringDefaults = {
-        score,
-        formattedScore: formatNumberToDecimalPrecision(score, displayDecimalDigits),
+    const resolvedScoreForContestant = (contestant: string): ResolvedScoring => {
+        const score = scores[contestant] ?? defaultScore
+        return {
+            score: score,
+            formattedScore: formatNumberToDecimalPrecision(score, displayDecimalDigits),
+        }
     }
 
     const templateProps: TemplateProps = {
@@ -98,13 +104,13 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
         videoBoxHeightPx,
         author: {
             ...defaultResolvedAuthor,
-            scoring: { ...scoringDefaults },
+            scoring: resolvedScoreForContestant(authorName),
         },
         sequenceNumberInAuthorEntries: [SNAEntries, SNAEntriesOutOf],
         sequenceNumberInSpecialTopic: [SNSTEntries, SNSTEntriesOutOf],
         contestants: Array.from({ length: contestantCount - 1 }, () => ({
             ...defaultResolvedContestant,
-            scoring: { ...scoringDefaults },
+            scoring: resolvedScoreForContestant(defaultResolvedContestant.name),
         })),
         scoreMinValue: defaultTemplateSettingsProps.scoreMinValue,
         scoreMaxValue: defaultTemplateSettingsProps.scoreMaxValue,
@@ -117,7 +123,7 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
             contestantCount,
             'number',
             'Including the author ...',
-            onChangeFactory((v) => setContestantCount(parseInt(v)))
+            onChangeFactory((v) => setContestantCount(v ? parseInt(v) : 0))
         ),
         inputFactory(
             'title',
@@ -141,7 +147,7 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
             rankingPlace,
             'number',
             'Numeric ranking place ...',
-            onChangeFactory((v) => setRankingPlace(parseInt(v)))
+            onChangeFactory((v) => setRankingPlace(v ? parseInt(v) : 0))
         ),
         inputFactory(
             'author-name',
@@ -157,7 +163,7 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
             SNAEntries,
             'number',
             'Lower bound ...',
-            onChangeFactory((v) => setSNAEntries(parseInt(v)))
+            onChangeFactory((v) => setSNAEntries(v ? parseInt(v) : 0))
         ),
         inputFactory(
             'sna-entries-out-of',
@@ -165,7 +171,7 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
             SNAEntriesOutOf,
             'number',
             'Upper bound ...',
-            onChangeFactory((v) => setSNAEntriesOutOf(parseInt(v)))
+            onChangeFactory((v) => setSNAEntriesOutOf(v ? parseInt(v) : 0))
         ),
         inputFactory(
             'snst-entries',
@@ -173,7 +179,7 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
             SNSTEntries,
             'number',
             'Lower bound ...',
-            onChangeFactory((v) => setSNSTEntries(parseInt(v)))
+            onChangeFactory((v) => setSNSTEntries(v ? parseInt(v) : 0))
         ),
         inputFactory(
             'snst-entries-out-of',
@@ -181,7 +187,7 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
             SNSTEntriesOutOf,
             'number',
             'Upper bound ...',
-            onChangeFactory((v) => setSNSTEntriesOutOf(parseInt(v)))
+            onChangeFactory((v) => setSNSTEntriesOutOf(v ? parseInt(v) : 0))
         ),
         inputFactory(
             'avg-score',
@@ -202,10 +208,41 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
         inputFactory(
             'scores',
             'Scores',
-            score,
-            'number',
-            'Score of all contestants ...',
-            onChangeFactory((v) => setScore(v ? parseFloat(v) : 0))
+            scoresString,
+            'text',
+            '[Alice: 9.5, Bob: 8.0, 7.0] or 8.5 ...',
+            onChangeFactory((v: string): void => {
+                v = v ? v.trim() : ''
+
+                const scorePairs: { [key: string]: number } = {}
+                let rawDefaultScore: string | undefined = ''
+
+                const numberRegex = '\\d+[.,]?\\d*?'
+                const scorePairRegex = `^.+\\s*:\\s*${numberRegex}$`
+
+                if (v.startsWith('[') && v.endsWith(']')) {
+                    const rawScorePairs = v
+                        .slice(1, -1)
+                        .split(',')
+                        .map((x) => x.trim())
+                        .filter((x) => !!x)
+
+                    rawScorePairs
+                        .filter((x) => !!x.match(scorePairRegex))
+                        .forEach((pair) => {
+                            const [name, scoreString] = pair.split(':').map((x) => x.trim())
+                            scorePairs[name] = parseFloat(scoreString.replace(',', '.'))
+                        })
+
+                    rawDefaultScore = !rawScorePairs.at(-1)?.includes(':') ? rawScorePairs.at(-1) : ''
+                } else if (!v.startsWith('[') && !v.endsWith(']')) {
+                    rawDefaultScore = !!v.match(`^${numberRegex}$`) ? v : ''
+                }
+
+                setScoresString(v)
+                setScores(scorePairs)
+                setDefaultScore(rawDefaultScore ? parseFloat(rawDefaultScore.replace(',', '.')) : 0)
+            })
         ),
         inputFactory(
             'avatar-scale',
@@ -213,7 +250,7 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
             avatarScale,
             'number',
             'Avatar scale factor ...',
-            onChangeFactory((v) => setAvatarScale(parseFloat(v)))
+            onChangeFactory((v) => setAvatarScale(v ? parseFloat(v) : 0))
         ),
         inputFactory(
             'author-avatar-scale',
@@ -221,7 +258,7 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
             authorAvatarScale,
             'number',
             'Author avatar scale factor ...',
-            onChangeFactory((v) => setAuthorAvatarScale(parseFloat(v)))
+            onChangeFactory((v) => setAuthorAvatarScale(v ? parseFloat(v) : 0))
         ),
         inputFactory(
             'video-box-width',
@@ -229,7 +266,7 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
             videoBoxWidthPx,
             'number',
             'Video box width (px) ...',
-            onChangeFactory((v) => setVideoBoxWidthPx(parseInt(v)))
+            onChangeFactory((v) => setVideoBoxWidthPx(v ? parseInt(v) : 0))
         ),
         inputFactory(
             'video-box-height',
@@ -237,7 +274,7 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
             videoBoxHeightPx,
             'number',
             'Video box height (px) ...',
-            onChangeFactory((v) => setVideoBoxHeightPx(parseInt(v)))
+            onChangeFactory((v) => setVideoBoxHeightPx(v ? parseInt(v) : 0))
         ),
     ]
 
