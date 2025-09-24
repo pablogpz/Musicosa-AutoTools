@@ -12,6 +12,7 @@ class Timestamp:
 class EntryVideoOptions:
     entry_id: str
     entry_title: str
+    ranking_place: int
     sequence_number: int
     timestamp: Timestamp
     width: int

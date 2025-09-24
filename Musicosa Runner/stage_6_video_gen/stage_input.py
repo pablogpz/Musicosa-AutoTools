@@ -7,6 +7,7 @@ from stage_6_video_gen.custom_types import EntryVideoOptions, Timestamp
 def load_entries_video_options_from_db() -> list[EntryVideoOptions]:
     return ([EntryVideoOptions(entry_id=row.id,
                                entry_title=row.title,
+                               ranking_place=row.ranking_place,
                                sequence_number=row.ranking_sequence,
                                timestamp=Timestamp(start=row.timestamp_start, end=row.timestamp_end),
                                width=row.video_box_width_px,
@@ -17,6 +18,7 @@ def load_entries_video_options_from_db() -> list[EntryVideoOptions]:
              Entry.ORM
              .select(Entry.ORM.id,
                      Entry.ORM.title,
+                     EntryStats.ORM.ranking_place,
                      EntryStats.ORM.ranking_sequence,
                      VideoOptions.ORM.timestamp_start,
                      VideoOptions.ORM.timestamp_end,

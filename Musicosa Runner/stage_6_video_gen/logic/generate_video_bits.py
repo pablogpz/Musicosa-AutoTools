@@ -84,7 +84,7 @@ def generate_video_bit(
 
     # Top video bits duration override and check if the timestamps are within the videoclip duration
 
-    if vid_opts.sequence_number <= override_top_n:
+    if vid_opts.ranking_place <= override_top_n:
         if override_duration_value == VIDEOCLIPS_OVERRIDE_DURATION_LIMIT:
             ffmpeg_time_code_args = {}
         elif videoclip_duration_seconds < override_duration_value:

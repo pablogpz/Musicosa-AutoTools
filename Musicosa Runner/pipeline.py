@@ -469,6 +469,7 @@ class PipelineStateManager:
         for entry in self.entries:
             entry_id = entry.id
             entry_title = entry.title
+            ranking_place = next(s.ranking_place for s in self.entry_stats_collection if s.entry.id == entry_id)
             sequence_number = next(s.ranking_sequence for s in self.entry_stats_collection if s.entry.id == entry_id)
             video_options = next(opt for opt in self.video_options if opt.entry.id == entry_id)
             template = next(t for t in self.templates if t.entry.id == entry_id)
@@ -476,6 +477,7 @@ class PipelineStateManager:
             entries_video_options.append(
                 EntryVideoOptions(entry_id=entry_id,
                                   entry_title=entry_title,
+                                  ranking_place=ranking_place,
                                   sequence_number=sequence_number,
                                   timestamp=Timestamp(start=str(video_options.timestamp_start),
                                                       end=str(video_options.timestamp_end)),
