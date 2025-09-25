@@ -10,8 +10,8 @@ def better_input(user_message: str,
                  error_message: str | Callable[[str], str] | None = None,
                  indent_level: int = 0) -> str:
     def prompt() -> str:
-        user_input = input(tab(indent_level, f"-> {user_message}{f" [{default}]" if default else ""}> "))
-        return user_input.strip() if user_input else default
+        inner_user_input = input(tab(indent_level, f"-> {user_message}{f" [{default}]" if default else ""}> "))
+        return inner_user_input.strip() if inner_user_input else default
 
     def format_error(error_value: str) -> str:
         if callable(error_message):

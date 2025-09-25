@@ -158,8 +158,8 @@ class FlowGate:
                     choice = better_input(on_success_msg,
                                           lambda x: x in controls,
                                           error_message=lambda x: f"Invalid choice '{x}'")
-            except Exception as err:
-                print(f"{err_header} {err}" if err_header else err)
+            except Exception as error:
+                print(f"{err_header} {err}" if err_header else error)
                 choice = better_input(on_error_msg,
                                       lambda x: x in error_controls,
                                       error_message=lambda x: f"Invalid choice '{x}'")
@@ -361,9 +361,9 @@ class PipelineStateManager:
 
                 if len(self.video_options) > 0:
                     VideoOptions.ORM.replace_many(bulk_pack(self.video_options)).execute()
-        except PeeweeException as err:
+        except PeeweeException as error:
             tx.rollback()
-            raise RuntimeError(f"DB transaction was rolled back due to an error: {err}") from err
+            raise RuntimeError(f"DB transaction was rolled back due to an error: {error}") from error
 
     def register_submissions(self, submissions: list[ContestantSubmission]) -> None:
         # First iteration. Register new contestants and entries
@@ -510,20 +510,20 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--config_file")
-    args = parser.parse_args()
+    arguments = parser.parse_args()
 
-    config_file = args.config_file.strip() if args.config_file else None
-    config_loader: ConfigLoader = lambda: load_config(config_file)
+    configuration_file = arguments.config_file.strip() if arguments.config_file else None
+    configuration_loader: ConfigLoader = lambda: load_config(configuration_file)
 
     try:
-        config = config_loader()
+        configuration = configuration_loader()
     except FileNotFoundError | IOError | TypeError as err:
         print(err)
         exit(1)
 
     # STATE MANAGEMENT
 
-    state_manager = PipelineStateManager(populate_helper_indices=config.start_from > STAGE_ONE)
+    state_manager = PipelineStateManager(populate_helper_indices=configuration.start_from > STAGE_ONE)
 
     # PIPELINE EXECUTION
 
@@ -538,7 +538,7 @@ if __name__ == '__main__':
 
     # STAGE 1
 
-    @retry_or_reconfig(err_header="[Stage 1 | Input collection ERROR]", config_loader=config_loader)
+    @retry_or_reconfig(err_header="[Stage 1 | Input collection ERROR]", config_loader=configuration_loader)
     def stage_1_collect_input(config: Config) -> StageOneInput:
         submissions = get_submissions_from_forms_folder(config.stage_1.forms_folder,
                                                         config.stage_1.contestant_name_coords,
@@ -550,7 +550,7 @@ if __name__ == '__main__':
 
 
     @stage(err_header="[Stage 1 | Execution ERROR]",
-           config_loader=config_loader,
+           config_loader=configuration_loader,
            data_collector=stage_1_collect_input)
     def stage_1_do_execute(config: Config, stage_input: StageOneInput) -> StageOneOutput:
         result = execute_stage_1(stage_input)
@@ -560,13 +560,13 @@ if __name__ == '__main__':
         return result
 
 
-    if config.start_from <= STAGE_ONE:
+    if configuration.start_from <= STAGE_ONE:
         print("")
         print("[STAGE 1 | Submission Validation]")
         print("")
 
-        stage_1_input = stage_1_collect_input(config)
-        stage_1_do_execute(config, stage_1_input)
+        stage_1_input = stage_1_collect_input(configuration)
+        stage_1_do_execute(configuration, stage_1_input)
 
         state_manager.register_submissions(stage_1_input.submissions)
 
@@ -575,7 +575,7 @@ if __name__ == '__main__':
 
     @retry(err_header="[Stage 2 | Input collection ERROR]")
     def stage_2_collect_input() -> StageTwoInput:
-        if config.start_from == STAGE_TWO:
+        if configuration.start_from == STAGE_TWO:
             return StageTwoInput(load_s2_musicosa_from_db())
         else:
             return state_manager.produce_stage_2_input()
@@ -590,7 +590,7 @@ if __name__ == '__main__':
         return result
 
 
-    if config.start_from <= STAGE_TWO:
+    if configuration.start_from <= STAGE_TWO:
         print("")
         print("[STAGE 2 | Ranking]")
         print("")
@@ -605,7 +605,7 @@ if __name__ == '__main__':
 
     @retry(err_header="[Stage 3 | Input collection ERROR]")
     def stage_3_collect_input() -> StageThreeInput:
-        if config.start_from >= STAGE_TWO:
+        if configuration.start_from >= STAGE_TWO:
             return StageThreeInput(load_s3_musicosa_from_db())
         else:
             return state_manager.produce_stage_3_input()
@@ -620,7 +620,7 @@ if __name__ == '__main__':
         return result
 
 
-    if config.start_from <= STAGE_THREE:
+    if configuration.start_from <= STAGE_THREE:
         print("")
         print("[STAGE 3 | Templates Pre-Generation Fulfillment]")
         print("")
@@ -635,7 +635,7 @@ if __name__ == '__main__':
 
     # DATA PERSISTENCE CHECKPOINT
 
-    if config.start_from <= STAGE_THREE:
+    if configuration.start_from <= STAGE_THREE:
         print("")
         print("Checkpointing state to database...")
         print("")
@@ -653,7 +653,7 @@ if __name__ == '__main__':
 
     # STAGE 4
 
-    @retry_or_reconfig(err_header="[Stage 4 | Input collection ERROR]", config_loader=config_loader)
+    @retry_or_reconfig(err_header="[Stage 4 | Input collection ERROR]", config_loader=configuration_loader)
     def stage_4_collect_input(config: Config) -> StageFourInput:
         if config.start_from == STAGE_FOUR:
             return StageFourInput(load_templates_from_db(generate_presentations=config.stitch_final_video))
@@ -662,7 +662,7 @@ if __name__ == '__main__':
 
 
     @stage(err_header="[Stage 4 | Execution ERROR]",
-           config_loader=config_loader,
+           config_loader=configuration_loader,
            data_collector=stage_4_collect_input)
     def stage_4_do_execute(config: Config, stage_input: StageFourInput) -> StageFourOutput:
         result = execute_stage_4(config, stage_input)
@@ -672,17 +672,17 @@ if __name__ == '__main__':
         return result
 
 
-    if config.start_from <= STAGE_FOUR:
+    if configuration.start_from <= STAGE_FOUR:
         print("")
         print("[STAGE 4 | Templates Generation]")
         print("")
 
-        stage_4_do_execute(config, stage_4_collect_input(config))
+        stage_4_do_execute(configuration, stage_4_collect_input(configuration))
 
 
     # STAGE 5
 
-    @retry_or_reconfig(err_header="[Stage 5 | Input collection ERROR]", config_loader=config_loader)
+    @retry_or_reconfig(err_header="[Stage 5 | Input collection ERROR]", config_loader=configuration_loader)
     def stage_5_collect_input(config: Config) -> StageFiveInput:
         if config.start_from > STAGE_ONE:
             return StageFiveInput(load_entries_from_db())
@@ -691,7 +691,7 @@ if __name__ == '__main__':
 
 
     @stage(err_header="[Stage 5 | Execution ERROR]",
-           config_loader=config_loader,
+           config_loader=configuration_loader,
            data_collector=stage_5_collect_input)
     def stage_5_do_execute(config: Config, stage_input: StageFiveInput) -> StageFiveOutput:
         result = execute_stage_5(config, stage_input)
@@ -701,17 +701,17 @@ if __name__ == '__main__':
         return result
 
 
-    if config.start_from <= STAGE_FIVE:
+    if configuration.start_from <= STAGE_FIVE:
         print("")
         print("[STAGE 5 | Videoclips Acquisition]")
         print("")
 
-        stage_5_do_execute(config, stage_5_collect_input(config))
+        stage_5_do_execute(configuration, stage_5_collect_input(configuration))
 
 
     # STAGE 6
 
-    @retry_or_reconfig(err_header="[Stage 6 | Input collection ERROR]", config_loader=config_loader)
+    @retry_or_reconfig(err_header="[Stage 6 | Input collection ERROR]", config_loader=configuration_loader)
     def stage_6_collect_input(config: Config) -> StageSixInput:
         if config.start_from > STAGE_ONE:
             return StageSixInput(load_entries_video_options_from_db())
@@ -720,7 +720,7 @@ if __name__ == '__main__':
 
 
     @stage(err_header="[Stage 6 | Execution ERROR]",
-           config_loader=config_loader,
+           config_loader=configuration_loader,
            data_collector=stage_6_collect_input)
     def stage_6_do_execute(config: Config, stage_input: StageSixInput) -> StageSixOutput:
         result = execute_stage_6(config, stage_input)
@@ -730,12 +730,12 @@ if __name__ == '__main__':
         return result
 
 
-    if config.start_from <= STAGE_SIX:
+    if configuration.start_from <= STAGE_SIX:
         print("")
         print("[STAGE 6 | Video Generation]")
         print("")
 
-        stage_6_do_execute(config, stage_6_collect_input(config))
+        stage_6_do_execute(configuration, stage_6_collect_input(configuration))
 
     print("")
     print("Pipeline execution completed ✔")
