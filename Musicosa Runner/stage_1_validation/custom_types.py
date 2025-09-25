@@ -7,6 +7,7 @@ from common.model.models import EntryTopic
 class ContestantSubmissionEntry:
     title: str
     score: float
+    estrelli: bool
     is_author: bool
     video_url: str | None
     video_timestamp: str | None

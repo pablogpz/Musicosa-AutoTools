@@ -32,6 +32,8 @@ CREATE TABLE settings
 INSERT INTO settings (group_key, setting, value, type)
 VALUES ('global', 'round_count', '', 'integer'); --FIXME: To be filled
 INSERT INTO settings (group_key, setting, value, type)
+VALUES ('validation', 'estrelli_count', '', 'integer'); --FIXME: To be filled
+INSERT INTO settings (group_key, setting, value, type)
 VALUES ('validation', 'score_min_value', '0.0', 'real');
 INSERT INTO settings (group_key, setting, value, type)
 VALUES ('validation', 'score_max_value', '10.0', 'real');
@@ -135,8 +137,10 @@ CREATE TABLE video_options
 CREATE TABLE contestant_grades_entries
 (
     contestant TEXT,
-    entry      TEXT NOT NULL,
-    score      REAL NOT NULL,
+    entry    TEXT    NOT NULL,
+    score    REAL    NOT NULL,
+    estrelli INTEGER NOT NULL DEFAULT 0
+        CONSTRAINT estrelli_is_boolean CHECK (estrelli IN (0, 1)),
 
     CONSTRAINT contestant_fk FOREIGN KEY (contestant) REFERENCES contestants (id)
         ON UPDATE CASCADE ON DELETE SET NULL,

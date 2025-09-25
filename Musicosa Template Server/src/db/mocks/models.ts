@@ -94,6 +94,7 @@ export const mockScoring = (partial?: Partial<Scoring>): Scoring => ({
     contestant: partial?.contestant ?? chance.guid({ version: 4 }),
     entry: partial?.entry ?? chance.guid({ version: 4 }),
     score: partial?.score ?? chance.floating({ min: 0, max: 10 }),
+    estrelli: partial?.estrelli ?? chance.natural({ min: 0, max: 1 }),
 })
 
 export const mockScoringEntries = (n: number, partial?: Partial<Scoring>): Scoring[] =>

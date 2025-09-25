@@ -3,7 +3,8 @@ from datetime import time
 from enum import StrEnum
 from typing import Literal, Any
 
-from peewee import Model as PeeweeModel, TextField, CompositeKey, AutoField, FloatField, ForeignKeyField, IntegerField
+from peewee import Model as PeeweeModel, TextField, CompositeKey, AutoField, FloatField, ForeignKeyField, IntegerField, \
+    BooleanField
 
 from common.db.database import db
 from common.time.utils import parse_time
@@ -74,6 +75,7 @@ class GlobalSettingNames(StrEnum):
 
 
 class ValidationSettingNames(StrEnum):
+    ESTRELLI_COUNT = "estrelli_count"
     SCORE_MIN_VALUE = "score_min_value"
     SCORE_MAX_VALUE = "score_max_value"
     ENTRY_VIDEO_TIMESTAMP_DURATION_SECONDS = "entry_video_duration_seconds"
@@ -99,6 +101,8 @@ SETTING_KEY_SEPARATOR = "."
 class SettingKeys(StrEnum):
     GLOBAL_ROUND_COUNT = \
         f"{SettingGroupKeys.GLOBAL}{SETTING_KEY_SEPARATOR}{GlobalSettingNames.ROUND_COUNT}"
+    ESTRELLI_COUNT = \
+        f"{SettingGroupKeys.VALIDATION}{SETTING_KEY_SEPARATOR}{ValidationSettingNames.ESTRELLI_COUNT}"
     VALIDATION_SCORE_MIN_VALUE = \
         f"{SettingGroupKeys.VALIDATION}{SETTING_KEY_SEPARATOR}{ValidationSettingNames.SCORE_MIN_VALUE}"
     VALIDATION_SCORE_MAX_VALUE = \
@@ -378,11 +382,13 @@ class Scoring(DomainModel):
     contestant: Contestant | None
     entry: Entry
     score: float
+    estrelli: bool
 
     class ORM(PeeweeModel, DatabaseModel):
         contestant = ForeignKeyField(Contestant.ORM, column_name="contestant", null=True)
         entry = ForeignKeyField(Entry.ORM, column_name="entry")
         score = FloatField(column_name="score")
+        estrelli = BooleanField(column_name="estrelli")
 
         class Meta:
             database = db
@@ -393,12 +399,14 @@ class Scoring(DomainModel):
             # noinspection PyTypeChecker
             return Scoring(contestant=self.contestant.to_domain(),
                            entry=self.entry.to_domain(),
-                           score=self.score)
+                           score=self.score,
+                           estrelli=self.estrelli)
 
     def to_orm(self) -> "Scoring.ORM":
         return Scoring.ORM(contestant=self.contestant.to_orm(),
                            entry=self.entry.to_orm(),
-                           score=self.score)
+                           score=self.score,
+                           estrelli=self.estrelli)
 
 
 @dataclass

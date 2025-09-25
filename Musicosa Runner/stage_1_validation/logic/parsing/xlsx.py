@@ -36,10 +36,11 @@ def parse_contestant_form_xlsx(form_file: str,
     for data_cells_row in data_cells_matrix:
         raw_title = data_cells_row[0].value
         raw_score = data_cells_row[1].value
-        raw_is_author = data_cells_row[2].value
-        raw_video_url = data_cells_row[3].value
-        raw_video_timestamp = data_cells_row[4].value
-        raw_topic = data_cells_row[5].value
+        raw_estrelli = data_cells_row[2].value
+        raw_is_author = data_cells_row[3].value
+        raw_video_url = data_cells_row[4].value
+        raw_video_timestamp = data_cells_row[5].value
+        raw_topic = data_cells_row[6].value
 
         title = raw_title.strip() if raw_title else raw_title
 
@@ -49,11 +50,13 @@ def parse_contestant_form_xlsx(form_file: str,
             raise StageException(
                 f"[{contestant_name}][{title}] Error parsing score value '{raw_score}': {err}") from err
 
+        estrelli = raw_estrelli.strip() != "" if raw_estrelli else False
+
         is_author = raw_is_author.strip() != "" if raw_is_author else False
 
         if not is_author:
             submission_entries.append(
-                ContestantSubmissionEntry(title, score, is_author, video_url=None, video_timestamp=None,
+                ContestantSubmissionEntry(title, score, estrelli, is_author, video_url=None, video_timestamp=None,
                                           topic=None))
             continue
 
@@ -70,7 +73,7 @@ def parse_contestant_form_xlsx(form_file: str,
         topic = parse_entry_topic_str(raw_topic) if raw_topic else None
 
         submission_entries.append(
-            ContestantSubmissionEntry(title, score, is_author, video_url, video_timestamp, topic))
+            ContestantSubmissionEntry(title, score, estrelli, is_author, video_url, video_timestamp, topic))
     workbook.close()
 
     return ContestantSubmission(contestant_name, submission_entries)

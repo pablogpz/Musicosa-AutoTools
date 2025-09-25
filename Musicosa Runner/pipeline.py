@@ -398,7 +398,8 @@ class PipelineStateManager:
             for entry in sub.entries:
                 self.scoring_entries.append(Scoring(contestant=self.contestants_by_name[sub.name],
                                                     entry=self.entries_by_title[entry.title],
-                                                    score=entry.score))
+                                                    score=entry.score,
+                                                    estrelli=entry.estrelli))
 
     def produce_stage_2_input(self) -> StageTwoInput:
         s2_contestants: list[S2_Contestant] = []

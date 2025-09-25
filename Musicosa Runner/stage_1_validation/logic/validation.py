@@ -58,6 +58,7 @@ def validate_contestant_submission(submission: ContestantSubmission,
                                    valid_titles: list[str],
                                    entry_topics: list[EntryTopic] | None) -> list[str] | None:
     round_count = get_setting_by_key(SettingKeys.GLOBAL_ROUND_COUNT).value
+    estrelli_count = get_setting_by_key(SettingKeys.ESTRELLI_COUNT).value
 
     entries = submission.entries
     entry_count = contestants_count * round_count
@@ -65,6 +66,10 @@ def validate_contestant_submission(submission: ContestantSubmission,
 
     if len(entries) != entry_count:
         validation_errors.append(f"Submission entry count mismatch ({len(entries)}) (Should be {entry_count})")
+
+    estrelli_entries = [entry for entry in entries if entry.estrelli]
+    if len(estrelli_entries) != estrelli_count:
+        validation_errors.append(f"Estrelli count mismatch ({len(estrelli_entries)}) (Should be {estrelli_count})")
 
     if (authored_entries_count := len([entry for entry in entries if entry.is_author])) != round_count:
         validation_errors.append(f"Author claim count mismatch ({authored_entries_count}) (Should be {round_count})")
@@ -106,11 +111,19 @@ def validate_contestant_submission(submission: ContestantSubmission,
     return [f"[{submission.name}] {err_msg}" for err_msg in validation_errors] or None
 
 
-def validate_entry(entry: ContestantSubmissionEntry, entry_topics: list[EntryTopic] | None) \
-        -> list[str] | None:
-    title, score, is_author, video_url, video_timestamp, topic = (
-        entry.title, entry.score, entry.is_author, entry.video_url, entry.video_timestamp, entry.topic)
+def validate_entry(entry: ContestantSubmissionEntry, entry_topics: list[EntryTopic] | None) -> list[str] | None:
+    title = entry.title
+    score = entry.score
+    estrelli = entry.estrelli
+    is_author = entry.is_author
+    video_url = entry.video_url
+    video_timestamp = entry.video_timestamp
+    topic = entry.topic
+
     validation_errors: list[str] = []
+
+    if is_author and estrelli:
+        validation_errors.append("Cannot award 'estrelli' to own entry")
 
     if not is_author and video_url:
         validation_errors.append("Video URL is only allowed for authors")

@@ -74,6 +74,7 @@ export const scoring = sqliteTable(
             .references(() => entries.id)
             .notNull(),
         score: real('score').notNull(),
+        estrelli: integer('estrelli').notNull(),
     },
     (table) => [primaryKey({ columns: [table.contestant, table.entry] })]
 )

@@ -5,8 +5,8 @@ stitch_final_video = false
 [stage_1]
 forms_folder = "contestant_forms"
 valid_titles_file = "titles.txt"
-contestant_name_coords = "F2"
-entries_data_coords = "C6:H6"
+contestant_name_coords = "G2"
+entries_data_coords = "C6:I6"
 
 [stage_4]
 templates_api_url = "http://localhost:3000/templates"

@@ -12,6 +12,9 @@ def execute(stage_input: StageOneInput) -> StageOneOutput:
     if not is_setting_set(SettingKeys.GLOBAL_ROUND_COUNT):
         raise StageException(f"Setting '{SettingKeys.GLOBAL_ROUND_COUNT}' not set")
 
+    if not is_setting_set(SettingKeys.ESTRELLI_COUNT):
+        raise StageException(f"Setting '{SettingKeys.ESTRELLI_COUNT}' not set")
+
     if not is_setting_set(SettingKeys.VALIDATION_SCORE_MIN_VALUE):
         raise StageException(f"Setting '{SettingKeys.VALIDATION_SCORE_MIN_VALUE}' not set")
 

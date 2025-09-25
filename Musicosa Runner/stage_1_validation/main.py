@@ -84,7 +84,8 @@ if __name__ == "__main__":
         for entry in sub.entries:
             scoring_entries.append(Scoring(contestant=contestants_by_name[sub.name],
                                            entry=entries_by_title[entry.title],
-                                           score=entry.score))
+                                           score=entry.score,
+                                           estrelli=entry.estrelli))
 
     video_options: list[VideoOptions] = []
     for sub in submissions:
