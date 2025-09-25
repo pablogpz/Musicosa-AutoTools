@@ -13,7 +13,6 @@ def validate_contestant_submission_collection(submissions: list[ContestantSubmis
                                               valid_titles: list[str],
                                               special_entry_topics: list[SpecialEntryTopic] | None) -> list[str] | None:
     contestant_count = len(submissions)
-    round_count = get_setting_by_key(SettingKeys.GLOBAL_ROUND_COUNT).value
     validation_errors: list[str] = []
 
     if len(submissions) != contestant_count:
@@ -47,7 +46,7 @@ def validate_contestant_submission_collection(submissions: list[ContestantSubmis
     # Validate each contestant submission
 
     for sub in submissions:
-        if submission_errors := validate_contestant_submission(sub, contestant_count, round_count, valid_titles,
+        if submission_errors := validate_contestant_submission(sub, contestant_count, valid_titles,
                                                                special_entry_topics):
             validation_errors.extend(submission_errors)
 
@@ -56,18 +55,19 @@ def validate_contestant_submission_collection(submissions: list[ContestantSubmis
 
 def validate_contestant_submission(submission: ContestantSubmission,
                                    contestants_count: int,
-                                   rounds_count: int,
                                    valid_titles: list[str],
                                    special_entry_topics: list[SpecialEntryTopic] | None) -> list[str] | None:
+    round_count = get_setting_by_key(SettingKeys.GLOBAL_ROUND_COUNT).value
+
     entries = submission.entries
-    entry_count = contestants_count * rounds_count
+    entry_count = contestants_count * round_count
     validation_errors: list[str] = []
 
     if len(entries) != entry_count:
         validation_errors.append(f"Submission entry count mismatch ({len(entries)}) (Should be {entry_count})")
 
-    if (authored_entries_count := len([entry for entry in entries if entry.is_author])) != rounds_count:
-        validation_errors.append(f"Author claim count mismatch ({authored_entries_count}) (Should be {rounds_count})")
+    if (authored_entries_count := len([entry for entry in entries if entry.is_author])) != round_count:
+        validation_errors.append(f"Author claim count mismatch ({authored_entries_count}) (Should be {round_count})")
 
     if duplicates := find_duplicates([entry.title for entry in entries]):
         for title, count in duplicates:
@@ -80,6 +80,7 @@ def validate_contestant_submission(submission: ContestantSubmission,
         validation_errors.append(
             f"Invalid entries ({len(invalid_titles)}):\n"
             f"{"\n".join([tab(2, f"* {title}") for title in invalid_titles])}")
+
     if missing_titles := valid_titles - titles:
         validation_errors.append(
             f"Missing entries ({len(missing_titles)}):\n"

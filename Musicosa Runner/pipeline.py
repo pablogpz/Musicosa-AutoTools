@@ -555,6 +555,10 @@ if __name__ == '__main__':
     def stage_1_do_execute(config: Config, stage_input: StageOneInput) -> StageOneOutput:
         result = execute_stage_1(stage_input)
 
+        if result.validation_errors:
+            for validation_error in result.validation_errors:
+                print(validation_error)
+
         print(stage_1_summary(config, stage_input))
 
         return result
