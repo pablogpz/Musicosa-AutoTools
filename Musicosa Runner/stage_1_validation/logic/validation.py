@@ -2,7 +2,7 @@ from validators import url as validate_url, ValidationError
 
 from common.constants import VIDEO_TIMESTAMP_SEPARATOR
 from common.formatting.tabulate import tab
-from common.model.models import SpecialEntryTopic, SettingKeys
+from common.model.models import EntryTopic, SettingKeys
 from common.model.settings import get_setting_by_key
 from common.time.utils import validate_time_str, parse_time, seconds_between
 from stage_1_validation.custom_types import ContestantSubmissionEntry, ContestantSubmission
@@ -11,7 +11,7 @@ from stage_1_validation.logic.helpers import find_duplicates
 
 def validate_contestant_submission_collection(submissions: list[ContestantSubmission],
                                               valid_titles: list[str],
-                                              special_entry_topics: list[SpecialEntryTopic] | None) -> list[str] | None:
+                                              entry_topics: list[EntryTopic] | None) -> list[str] | None:
     contestant_count = len(submissions)
     validation_errors: list[str] = []
 
@@ -47,7 +47,7 @@ def validate_contestant_submission_collection(submissions: list[ContestantSubmis
 
     for sub in submissions:
         if submission_errors := validate_contestant_submission(sub, contestant_count, valid_titles,
-                                                               special_entry_topics):
+                                                               entry_topics):
             validation_errors.extend(submission_errors)
 
     return [err_msg for err_msg in validation_errors] or None
@@ -56,7 +56,7 @@ def validate_contestant_submission_collection(submissions: list[ContestantSubmis
 def validate_contestant_submission(submission: ContestantSubmission,
                                    contestants_count: int,
                                    valid_titles: list[str],
-                                   special_entry_topics: list[SpecialEntryTopic] | None) -> list[str] | None:
+                                   entry_topics: list[EntryTopic] | None) -> list[str] | None:
     round_count = get_setting_by_key(SettingKeys.GLOBAL_ROUND_COUNT).value
 
     entries = submission.entries
@@ -87,29 +87,29 @@ def validate_contestant_submission(submission: ContestantSubmission,
             f"{"\n".join([tab(2, f"* {title}") for title in missing_titles])}")
 
     for entry in entries:
-        if entry_errors := validate_entry(entry, special_entry_topics):
+        if entry_errors := validate_entry(entry, entry_topics):
             validation_errors.extend(entry_errors)
 
-    if special_entry_topics:
-        for topic in special_entry_topics:
-            entries_with_topic = [entry for entry in entries if entry.special_topic is not None]
-            occurrences = [e for e in entries_with_topic if e.special_topic.lower() == topic.designation.lower()]
+    if entry_topics:
+        for topic in entry_topics:
+            entries_with_topic = [entry for entry in entries if entry.topic is not None]
+            occurrences = [e for e in entries_with_topic if e.topic.lower() == topic.designation.lower()]
 
             if len(occurrences) == 0:
                 validation_errors.append(f"There are no entries designated as '{topic.designation.upper()}'")
 
             if len(occurrences) > 1:
                 validation_errors.append(
-                    f"There are multiple entries ({len(occurrences)}) of special topic '{topic.designation.upper()}':\n"
+                    f"There are multiple entries ({len(occurrences)}) of topic '{topic.designation.upper()}':\n"
                     f"{"\n".join([tab(1, f"* {entry.title}") for entry in occurrences])}")
 
     return [f"[{submission.name}] {err_msg}" for err_msg in validation_errors] or None
 
 
-def validate_entry(entry: ContestantSubmissionEntry, special_entry_topics: list[SpecialEntryTopic] | None) \
+def validate_entry(entry: ContestantSubmissionEntry, entry_topics: list[EntryTopic] | None) \
         -> list[str] | None:
-    title, score, is_author, video_url, video_timestamp, special_topic = (
-        entry.title, entry.score, entry.is_author, entry.video_url, entry.video_timestamp, entry.special_topic)
+    title, score, is_author, video_url, video_timestamp, topic = (
+        entry.title, entry.score, entry.is_author, entry.video_url, entry.video_timestamp, entry.topic)
     validation_errors: list[str] = []
 
     if not is_author and video_url:
@@ -118,8 +118,8 @@ def validate_entry(entry: ContestantSubmissionEntry, special_entry_topics: list[
     if not is_author and video_timestamp:
         validation_errors.append("Video timestamp is only allowed for authors")
 
-    if not is_author and special_topic:
-        validation_errors.append("Special topic is only allowed for authors")
+    if not is_author and topic:
+        validation_errors.append("Topic is only allowed for authors")
 
     min_score = get_setting_by_key(SettingKeys.VALIDATION_SCORE_MIN_VALUE).value
     max_score = get_setting_by_key(SettingKeys.VALIDATION_SCORE_MAX_VALUE).value
@@ -133,12 +133,12 @@ def validate_entry(entry: ContestantSubmissionEntry, special_entry_topics: list[
     if is_author and video_timestamp:
         validation_errors.append(validate_video_timestamp(video_timestamp))
 
-    if is_author and special_topic:
-        if not special_entry_topics:
+    if is_author and topic:
+        if not entry_topics:
             validation_errors.append(
-                f"Special topic designation '{special_topic}' specified, but no special topics are expected")
+                f"Topic designation '{topic}' specified, but no entry topics are expected")
         else:
-            validation_errors.append(validate_special_topic(special_topic, special_entry_topics))
+            validation_errors.append(validate_topic(topic, entry_topics))
 
     return [f"[{title}] {err_msg}" for err_msg in validation_errors if err_msg is not None] or None
 
@@ -203,11 +203,11 @@ def validate_video_url(video_url: str) -> str | None:
     return None
 
 
-def validate_special_topic(topic: str, special_entry_topics: list[SpecialEntryTopic]) -> str | None:
+def validate_topic(topic: str, entry_topics: list[EntryTopic]) -> str | None:
     if not isinstance(topic, str) or not topic:
-        return "Special topic is not a string or is empty"
+        return "Topic is not a string or is empty"
 
-    if topic.lower() not in [valid_topic.designation.lower() for valid_topic in special_entry_topics]:
-        return f"Invalid special topic designation '{topic}' (Should be one of the allowed designations)"
+    if topic.lower() not in [valid_topic.designation.lower() for valid_topic in entry_topics]:
+        return f"Invalid topic designation '{topic}' (Should be one of the allowed designations)"
 
     return None

@@ -5,13 +5,13 @@ import { entries, entriesStats } from '@/db/schema'
 
 export interface EntriesRepository {
     getSequenceNumberInAuthorEntries: (entryId: string) => Promise<[number, number] | undefined>
-    getSequenceNumberInSpecialTopic: (entryId: string) => Promise<[number, number] | undefined>
+    getSequenceNumberInTopic: (entryId: string) => Promise<[number, number] | undefined>
     getSequenceNumberInTie: (entryId: string) => Promise<[number, number] | undefined>
     getAvgScoreDeltaFromPreviousEntry: (entryId: string) => Promise<number | undefined>
 }
 
 const sequenceNumbersInAuthorEntries: Map<string, [number, number]> = new Map()
-const sequenceNumbersInSpecialTopic: Map<string, [number, number]> = new Map()
+const sequenceNumbersInTopic: Map<string, [number, number]> = new Map()
 const sequenceNumbersInTie: Map<string, [number, number]> = new Map()
 const avgScoreDeltas: Map<string, number> = new Map()
 
@@ -41,13 +41,9 @@ async function getSequenceNumberInAuthorEntries(entryId: string): Promise<[numbe
     return sequenceNumbersInAuthorEntries.get(entryId)
 }
 
-async function getSequenceNumberInSpecialTopic(entryId: string): Promise<[number, number] | undefined> {
-    if (process.env.NODE_ENV === 'development' || !sequenceNumbersInSpecialTopic.has(entryId)) {
-        const sq = db
-            .select({ specialTopic: entries.specialTopic })
-            .from(entries)
-            .where(eq(entries.id, entryId))
-            .as('sq')
+async function getSequenceNumberInTopic(entryId: string): Promise<[number, number] | undefined> {
+    if (process.env.NODE_ENV === 'development' || !sequenceNumbersInTopic.has(entryId)) {
+        const sq = db.select({ topic: entries.topic }).from(entries).where(eq(entries.id, entryId)).as('sq')
 
         const sequenceNumbersResult = await db
             .select({
@@ -56,19 +52,19 @@ async function getSequenceNumberInSpecialTopic(entryId: string): Promise<[number
             })
             .from(entries)
             .innerJoin(entriesStats, eq(entries.id, entriesStats.entry))
-            .innerJoin(sq, eq(entries.specialTopic, sq.specialTopic))
+            .innerJoin(sq, eq(entries.topic, sq.topic))
 
         const entriesCountResult = await db
             .select({ count: count() })
             .from(entries)
-            .innerJoin(sq, eq(entries.specialTopic, sq.specialTopic))
+            .innerJoin(sq, eq(entries.topic, sq.topic))
         const entriesCount = entriesCountResult[0].count
 
         for (const row of sequenceNumbersResult)
-            sequenceNumbersInSpecialTopic.set(row.entryId, [row.sequenceNumber, entriesCount])
+            sequenceNumbersInTopic.set(row.entryId, [row.sequenceNumber, entriesCount])
     }
 
-    return sequenceNumbersInSpecialTopic.get(entryId)
+    return sequenceNumbersInTopic.get(entryId)
 }
 
 async function getSequenceNumberInTie(entryId: string): Promise<[number, number] | undefined> {
@@ -113,7 +109,7 @@ async function getAvgScoreDeltaFromPreviousEntry(entryId: string): Promise<numbe
 
 const entriesRepository: EntriesRepository = {
     getSequenceNumberInAuthorEntries,
-    getSequenceNumberInSpecialTopic,
+    getSequenceNumberInTopic: getSequenceNumberInTopic,
     getSequenceNumberInTie,
     getAvgScoreDeltaFromPreviousEntry,
 }

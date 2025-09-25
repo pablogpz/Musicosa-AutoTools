@@ -9,7 +9,7 @@ import {
     defaultResolvedAuthor,
     defaultResolvedContestant,
     defaultSequenceNumberInAuthorEntries,
-    defaultSequenceNumberInSpecialTopic,
+    defaultSequenceNumberInTopic,
     defaultTemplateSettingsProps,
 } from '@/app/templates/common/withTemplateProps/defaults'
 import Template, { TemplateProps } from '@/app/templates/components/Template/Template'
@@ -67,7 +67,7 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
 
     const [contestantCount, setContestantCount] = useState<number>(INITIAL_CONTESTANT_COUNT)
     const [title, setTitle] = useState<string>(defaultEntry.title)
-    const [specialTopic, setSpecialTopic] = useState<string>(defaultEntry.specialTopic!)
+    const [topic, setTopic] = useState<string>(defaultEntry.topic!)
     const [rankingPlace, setRankingPlace] = useState<number>(defaultEntryStats.rankingPlace!)
     const [authorName, setAuthorName] = useState<string>(defaultAuthor.name)
     const [avgScore, setAvgScore] = useState<number>(defaultEntryStats.avgScore!)
@@ -80,8 +80,8 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
     const [videoBoxHeightPx, setVideoBoxHeightPx] = useState<number>(defaultTemplate.videoBoxHeightPx)
     const [SNAEntries, setSNAEntries] = useState<number>(defaultSequenceNumberInAuthorEntries[0])
     const [SNAEntriesOutOf, setSNAEntriesOutOf] = useState<number>(defaultSequenceNumberInAuthorEntries[1])
-    const [SNSTEntries, setSNSTEntries] = useState<number>(defaultSequenceNumberInSpecialTopic![0])
-    const [SNSTEntriesOutOf, setSNSTEntriesOutOf] = useState<number>(defaultSequenceNumberInSpecialTopic![1])
+    const [SNTEntries, setSNTEntries] = useState<number>(defaultSequenceNumberInTopic![0])
+    const [SNTEntriesOutOf, setSNTEntriesOutOf] = useState<number>(defaultSequenceNumberInTopic![1])
     const [avgScoreDelta, setAvgScoreDelta] = useState<number>(defaultAvgScoreDelta)
 
     const resolvedScoreForContestant = (contestant: string): ResolvedScoring => {
@@ -94,7 +94,7 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
 
     const templateProps: TemplateProps = {
         title,
-        specialTopic,
+        topic,
         rankingPlace,
         formattedAvgScore: formatNumberToDecimalPrecision(avgScore, displayDecimalDigits),
         avgScoreDelta,
@@ -107,7 +107,7 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
             scoring: resolvedScoreForContestant(authorName),
         },
         sequenceNumberInAuthorEntries: [SNAEntries, SNAEntriesOutOf],
-        sequenceNumberInSpecialTopic: SNSTEntries && SNSTEntriesOutOf ? [SNSTEntries, SNSTEntriesOutOf] : undefined,
+        sequenceNumberInTopic: SNTEntries && SNTEntriesOutOf ? [SNTEntries, SNTEntriesOutOf] : undefined,
         contestants: Array.from({ length: contestantCount - 1 }, () => ({
             ...defaultResolvedContestant,
             scoring: resolvedScoreForContestant(defaultResolvedContestant.name),
@@ -134,12 +134,12 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
             onChangeFactory((v) => setTitle(v))
         ),
         inputFactory(
-            'special-topic',
-            'Special entry topic',
-            specialTopic,
+            'entry-topic',
+            'Entry topic',
+            topic,
             'text',
             'Entry topic ...',
-            onChangeFactory((v) => setSpecialTopic(v))
+            onChangeFactory((v) => setTopic(v))
         ),
         inputFactory(
             'ranking-place',
@@ -174,20 +174,20 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
             onChangeFactory((v) => setSNAEntriesOutOf(v ? parseInt(v) : 0))
         ),
         inputFactory(
-            'snst-entries',
-            'Special topic ranking (Lower bound)',
-            SNSTEntries,
+            'snt-entries',
+            'Topic ranking (Lower bound)',
+            SNTEntries,
             'number',
             'Lower bound ...',
-            onChangeFactory((v) => setSNSTEntries(v ? parseInt(v) : 0))
+            onChangeFactory((v) => setSNTEntries(v ? parseInt(v) : 0))
         ),
         inputFactory(
-            'snst-entries-out-of',
-            'Special topic ranking (Upper bound)',
-            SNSTEntriesOutOf,
+            'snt-entries-out-of',
+            'Topic ranking (Upper bound)',
+            SNTEntriesOutOf,
             'number',
             'Upper bound ...',
-            onChangeFactory((v) => setSNSTEntriesOutOf(v ? parseInt(v) : 0))
+            onChangeFactory((v) => setSNTEntriesOutOf(v ? parseInt(v) : 0))
         ),
         inputFactory(
             'avg-score',

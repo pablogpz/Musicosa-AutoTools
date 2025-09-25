@@ -4,7 +4,7 @@ from os.path import basename
 from common.custom_types import StageException
 from stage_1_validation.constants import CSV_SEPARATOR, CSV_FIELDS_COUNT
 from stage_1_validation.custom_types import ContestantSubmissionEntry, ContestantSubmission
-from stage_1_validation.logic.parsing.utils import parse_score_str, parse_video_timestamp_str, parse_special_topic_str
+from stage_1_validation.logic.parsing.utils import parse_score_str, parse_video_timestamp_str, parse_entry_topic_str
 
 
 def parse_contestant_forms_csv_folder(forms_folder: str) -> list[ContestantSubmission]:
@@ -51,7 +51,7 @@ def parse_entry_csv(entry_line: str) -> ContestantSubmissionEntry:
 
     if not is_author:
         return ContestantSubmissionEntry(title, score, is_author, video_url=None, video_timestamp=None,
-                                         special_topic=None)
+                                         topic=None)
 
     video_url = line[3].strip() or None
 
@@ -63,9 +63,9 @@ def parse_entry_csv(entry_line: str) -> ContestantSubmissionEntry:
     else:
         video_timestamp = None
 
-    if raw_special_topic := line[5].strip():
-        special_topic = parse_special_topic_str(raw_special_topic)
+    if raw_topic := line[5].strip():
+        topic = parse_entry_topic_str(raw_topic)
     else:
-        special_topic = None
+        topic = None
 
-    return ContestantSubmissionEntry(title, score, is_author, video_url, video_timestamp, special_topic)
+    return ContestantSubmissionEntry(title, score, is_author, video_url, video_timestamp, topic)

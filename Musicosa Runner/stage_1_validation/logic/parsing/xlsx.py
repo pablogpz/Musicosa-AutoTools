@@ -4,7 +4,7 @@ from openpyxl.reader.excel import load_workbook
 
 from common.custom_types import StageException
 from stage_1_validation.custom_types import ContestantSubmissionEntry, ContestantSubmission
-from stage_1_validation.logic.parsing.utils import parse_score_str, parse_video_timestamp_str, parse_special_topic_str
+from stage_1_validation.logic.parsing.utils import parse_score_str, parse_video_timestamp_str, parse_entry_topic_str
 
 
 def parse_contestant_forms_xlsx_folder(forms_folder: str,
@@ -39,7 +39,7 @@ def parse_contestant_form_xlsx(form_file: str,
         raw_is_author = data_cells_row[2].value
         raw_video_url = data_cells_row[3].value
         raw_video_timestamp = data_cells_row[4].value
-        raw_special_topic = data_cells_row[5].value
+        raw_topic = data_cells_row[5].value
 
         title = raw_title.strip() if raw_title else raw_title
 
@@ -54,7 +54,7 @@ def parse_contestant_form_xlsx(form_file: str,
         if not is_author:
             submission_entries.append(
                 ContestantSubmissionEntry(title, score, is_author, video_url=None, video_timestamp=None,
-                                          special_topic=None))
+                                          topic=None))
             continue
 
         video_url = raw_video_url.strip() if raw_video_url else None
@@ -67,10 +67,10 @@ def parse_contestant_form_xlsx(form_file: str,
         else:
             video_timestamp = None
 
-        special_topic = parse_special_topic_str(raw_special_topic) if raw_special_topic else None
+        topic = parse_entry_topic_str(raw_topic) if raw_topic else None
 
         submission_entries.append(
-            ContestantSubmissionEntry(title, score, is_author, video_url, video_timestamp, special_topic))
+            ContestantSubmissionEntry(title, score, is_author, video_url, video_timestamp, topic))
     workbook.close()
 
     return ContestantSubmission(contestant_name, submission_entries)

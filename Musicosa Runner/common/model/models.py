@@ -244,7 +244,7 @@ class Contestant(DomainModel):
 
 
 @dataclass
-class SpecialEntryTopic(DomainModel):
+class EntryTopic(DomainModel):
     designation: str
 
     class ORM(PeeweeModel, DatabaseModel):
@@ -252,14 +252,14 @@ class SpecialEntryTopic(DomainModel):
 
         class Meta:
             database = db
-            table_name = "special_entry_topics"
+            table_name = "entry_topics"
 
-        def to_domain(self) -> "SpecialEntryTopic":
+        def to_domain(self) -> "EntryTopic":
             # noinspection PyTypeChecker
-            return SpecialEntryTopic(designation=self.designation)
+            return EntryTopic(designation=self.designation)
 
-    def to_orm(self) -> "SpecialEntryTopic.ORM":
-        return SpecialEntryTopic.ORM(designation=self.designation)
+    def to_orm(self) -> "EntryTopic.ORM":
+        return EntryTopic.ORM(designation=self.designation)
 
 
 @dataclass
@@ -268,14 +268,14 @@ class Entry(DomainModel):
     title: str
     author: Contestant | None
     video_url: str
-    special_topic: SpecialEntryTopic | None
+    topic: EntryTopic | None
 
     class ORM(PeeweeModel, DatabaseModel):
         id = TextField(column_name="id", primary_key=True)
         title = TextField(column_name="title", unique=True)
         author = ForeignKeyField(Contestant.ORM, column_name="author", null=True)
         video_url = TextField(column_name="video_url")
-        special_topic = ForeignKeyField(SpecialEntryTopic.ORM, column_name="special_topic", null=True)
+        topic = ForeignKeyField(EntryTopic.ORM, column_name="topic", null=True)
 
         class Meta:
             database = db
@@ -293,14 +293,14 @@ class Entry(DomainModel):
                          title=self.title,
                          author=self.author.to_domain() if self.author else None,
                          video_url=self.video_url,
-                         special_topic=self.special_topic.to_domain() if self.special_topic else None)
+                         topic=self.topic.to_domain() if self.topic else None)
 
     def to_orm(self) -> "Entry.ORM":
         return Entry.ORM(id=self.id,
                          title=self.title,
                          author=self.author.to_orm() if self.author else None,
                          video_url=self.video_url,
-                         special_topic=self.special_topic.to_orm() if self.special_topic else None)
+                         topic=self.topic.to_orm() if self.topic else None)
 
 
 @dataclass

@@ -1,5 +1,5 @@
 from common.custom_types import StageException
-from common.model.models import SpecialEntryTopic
+from common.model.models import EntryTopic
 from stage_1_validation.custom_types import ContestantSubmission
 from stage_1_validation.logic.parsing.xlsx import parse_contestant_forms_xlsx_folder
 
@@ -25,5 +25,5 @@ def get_valid_titles(forms_folder: str, valid_titles_file: str) -> list[str]:
         raise StageException(f"Error loading valid entry titles file '{valid_titles_file}': {err}") from err
 
 
-def get_special_topics_from_db() -> list[SpecialEntryTopic] | None:
-    return [topic.to_domain() for topic in SpecialEntryTopic.ORM.select()] or None
+def get_entry_topics_from_db() -> list[EntryTopic] | None:
+    return [topic.to_domain() for topic in EntryTopic.ORM.select()] or None

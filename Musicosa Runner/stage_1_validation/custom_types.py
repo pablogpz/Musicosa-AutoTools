@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from common.model.models import SpecialEntryTopic
+from common.model.models import EntryTopic
 
 
 @dataclass
@@ -10,7 +10,7 @@ class ContestantSubmissionEntry:
     is_author: bool
     video_url: str | None
     video_timestamp: str | None
-    special_topic: str | None
+    topic: str | None
 
 
 @dataclass
@@ -23,7 +23,7 @@ class ContestantSubmission:
 class StageOneInput:
     submissions: list[ContestantSubmission]
     valid_titles: list[str]
-    special_entry_topics: list[SpecialEntryTopic] | None
+    entry_topics: list[EntryTopic] | None
 
 
 @dataclass

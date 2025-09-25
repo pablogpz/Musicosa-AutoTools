@@ -6,11 +6,11 @@ import {
     ContestantStats,
     Entry,
     EntryStats,
+    EntryTopic,
     Metadata,
     MetadataFields,
     Scoring,
     Setting,
-    SpecialEntryTopic,
     Template,
     VideoOptions,
 } from '@/db/models'
@@ -72,20 +72,19 @@ export const mockContestant = (partial?: Partial<Contestant>): Contestant => ({
 export const mockContestants = (n: number, partial?: Partial<Contestant>): Contestant[] =>
     Array.from({ length: n }, () => mockContestant(partial))
 
-export const mockSpecialEntryTopic = (partial?: Partial<SpecialEntryTopic>): SpecialEntryTopic => ({
+export const mockEntryTopic = (partial?: Partial<EntryTopic>): EntryTopic => ({
     designation: partial?.designation ?? chance.word().toUpperCase(),
 })
 
-export const mockSpecialEntryTopics = (n: number, partial?: Partial<SpecialEntryTopic>): SpecialEntryTopic[] =>
-    Array.from({ length: n }, () => mockSpecialEntryTopic(partial))
+export const mockEntryTopics = (n: number, partial?: Partial<EntryTopic>): EntryTopic[] =>
+    Array.from({ length: n }, () => mockEntryTopic(partial))
 
 export const mockEntry = (partial?: Partial<Entry>): Entry => ({
     id: partial?.id ?? chance.guid({ version: 4 }),
     title: partial?.title ?? chance.sentence({ words: 3 }),
     author: partial?.author ?? chance.guid({ version: 4 }),
     videoUrl: partial?.videoUrl ?? chance.url(),
-    specialTopic:
-        (partial?.specialTopic ?? chance.natural({ min: 1, max: 10 }) == 1) ? chance.word().toUpperCase() : null,
+    topic: (partial?.topic ?? chance.natural({ min: 1, max: 10 }) == 1) ? chance.word().toUpperCase() : null,
 })
 
 export const mockEntries = (n: number, partial?: Partial<Entry>): Entry[] =>

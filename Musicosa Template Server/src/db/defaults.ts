@@ -33,7 +33,7 @@ export const defaultEntry: Entry = {
     author: defaultAuthor.id,
     title: 'Título de la entrada - Obra',
     videoUrl: 'https://www.youtube.com/watch?v=CVyPO_tR540',
-    specialTopic: 'INFANCIA',
+    topic: 'INFANCIA',
 }
 
 export const defaultScoring: Scoring = {

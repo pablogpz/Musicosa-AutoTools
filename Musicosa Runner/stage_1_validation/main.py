@@ -7,13 +7,13 @@ from common.constants import VIDEO_TIMESTAMP_SEPARATOR
 from common.custom_types import StageException
 from common.db.database import db
 from common.db.peewee_helpers import bulk_pack
-from common.model.models import Entry, Scoring, VideoOptions, Contestant, SpecialEntryTopic
+from common.model.models import Entry, Scoring, VideoOptions, Contestant, EntryTopic
 from common.naming.identifiers import generate_contestant_uuid5, generate_entry_uuid5
 from common.time.utils import parse_time
 from stage_1_validation.custom_types import StageOneInput
 from stage_1_validation.execute import execute
 from stage_1_validation.stage_input import get_submissions_from_forms_folder, get_valid_titles, \
-    get_special_topics_from_db
+    get_entry_topics_from_db
 from stage_1_validation.summary import stage_summary
 
 if __name__ == "__main__":
@@ -40,12 +40,12 @@ if __name__ == "__main__":
     try:
         submissions = get_submissions_from_forms_folder(forms_folder, contestant_name_coords, entries_data_coords)
         valid_titles = get_valid_titles(forms_folder, valid_titles_file)
-        special_entry_topics = get_special_topics_from_db()
+        entry_topics = get_entry_topics_from_db()
     except Exception as err:
         print(f"[Stage 1 | Data retrieval] {err}")
         exit(1)
 
-    stage_input = StageOneInput(submissions, valid_titles, special_entry_topics)
+    stage_input = StageOneInput(submissions, valid_titles, entry_topics)
 
     # Stage execution
 
@@ -72,12 +72,12 @@ if __name__ == "__main__":
         for entry in sub.entries:
             if entry.is_author:
                 # noinspection PyTypeChecker
-                special_topic = SpecialEntryTopic(designation=entry.special_topic) if entry.special_topic else None
+                topic = EntryTopic(designation=entry.topic) if entry.topic else None
                 entries_by_title[entry.title] = Entry(id=generate_entry_uuid5(entry.title).hex,
                                                       title=entry.title,
                                                       author=contestants_by_name[sub.name],
                                                       video_url=entry.video_url,
-                                                      special_topic=special_topic)
+                                                      topic=topic)
 
     scoring_entries: list[Scoring] = []
     for sub in submissions:

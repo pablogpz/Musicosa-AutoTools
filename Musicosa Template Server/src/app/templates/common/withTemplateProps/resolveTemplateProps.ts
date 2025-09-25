@@ -25,12 +25,12 @@ export type ResolvedTemplateProps = Pick<
     Template,
     'avatarScale' | 'authorAvatarScale' | 'videoBoxWidthPx' | 'videoBoxHeightPx'
 > &
-    Pick<Entry, 'title' | 'specialTopic'> &
+    Pick<Entry, 'title' | 'topic'> &
     Pick<ResolvedEntryStats, 'rankingPlace' | 'formattedAvgScore'> & {
         avgScoreDelta: number
         author: ResolvedContestant
         sequenceNumberInAuthorEntries: [number, number]
-        sequenceNumberInSpecialTopic: [number, number] | undefined
+        sequenceNumberInTopic: [number, number] | undefined
         contestants: ResolvedContestant[]
     }
 
@@ -98,7 +98,7 @@ export async function resolveTemplateProps(templateId: string): Promise<Resolved
         .select({
             title: entries.title,
             author: entries.author,
-            specialTopic: entries.specialTopic,
+            topic: entries.topic,
         })
         .from(entries)
         .where(eq(entries.id, templateId))
@@ -123,7 +123,7 @@ export async function resolveTemplateProps(templateId: string): Promise<Resolved
     const sequenceNumberInAuthorEntries = await entriesRepository.getSequenceNumberInAuthorEntries(templateId)
     if (!sequenceNumberInAuthorEntries) return undefined
 
-    const sequenceNumberInSpecialTopic = await entriesRepository.getSequenceNumberInSpecialTopic(templateId)
+    const sequenceNumberInTopic = await entriesRepository.getSequenceNumberInTopic(templateId)
 
     const contestants = allContestants
         .filter((contestant) => contestant.id !== entry.author)
@@ -138,7 +138,7 @@ export async function resolveTemplateProps(templateId: string): Promise<Resolved
 
     return {
         title: entry.title,
-        specialTopic: entry.specialTopic,
+        topic: entry.topic,
         rankingPlace: entryStats.rankingPlace,
         formattedAvgScore: formatNumberToDecimalPrecision(entryStats.avgScore!, displayDecimalDigits),
         avgScoreDelta,
@@ -148,7 +148,7 @@ export async function resolveTemplateProps(templateId: string): Promise<Resolved
         videoBoxHeightPx: template.videoBoxHeightPx,
         author: resolveContestant(author, authorAvatar, authorScoring, displayDecimalDigits),
         sequenceNumberInAuthorEntries,
-        sequenceNumberInSpecialTopic,
+        sequenceNumberInTopic: sequenceNumberInTopic,
         contestants: contestants,
     }
 }

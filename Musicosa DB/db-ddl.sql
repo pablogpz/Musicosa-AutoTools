@@ -77,14 +77,14 @@ CREATE TABLE contestants
         ON UPDATE CASCADE ON DELETE SET NULL
 );
 
-CREATE TABLE special_entry_topics
+CREATE TABLE entry_topics
 (
     designation TEXT NOT NULL
-        CONSTRAINT special_entry_topics_pk PRIMARY KEY
+        CONSTRAINT entry_topics_pk PRIMARY KEY
 );
 
---TODO: Register all special topics
--- INSERT INTO special_entry_topics (designation)
+--FIXME: Register all topics
+-- INSERT INTO entry_topics (designation)
 -- VALUES ('');
 
 CREATE TABLE entries
@@ -95,12 +95,12 @@ CREATE TABLE entries
     title         TEXT     NOT NULL UNIQUE,
     author        TEXT,
     video_url     TEXT     NOT NULL,
-    special_topic TEXT,
+    topic TEXT,
 
     CONSTRAINT authored_by_fk FOREIGN KEY (author) REFERENCES contestants (id)
         ON UPDATE CASCADE ON DELETE SET NULL,
 
-    CONSTRAINT is_of_special_topic_fk FOREIGN KEY (special_topic) REFERENCES special_entry_topics (designation)
+    CONSTRAINT is_of_topic_fk FOREIGN KEY (topic) REFERENCES entry_topics (designation)
         ON UPDATE CASCADE ON DELETE SET NULL
 );
 

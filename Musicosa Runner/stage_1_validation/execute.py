@@ -6,8 +6,8 @@ from stage_1_validation.logic.validation import validate_contestant_submission_c
 
 
 def execute(stage_input: StageOneInput) -> StageOneOutput:
-    submissions, valid_titles, special_entry_topics = (
-        stage_input.submissions, stage_input.valid_titles, stage_input.special_entry_topics)
+    submissions, valid_titles, entry_topics = (
+        stage_input.submissions, stage_input.valid_titles, stage_input.entry_topics)
 
     if not is_setting_set(SettingKeys.GLOBAL_ROUND_COUNT):
         raise StageException(f"Setting '{SettingKeys.GLOBAL_ROUND_COUNT}' not set")
@@ -24,6 +24,6 @@ def execute(stage_input: StageOneInput) -> StageOneOutput:
     if not valid_titles:
         raise StageException("Valid entry titles list is empty")
 
-    validation_errors = validate_contestant_submission_collection(submissions, valid_titles, special_entry_topics)
+    validation_errors = validate_contestant_submission_collection(submissions, valid_titles, entry_topics)
 
     return StageOneOutput(validation_errors)

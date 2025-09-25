@@ -15,13 +15,13 @@ from common.formatting.tabulate import tab
 from common.input.better_input import better_input
 from common.model.metadata import get_metadata_by_field
 from common.model.models import Contestant, Avatar, Entry, Scoring, VideoOptions, Template, Setting, ContestantStats, \
-    EntryStats, SpecialEntryTopic, MetadataFields
+    EntryStats, EntryTopic, MetadataFields
 from common.naming.identifiers import generate_contestant_uuid5, generate_entry_uuid5
 from common.time.utils import parse_time
 from stage_1_validation.custom_types import ContestantSubmission, StageOneOutput, StageOneInput
 from stage_1_validation.execute import execute as execute_stage_1
 from stage_1_validation.stage_input import get_submissions_from_forms_folder, get_valid_titles, \
-    get_special_topics_from_db
+    get_entry_topics_from_db
 from stage_1_validation.summary import stage_summary as stage_1_summary
 from stage_2_ranking.custom_types import Musicosa as S2_Musicosa, Contestant as S2_Contestant, \
     Entry as S2_Entry, Score as S2_Score, StageTwoOutput, StageTwoInput
@@ -376,13 +376,13 @@ class PipelineStateManager:
             for entry in sub.entries:
                 if entry.is_author:
                     # noinspection PyTypeChecker
-                    special_topic = SpecialEntryTopic(designation=entry.special_topic) if entry.special_topic else None
+                    topic = EntryTopic(designation=entry.topic) if entry.topic else None
 
                     new_entry = Entry(id=generate_entry_uuid5(entry.title).hex,
                                       title=entry.title,
                                       author=new_contestant,
                                       video_url=entry.video_url,
-                                      special_topic=special_topic)
+                                      topic=topic)
 
                     if entry.video_timestamp:
                         start, end = entry.video_timestamp.split(VIDEO_TIMESTAMP_SEPARATOR)
@@ -544,9 +544,9 @@ if __name__ == '__main__':
                                                         config.stage_1.contestant_name_coords,
                                                         config.stage_1.entries_data_coords)
         valid_titles = get_valid_titles(config.stage_1.forms_folder, config.stage_1.valid_titles_file)
-        special_entry_topics = get_special_topics_from_db()
+        entry_topics = get_entry_topics_from_db()
 
-        return StageOneInput(submissions, valid_titles, special_entry_topics)
+        return StageOneInput(submissions, valid_titles, entry_topics)
 
 
     @stage(err_header="[Stage 1 | Execution ERROR]",

@@ -17,7 +17,7 @@ const open_sans = Open_Sans({
 
 export default function Template({
     title,
-    specialTopic,
+    topic,
     rankingPlace,
     formattedAvgScore,
     avgScoreDelta,
@@ -27,7 +27,7 @@ export default function Template({
     videoBoxHeightPx,
     author,
     sequenceNumberInAuthorEntries,
-    sequenceNumberInSpecialTopic,
+    sequenceNumberInTopic,
     contestants,
     scoreMinValue,
     scoreMaxValue,
@@ -41,16 +41,16 @@ export default function Template({
         </p>
     )
 
-    const [specialTopicSequence, specialTopicSequenceOutOf] = sequenceNumberInSpecialTopic || [undefined, undefined]
+    const [topicSequence, topicSequenceOutOf] = sequenceNumberInTopic || [undefined, undefined]
 
-    const specialTopicPillComponent = specialTopic && (
+    const topicPillComponent = topic && (
         <p className={`text-2xl ${open_sans.className} font-thin p-2 mt-4 mr-7 bg-white rounded`}>
-            {specialTopic.toUpperCase()}{' '}
+            {topic.toUpperCase()}{' '}
             <span className={`${open_sans.className} text-lg font-normal relative bottom-0.5 mr-1`}>
-                {specialTopicSequence} de {specialTopicSequenceOutOf}{' '}
+                {topicSequence} de {topicSequenceOutOf}{' '}
             </span>
             <span className='px-1 text-2xl font-semibold border-black border-2 rounded'>
-                {specialTopicSequenceOutOf! - specialTopicSequence! + 1}º
+                {topicSequenceOutOf! - topicSequence! + 1}º
             </span>
         </p>
     )
@@ -193,7 +193,7 @@ export default function Template({
                                 </p>
                             </div>
                         </div>
-                        {specialTopicPillComponent}
+                        {topicPillComponent}
                     </div>
                     <div className='flex h-full justify-around items-center'>
                         {authorDetailsComponent}

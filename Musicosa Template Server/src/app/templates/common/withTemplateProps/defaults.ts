@@ -32,6 +32,6 @@ export const defaultResolvedContestant: ResolvedContestant = {
 
 export const defaultSequenceNumberInAuthorEntries: ResolvedTemplateProps['sequenceNumberInAuthorEntries'] = [1, 2]
 
-export const defaultSequenceNumberInSpecialTopic: ResolvedTemplateProps['sequenceNumberInSpecialTopic'] = [1, 2]
+export const defaultSequenceNumberInTopic: ResolvedTemplateProps['sequenceNumberInTopic'] = [1, 2]
 
 export const defaultAvgScoreDelta: ResolvedTemplateProps['avgScoreDelta'] = 0.5

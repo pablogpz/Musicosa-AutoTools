@@ -33,5 +33,5 @@ def parse_video_timestamp_str(video_timestamp_str: str) -> str:
     return f"{time_str_zfill(timestamp_start)}{VIDEO_TIMESTAMP_SEPARATOR}{time_str_zfill(timestamp_end)}"
 
 
-def parse_special_topic_str(special_topic_str: str) -> str:
-    return special_topic_str.strip().upper()
+def parse_entry_topic_str(topic_str: str) -> str:
+    return topic_str.strip().upper()

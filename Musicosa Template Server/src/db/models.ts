@@ -6,10 +6,10 @@ import {
     contestantsStats,
     entries,
     entriesStats,
+    entryTopics,
     metadata,
     scoring,
     settings,
-    specialEntryTopics,
     templates,
     videoOptions,
 } from '@/db/schema'
@@ -49,7 +49,7 @@ export type Avatar = InferSelectModel<typeof avatars>
 
 export type Contestant = InferSelectModel<typeof contestants>
 
-export type SpecialEntryTopic = InferSelectModel<typeof specialEntryTopics>
+export type EntryTopic = InferSelectModel<typeof entryTopics>
 
 export type Entry = InferSelectModel<typeof entries>
 

@@ -34,7 +34,7 @@ export const contestants = sqliteTable('contestants', {
     avatar: integer('avatar').references(() => avatars.id),
 })
 
-export const specialEntryTopics = sqliteTable('special_entry_topics', {
+export const entryTopics = sqliteTable('entry_topics', {
     designation: text('designation').primaryKey(),
 })
 
@@ -43,7 +43,7 @@ export const entries = sqliteTable('entries', {
     title: text('title').notNull().unique(),
     author: text('author').references(() => contestants.id),
     videoUrl: text('video_url').notNull(),
-    specialTopic: text('special_topic').references(() => specialEntryTopics.designation),
+    topic: text('topic').references(() => entryTopics.designation),
 })
 
 export const templates = sqliteTable('templates', {
