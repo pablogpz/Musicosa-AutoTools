@@ -128,9 +128,9 @@ def generate_final_video(artifacts_folder: str,
                                   vcodec=VIDEO_CODEC,
                                   b=VIDEO_BITRATE)
                           .compile(overwrite_output=True))
-        except FFMpegError as err:
+        except FFMpegError as error:
             raise StageException(f"Bad ffmpeg command for fragment '{fragment_id}' for award '{award_slug}'. "
-                                 f"Cause: {err}") from err
+                                 f"Cause: {error}") from error
 
         filtergraph_arg_idx = ffmpeg_cmd.index("-filter_complex")
 
@@ -142,8 +142,8 @@ def generate_final_video(artifacts_folder: str,
             cmd_config_and_inputs.append("-hide_banner -loglevel error")
 
         filtergraph_script = f"{video_bits_folder}/{award_slug}.filtergraph.fragment-{fragment_id}.tmp"
-        with open(filtergraph_script, "w") as f:
-            f.write(cmd_filtergraph)
+        with open(filtergraph_script, "w") as file:
+            file.write(cmd_filtergraph)
 
         recompiled_cmd = []
         recompiled_cmd.extend(cmd_config_and_inputs)
@@ -153,17 +153,17 @@ def generate_final_video(artifacts_folder: str,
         # Execute compiled FFmpeg command
 
         try:
-            ffmpeg_exit_code = system(" ".join(recompiled_cmd))
+            inner_ffmpeg_exit_code = system(" ".join(recompiled_cmd))
             os.remove(filtergraph_script)
 
-            if ffmpeg_exit_code == 0:
+            if inner_ffmpeg_exit_code == 0:
                 print(f"[FRAGMENT #{fragment_id}][{award_slug}] "
                       f"Fragment generated at '{fragment_path}' from {len(vid_opts)} clips")
             else:
-                raise StageException(f"An error occurred while executing ffmpeg. Exit code: {ffmpeg_exit_code}")
-        except RuntimeError as err:
+                raise StageException(f"An error occurred while executing ffmpeg. Exit code: {inner_ffmpeg_exit_code}")
+        except RuntimeError as error:
             raise StageException(f"Failed to generate final video fragment #{fragment_id} for award '{award_slug}'. "
-                                 f"Cause: {err}") from err
+                                 f"Cause: {error}") from error
 
         return fragment_path
 
