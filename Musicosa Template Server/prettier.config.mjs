@@ -1,5 +1,5 @@
 /**
- * @type {import("prettier").Config & import("@trivago/prettier-plugin-sort-imports").PluginConfig}
+ * @type {import('prettier').Config & import('@trivago/prettier-plugin-sort-imports').PluginConfig}
  */
 const config = {
     printWidth: 120,
