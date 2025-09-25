@@ -61,18 +61,20 @@ type DataCollector[D] = Callable[[Config], D]
 # PIPELINE STEP FLOW GATE Controls
 
 CONTINUE: Literal["c"] = "c"
+CONTINUE_AND_SKIP: Literal["sk"] = "sk"
 RETRY: Literal["r"] = "r"
 RELOAD_CONFIG: Literal["rc"] = "rc"
 RELOAD_DATA: Literal["rd"] = "rd"
 RELOAD_CONFIG_AND_DATA: Literal["re"] = "re"
 ABORT: Literal["a"] = "a"
 
-type GateControl = Literal["c", "r", "rc", "rd", "re", "a"]
+type GateControl = Literal["c", "sk", "r", "rc", "rd", "re", "a"]
 
 ALLOWED_CONTROLS_ON_ERROR = {RETRY, RELOAD_CONFIG, RELOAD_DATA, RELOAD_CONFIG_AND_DATA, ABORT}
 
 GATE_MESSAGES: dict[GateControl, str] = {
     CONTINUE: "continue",
+    CONTINUE_AND_SKIP: "continue, skip future continuation breaks",
     RETRY: "retry",
     RELOAD_CONFIG: "reload config, then retry",
     RELOAD_DATA: "reload data, then retry",
@@ -83,95 +85,107 @@ GATE_MESSAGES: dict[GateControl, str] = {
 
 # PIPELINE STEP FLOW GATE Definition
 
-def flow_gate[D, O](
-        step: PipelineStep[D, O],
-        step_args: tuple[Any, ...],
-        step_kwargs: dict[str, Any],
-        /, *,
-        controls: set[GateControl],
-        err_header: str | None = None,
-        config_loader: ConfigLoader | None = None,
-        data_collector: DataCollector[D] | None = None
-) -> O | Never:
-    """
-    :param step: Pipeline step function to be executed (see PipelineStep)
-    :param step_args: step's args
-    :param step_kwargs: step's kwargs
-    :param controls: Set of gate controls that are available to this step (see GateControl)
-    :param err_header: Error header to show to the user if an exception is raised by the step
-    :param config_loader: Function used to reload the configuration of the step
-    :param data_collector: Function to be used to reload the step's data
-    :return: step's result or nothing if aborted
-    """
-    controls = {*controls, ABORT}  # Should always have the option to abort
+class FlowGate:
+    _skip_continuation: bool
 
-    # Runtime checks
+    def __init__(self):
+        self._skip_continuation = False
 
-    if len(inspect.getfullargspec(step).args) < 2:
-        raise RuntimeError(f"Step function '{step}' is missing mandatory positional arguments")
+    def __call__[D, O](self, step: PipelineStep[D, O],
+                       step_args: tuple[Any, ...],
+                       step_kwargs: dict[str, Any],
+                       /, *,
+                       controls: set[GateControl],
+                       err_header: str | None = None,
+                       config_loader: ConfigLoader | None = None,
+                       data_collector: DataCollector[D] | None = None) -> O | Never:
+        """
+           :param step: Pipeline step function to be executed (see PipelineStep)
+           :param step_args: step's args
+           :param step_kwargs: step's kwargs
+           :param controls: Set of gate controls that are available to this step (see GateControl)
+           :param err_header: Error header to show to the user if an exception is raised by the step
+           :param config_loader: Function used to reload the configuration of the step
+           :param data_collector: Function to be used to reload the step's data
+           :return: step's result or nothing if aborted
+           """
+        controls = {*controls, ABORT}  # Should always have the option to abort
 
-    if not controls.isdisjoint({RELOAD_CONFIG, RELOAD_CONFIG_AND_DATA}):
-        if config_loader is None:
-            raise RuntimeError(f"Step function '{step}' supports config reloading but does not provide a config loader")
+        # Runtime checks
 
-    if not controls.isdisjoint({RELOAD_DATA, RELOAD_CONFIG_AND_DATA}):
-        if data_collector is None:
-            raise RuntimeError(f"Step function '{step}' supports data reloading but does not provide a data collector")
+        if len(inspect.getfullargspec(step).args) < 2:
+            raise RuntimeError(f"Step function '{step}' is missing mandatory positional arguments")
 
-    def adapted_data_collector(config: Config):
-        # Adapt for data collectors with and without config dependency
-        if len(inspect.getfullargspec(data_collector).args) > 0:
-            return data_collector(config)
-        else:
-            return data_collector()
+        if not controls.isdisjoint({RELOAD_CONFIG, RELOAD_CONFIG_AND_DATA}):
+            if config_loader is None:
+                raise RuntimeError(
+                    f"Step function '{step}' supports config reloading but does not provide a config loader")
 
-    # Step execution
+        if not controls.isdisjoint({RELOAD_DATA, RELOAD_CONFIG_AND_DATA}):
+            if data_collector is None:
+                raise RuntimeError(
+                    f"Step function '{step}' supports data reloading but does not provide a data collector")
 
-    config_arg, reloadable_data_arg, *other_args = step_args
-    step_result = None
+        def adapted_data_collector(config: Config):
+            # Adapt for data collectors with and without config dependency
+            if len(inspect.getfullargspec(data_collector).args) > 0:
+                return data_collector(config)
+            else:
+                return data_collector()
 
-    ask_to_continue_on_success = CONTINUE in controls
-    on_success_msg = (f"< Pipeline Step Gate >\n"
-                      f"{"\n".join([tab(1, f"[{k}] {v}") for k, v in GATE_MESSAGES.items() if k in controls])}"
-                      f"\n")
+        # Step execution
 
-    error_controls = {ctrl for ctrl in controls if ctrl in ALLOWED_CONTROLS_ON_ERROR}
-    on_error_msg = (f"< (!) Action required >\n"
-                    f"{"\n".join([tab(1, f"[{k}] {v}") for k, v in GATE_MESSAGES.items() if k in error_controls])}"
-                    f"\n")
+        config_arg, reloadable_data_arg, *other_args = step_args
+        step_result = None
 
-    while True:
-        choice = CONTINUE
+        on_success_msg = (f"< Pipeline Step Gate >\n"
+                          f"{"\n".join([tab(1, f"[{k}] {v}") for k, v in GATE_MESSAGES.items() if k in controls])}"
+                          f"\n")
 
-        try:
-            step_result = step(config_arg, reloadable_data_arg, *other_args, **step_kwargs)
+        error_controls = {ctrl for ctrl in controls if ctrl in ALLOWED_CONTROLS_ON_ERROR}
+        on_error_msg = (f"< (!) Action required >\n"
+                        f"{"\n".join([tab(1, f"[{k}] {v}") for k, v in GATE_MESSAGES.items() if k in error_controls])}"
+                        f"\n")
 
-            if ask_to_continue_on_success:
-                choice = better_input(on_success_msg,
-                                      lambda x: x in controls,
+        while True:
+            choice = CONTINUE
+
+            try:
+                step_result = step(config_arg, reloadable_data_arg, *other_args, **step_kwargs)
+
+                ask_to_continue_on_success = CONTINUE in controls if not self._skip_continuation else False
+                if ask_to_continue_on_success:
+                    choice = better_input(on_success_msg,
+                                          lambda x: x in controls,
+                                          error_message=lambda x: f"Invalid choice '{x}'")
+            except Exception as err:
+                print(f"{err_header} {err}" if err_header else err)
+                choice = better_input(on_error_msg,
+                                      lambda x: x in error_controls,
                                       error_message=lambda x: f"Invalid choice '{x}'")
-        except Exception as err:
-            print(f"{err_header} {err}" if err_header else err)
-            choice = better_input(on_error_msg,
-                                  lambda x: x in error_controls,
-                                  error_message=lambda x: f"Invalid choice '{x}'")
 
-        if choice == ABORT:
-            exit(1)
+            if choice == ABORT:
+                exit(1)
 
-        if choice == CONTINUE:
-            break
+            if choice == CONTINUE_AND_SKIP:
+                self._skip_continuation = True
 
-        if choice == RETRY:
-            continue
+            if choice == CONTINUE or choice == CONTINUE_AND_SKIP:
+                break
 
-        if choice == RELOAD_CONFIG or choice == RELOAD_CONFIG_AND_DATA:
-            config_arg = config_loader()
+            if choice == RETRY:
+                continue
 
-        if choice == RELOAD_DATA or choice == RELOAD_CONFIG_AND_DATA:
-            reloadable_data_arg = adapted_data_collector(config_arg)
+            if choice == RELOAD_CONFIG or choice == RELOAD_CONFIG_AND_DATA:
+                config_arg = config_loader()
 
-    return step_result
+            if choice == RELOAD_DATA or choice == RELOAD_CONFIG_AND_DATA:
+                reloadable_data_arg = adapted_data_collector(config_arg)
+
+        return step_result
+
+
+flow_gate = FlowGate()
 
 
 # PIPELINE STEP FLOW GATE Decorators
@@ -238,31 +252,20 @@ def retry_or_reconfig[O](
     return generator
 
 
-def stage[D, O](
-        config_loader: ConfigLoader,
-        data_collector: DataCollector[D],
-        err_header: str | None = None
-) -> Callable[[PipelineStep[D, O]], PipelineStep[D, O]]:
-    return flow_gate_decorator(controls={CONTINUE, RETRY, RELOAD_CONFIG, RELOAD_DATA, RELOAD_CONFIG_AND_DATA, ABORT},
-                               err_header=err_header,
-                               config_loader=config_loader,
-                               data_collector=data_collector)
-
-
-class ConfiglessStagePipelineStep[O](Protocol):
-    def __call__(self, reloadable_data: Any, *args: Any, **kwargs: Any) -> O:
+class ConfiglessStagePipelineStep[D, O](Protocol):
+    def __call__(self, reloadable_data: D, *args: Any, **kwargs: Any) -> O:
         pass
 
 
 def configless_stage[D, O](
         data_collector: DataCollector[D],
         err_header: str | None = None
-) -> Callable[[PipelineStep[D, O]], ConfiglessStagePipelineStep[O]]:
-    decorator = flow_gate_decorator(controls={CONTINUE, RETRY, RELOAD_DATA, ABORT},
+) -> Callable[[PipelineStep[D, O]], ConfiglessStagePipelineStep[D, O]]:
+    decorator = flow_gate_decorator(controls={CONTINUE, CONTINUE_AND_SKIP, RETRY, RELOAD_DATA, ABORT},
                                     err_header=err_header,
                                     data_collector=data_collector)
 
-    def generator(func: PipelineStep[D, O]) -> ConfiglessStagePipelineStep[O]:
+    def generator(func: PipelineStep[D, O]) -> ConfiglessStagePipelineStep[D, O]:
         adapted_step_func: PipelineStep[D, O] = lambda _c, data, *args, **kwargs: func(data, *args, **kwargs)
 
         def wrap(data: D, *args: Any, **kwargs: Any) -> O:
@@ -271,6 +274,18 @@ def configless_stage[D, O](
         return wrap
 
     return generator
+
+
+def stage[D, O](
+        config_loader: ConfigLoader,
+        data_collector: DataCollector[D],
+        err_header: str | None = None
+) -> Callable[[PipelineStep[D, O]], PipelineStep[D, O]]:
+    return flow_gate_decorator(
+        controls={CONTINUE, CONTINUE_AND_SKIP, RETRY, RELOAD_CONFIG, RELOAD_DATA, RELOAD_CONFIG_AND_DATA, ABORT},
+        err_header=err_header,
+        config_loader=config_loader,
+        data_collector=data_collector)
 
 
 class PipelineStateManager:
