@@ -1,0 +1,8 @@
+[tool.pyright]
+include = ["common", "stage_*", "pipeline.py"]
+
+reportMissingTypeStubs = true
+
+pythonVersion = "3.12"
+pythonPlatform = "Windows"
+
