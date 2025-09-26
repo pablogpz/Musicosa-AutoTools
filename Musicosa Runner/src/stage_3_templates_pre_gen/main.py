@@ -8,7 +8,6 @@ from stage_3_templates_pre_gen.stage_input import load_musicosa_from_db
 from stage_3_templates_pre_gen.summary import stage_summary
 
 if __name__ == "__main__":
-
     # Data retrieval
 
     try:
@@ -36,10 +35,11 @@ if __name__ == "__main__":
                     else:
                         paired_avatar_entity = pairing.avatar.to_orm()
 
-                    (Contestant.ORM
-                     .update(avatar=paired_avatar_entity)
-                     .where(Contestant.ORM.id == pairing.contestant.id)
-                     .execute())
+                    (
+                        Contestant.ORM.update(avatar=paired_avatar_entity)
+                        .where(Contestant.ORM.id == pairing.contestant.id)
+                        .execute()
+                    )
 
         if result.frame_settings:
             with db.atomic():

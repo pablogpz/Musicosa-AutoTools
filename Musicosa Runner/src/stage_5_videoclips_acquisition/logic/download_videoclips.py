@@ -14,10 +14,10 @@ from stage_5_videoclips_acquisition.custom_types import VideoclipsDownloadResult
 
 # pyright: reportIndexIssue=false, reportOptionalSubscript=false, reportTypedDictNotRequiredAccess=false, reportAttributeAccessIssue=false
 
-def download_videoclip_collection(entries: list[Entry],
-                                  artifacts_folder: str,
-                                  use_cookies: bool,
-                                  quiet_ffmpeg: bool) -> VideoclipsDownloadResult:
+
+def download_videoclip_collection(
+    entries: list[Entry], artifacts_folder: str, use_cookies: bool, quiet_ffmpeg: bool
+) -> VideoclipsDownloadResult:
     downloaded_videoclip_titles: list[str] = []
     skipped_videoclip_titles: list[str] = []
     failed_videoclip_titles: list[str] = []
@@ -46,7 +46,6 @@ def download_videoclip_collection(entries: list[Entry],
         ytdl.add_post_processor(MP4RemuxPostProcessor(quiet_ffmpeg))
 
         for idx, entry in enumerate(entries):
-
             if path.isfile(f"{artifacts_folder}/{slugify(entry.title)}.{VIDEO_FORMAT}"):
                 print(f"[SKIPPING #{idx + 1}] {entry.title}")
                 skipped_videoclip_titles.append(entry.title)
@@ -90,19 +89,22 @@ class MP4RemuxPostProcessor(yt_dlp.postprocessor.PostProcessor):
             print(tab(1, f"[SKIPPING REMUX] Skipping '{basename(downloaded_videoclip_path)}'"))
             return [], info
 
-        remuxed_videoclip_path = f"{downloaded_videoclip_path.rsplit(".", 1)[0]}.mp4"
+        remuxed_videoclip_path = f"{downloaded_videoclip_path.rsplit('.', 1)[0]}.mp4"
 
         print(tab(1, f"[REMUXING] Remuxing videoclip '{basename(downloaded_videoclip_path)}' to MP4"))
 
         try:
-            (ffmpeg
-             .input(filename=downloaded_videoclip_path)
-             .output(filename=remuxed_videoclip_path, vcodec="copy")
-             .run(quiet=self.quiet_ffmpeg, overwrite_output=True))
+            (
+                ffmpeg.input(filename=downloaded_videoclip_path)
+                .output(filename=remuxed_videoclip_path, vcodec="copy")
+                .run(quiet=self.quiet_ffmpeg, overwrite_output=True)
+            )
         except FFMpegError as err:
-            print(tab(1,
-                      f"[REMUX FAILED] "
-                      f"Failed to remux videoclip '{basename(downloaded_videoclip_path)}'. Cause: {err}"))
+            print(
+                tab(
+                    1, f"[REMUX FAILED] Failed to remux videoclip '{basename(downloaded_videoclip_path)}'. Cause: {err}"
+                )
+            )
             raise
 
         safe_to_delete_files = [downloaded_videoclip_path]

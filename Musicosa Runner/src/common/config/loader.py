@@ -27,12 +27,14 @@ def load_config(config_file: str | None = None) -> Config:
     config_dict = tomllib.loads(config_contents, parse_float=float)
 
     try:
-        return Config(start_from=config_dict["start_from"],
-                      artifacts_folder=config_dict["artifacts_folder"],
-                      stitch_final_video=config_dict["stitch_final_video"],
-                      stage_1=StageOneConfig(**config_dict["stage_1"]),
-                      stage_4=StageFourConfig(**config_dict["stage_4"]),
-                      stage_5=StageFiveConfig(**config_dict["stage_5"]),
-                      stage_6=StageSixConfig(**config_dict["stage_6"]))
+        return Config(
+            start_from=config_dict["start_from"],
+            artifacts_folder=config_dict["artifacts_folder"],
+            stitch_final_video=config_dict["stitch_final_video"],
+            stage_1=StageOneConfig(**config_dict["stage_1"]),
+            stage_4=StageFourConfig(**config_dict["stage_4"]),
+            stage_5=StageFiveConfig(**config_dict["stage_5"]),
+            stage_6=StageSixConfig(**config_dict["stage_6"]),
+        )
     except TypeError as err:
         raise TypeError(f"Couldn't parse config file. Cause: {err}") from err

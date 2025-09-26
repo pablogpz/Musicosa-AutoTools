@@ -10,14 +10,13 @@ from common.time.utils import parse_time
 
 # pyright: reportArgumentType=false
 
+
 class DomainModel:
-    def to_orm(self) -> Any:
-        ...
+    def to_orm(self) -> Any: ...
 
 
 class DatabaseModel:
-    def to_domain(self) -> Any:
-        ...
+    def to_domain(self) -> Any: ...
 
 
 class MetadataFields(StrEnum):
@@ -98,24 +97,21 @@ SETTING_KEY_SEPARATOR = "."
 
 
 class SettingKeys(StrEnum):
-    GLOBAL_ROUND_COUNT = \
-        f"{SettingGroupKeys.GLOBAL}{SETTING_KEY_SEPARATOR}{GlobalSettingNames.ROUND_COUNT}"
-    VALIDATION_SCORE_MIN_VALUE = \
+    GLOBAL_ROUND_COUNT = f"{SettingGroupKeys.GLOBAL}{SETTING_KEY_SEPARATOR}{GlobalSettingNames.ROUND_COUNT}"
+    VALIDATION_SCORE_MIN_VALUE = (
         f"{SettingGroupKeys.VALIDATION}{SETTING_KEY_SEPARATOR}{ValidationSettingNames.SCORE_MIN_VALUE}"
-    VALIDATION_SCORE_MAX_VALUE = \
+    )
+    VALIDATION_SCORE_MAX_VALUE = (
         f"{SettingGroupKeys.VALIDATION}{SETTING_KEY_SEPARATOR}{ValidationSettingNames.SCORE_MAX_VALUE}"
-    VALIDATION_ENTRY_VIDEO_DURATION_SECONDS = \
-        f"{SettingGroupKeys.VALIDATION}{SETTING_KEY_SEPARATOR}{ValidationSettingNames.ENTRY_VIDEO_TIMESTAMP_DURATION_SECONDS}"
-    RANKING_SIGNIFICANT_DECIMAL_DIGITS = \
+    )
+    VALIDATION_ENTRY_VIDEO_DURATION_SECONDS = f"{SettingGroupKeys.VALIDATION}{SETTING_KEY_SEPARATOR}{ValidationSettingNames.ENTRY_VIDEO_TIMESTAMP_DURATION_SECONDS}"
+    RANKING_SIGNIFICANT_DECIMAL_DIGITS = (
         f"{SettingGroupKeys.RANKING}{SETTING_KEY_SEPARATOR}{RankingSettingNames.SIGNIFICANT_DECIMAL_DIGITS}"
-    FRAME_WIDTH_PX = \
-        f"{SettingGroupKeys.FRAME}{SETTING_KEY_SEPARATOR}{FrameSettingNames.WIDTH_PX}"
-    FRAME_HEIGHT_PX = \
-        f"{SettingGroupKeys.FRAME}{SETTING_KEY_SEPARATOR}{FrameSettingNames.HEIGHT_PX}"
-    GENERATION_VIDEOCLIPS_OVERRIDE_TOP_N_DURATION = \
-        f"{SettingGroupKeys.GENERATION}{SETTING_KEY_SEPARATOR}{GenerationSettingNames.VIDEOCLIPS_OVERRIDE_TOP_N_DURATION}"
-    GENERATION_VIDEOCLIPS_OVERRIDE_DURATION_UP_TO_X_SECONDS = \
-        f"{SettingGroupKeys.GENERATION}{SETTING_KEY_SEPARATOR}{GenerationSettingNames.VIDEOCLIPS_OVERRIDE_DURATION_SECONDS}"
+    )
+    FRAME_WIDTH_PX = f"{SettingGroupKeys.FRAME}{SETTING_KEY_SEPARATOR}{FrameSettingNames.WIDTH_PX}"
+    FRAME_HEIGHT_PX = f"{SettingGroupKeys.FRAME}{SETTING_KEY_SEPARATOR}{FrameSettingNames.HEIGHT_PX}"
+    GENERATION_VIDEOCLIPS_OVERRIDE_TOP_N_DURATION = f"{SettingGroupKeys.GENERATION}{SETTING_KEY_SEPARATOR}{GenerationSettingNames.VIDEOCLIPS_OVERRIDE_TOP_N_DURATION}"
+    GENERATION_VIDEOCLIPS_OVERRIDE_DURATION_UP_TO_X_SECONDS = f"{SettingGroupKeys.GENERATION}{SETTING_KEY_SEPARATOR}{GenerationSettingNames.VIDEOCLIPS_OVERRIDE_DURATION_SECONDS}"
 
 
 @dataclass
@@ -129,8 +125,9 @@ class Setting(DomainModel):
         group_key = TextField(column_name="group_key")
         setting = TextField(column_name="setting")
         value = TextField(column_name="value", null=True)
-        type = TextField(column_name="type", choices=[t.value for t in SettingValueTypes],
-                         default=SettingValueTypes.STRING)
+        type = TextField(
+            column_name="type", choices=[t.value for t in SettingValueTypes], default=SettingValueTypes.STRING
+        )
 
         class Meta:
             database = db
@@ -139,8 +136,12 @@ class Setting(DomainModel):
 
         def to_domain(self) -> "Setting":
             # noinspection PyTypeChecker
-            return Setting(group_key=self.group_key, setting=self.setting, type=self.type,
-                           value=Setting.parse_setting_value(value=self.value, type_str=self.type))
+            return Setting(
+                group_key=self.group_key,
+                setting=self.setting,
+                type=self.type,
+                value=Setting.parse_setting_value(value=self.value, type_str=self.type),
+            )
 
     @staticmethod
     def parse_setting_value(value: str, type_str: SettingValueTypes) -> SettingValueTypeSpec:
@@ -186,22 +187,26 @@ class Avatar(DomainModel):
 
         def to_domain(self) -> "Avatar":
             # noinspection PyTypeChecker
-            return Avatar(id=self.id,
-                          image_filename=self.image_filename,
-                          image_height=self.image_height,
-                          score_box_position_top=self.score_box_position_top,
-                          score_box_position_left=self.score_box_position_left,
-                          score_box_font_scale=self.score_box_font_scale,
-                          score_box_font_color=self.score_box_font_color)
+            return Avatar(
+                id=self.id,
+                image_filename=self.image_filename,
+                image_height=self.image_height,
+                score_box_position_top=self.score_box_position_top,
+                score_box_position_left=self.score_box_position_left,
+                score_box_font_scale=self.score_box_font_scale,
+                score_box_font_color=self.score_box_font_color,
+            )
 
     def to_orm(self) -> "Avatar.ORM":
-        return Avatar.ORM(id=self.id,
-                          image_filename=self.image_filename,
-                          image_height=self.image_height,
-                          score_box_position_top=self.score_box_position_top,
-                          score_box_position_left=self.score_box_position_left,
-                          score_box_font_scale=self.score_box_font_scale,
-                          score_box_font_color=self.score_box_font_color)
+        return Avatar.ORM(
+            id=self.id,
+            image_filename=self.image_filename,
+            image_height=self.image_height,
+            score_box_position_top=self.score_box_position_top,
+            score_box_position_left=self.score_box_position_left,
+            score_box_font_scale=self.score_box_font_scale,
+            score_box_font_color=self.score_box_font_color,
+        )
 
     @dataclass
     class Insert:
@@ -213,12 +218,14 @@ class Avatar(DomainModel):
         score_box_font_color: str | None
 
         def to_orm(self) -> "Avatar.ORM":
-            return Avatar.ORM(image_filename=self.image_filename,
-                              image_height=self.image_height,
-                              score_box_position_top=self.score_box_position_top,
-                              score_box_position_left=self.score_box_position_left,
-                              score_box_font_scale=self.score_box_font_scale,
-                              score_box_font_color=self.score_box_font_color)
+            return Avatar.ORM(
+                image_filename=self.image_filename,
+                image_height=self.image_height,
+                score_box_position_top=self.score_box_position_top,
+                score_box_position_left=self.score_box_position_left,
+                score_box_font_scale=self.score_box_font_scale,
+                score_box_font_color=self.score_box_font_color,
+            )
 
 
 @dataclass
@@ -290,18 +297,22 @@ class Entry(DomainModel):
 
         def to_domain(self) -> "Entry":
             # noinspection PyTypeChecker
-            return Entry(id=self.id,
-                         title=self.title,
-                         author=self.author.to_domain() if self.author else None,
-                         video_url=self.video_url,
-                         topic=self.topic.to_domain() if self.topic else None)
+            return Entry(
+                id=self.id,
+                title=self.title,
+                author=self.author.to_domain() if self.author else None,
+                video_url=self.video_url,
+                topic=self.topic.to_domain() if self.topic else None,
+            )
 
     def to_orm(self) -> "Entry.ORM":
-        return Entry.ORM(id=self.id,
-                         title=self.title,
-                         author=self.author.to_orm() if self.author else None,
-                         video_url=self.video_url,
-                         topic=self.topic.to_orm() if self.topic else None)
+        return Entry.ORM(
+            id=self.id,
+            title=self.title,
+            author=self.author.to_orm() if self.author else None,
+            video_url=self.video_url,
+            topic=self.topic.to_orm() if self.topic else None,
+        )
 
 
 @dataclass
@@ -329,22 +340,26 @@ class Template(DomainModel):
 
         def to_domain(self) -> "Template":
             # noinspection PyTypeChecker
-            return Template(entry=self.entry.to_domain(),
-                            avatar_scale=self.avatar_scale,
-                            author_avatar_scale=self.author_avatar_scale,
-                            video_box_width_px=self.video_box_width_px,
-                            video_box_height_px=self.video_box_height_px,
-                            video_box_position_top_px=self.video_box_position_top_px,
-                            video_box_position_left_px=self.video_box_position_left_px)
+            return Template(
+                entry=self.entry.to_domain(),
+                avatar_scale=self.avatar_scale,
+                author_avatar_scale=self.author_avatar_scale,
+                video_box_width_px=self.video_box_width_px,
+                video_box_height_px=self.video_box_height_px,
+                video_box_position_top_px=self.video_box_position_top_px,
+                video_box_position_left_px=self.video_box_position_left_px,
+            )
 
     def to_orm(self) -> "Template.ORM":
-        return Template.ORM(entry=self.entry.to_orm(),
-                            avatar_scale=self.avatar_scale,
-                            author_avatar_scale=self.author_avatar_scale,
-                            video_box_width_px=self.video_box_width_px,
-                            video_box_height_px=self.video_box_height_px,
-                            video_box_position_top_px=self.video_box_position_top_px,
-                            video_box_position_left_px=self.video_box_position_left_px)
+        return Template.ORM(
+            entry=self.entry.to_orm(),
+            avatar_scale=self.avatar_scale,
+            author_avatar_scale=self.author_avatar_scale,
+            video_box_width_px=self.video_box_width_px,
+            video_box_height_px=self.video_box_height_px,
+            video_box_position_top_px=self.video_box_position_top_px,
+            video_box_position_left_px=self.video_box_position_left_px,
+        )
 
 
 @dataclass
@@ -364,14 +379,16 @@ class VideoOptions(DomainModel):
 
         def to_domain(self) -> "VideoOptions":
             # noinspection PyTypeChecker
-            return VideoOptions(entry=self.entry.to_domain(),
-                                timestamp_start=parse_time(self.timestamp_start),
-                                timestamp_end=parse_time(self.timestamp_end))
+            return VideoOptions(
+                entry=self.entry.to_domain(),
+                timestamp_start=parse_time(self.timestamp_start),
+                timestamp_end=parse_time(self.timestamp_end),
+            )
 
     def to_orm(self) -> "VideoOptions.ORM":
-        return VideoOptions.ORM(entry=self.entry.to_orm(),
-                                timestamp_start=str(self.timestamp_start),
-                                timestamp_end=str(self.timestamp_end))
+        return VideoOptions.ORM(
+            entry=self.entry.to_orm(), timestamp_start=str(self.timestamp_start), timestamp_end=str(self.timestamp_end)
+        )
 
 
 @dataclass
@@ -392,14 +409,14 @@ class Scoring(DomainModel):
 
         def to_domain(self) -> "Scoring":
             # noinspection PyTypeChecker
-            return Scoring(contestant=self.contestant.to_domain(),
-                           entry=self.entry.to_domain(),
-                           score=self.score)
+            return Scoring(contestant=self.contestant.to_domain(), entry=self.entry.to_domain(), score=self.score)
 
     def to_orm(self) -> "Scoring.ORM":
-        return Scoring.ORM(contestant=self.contestant.to_orm() if self.contestant else None,
-                           entry=self.entry.to_orm(),
-                           score=self.score)
+        return Scoring.ORM(
+            contestant=self.contestant.to_orm() if self.contestant else None,
+            entry=self.entry.to_orm(),
+            score=self.score,
+        )
 
 
 @dataclass
@@ -419,14 +436,18 @@ class ContestantStats(DomainModel):
 
         def to_domain(self) -> "ContestantStats":
             # noinspection PyTypeChecker
-            return ContestantStats(contestant=self.contestant.to_domain(),
-                                   avg_given_score=self.avg_given_score,
-                                   avg_received_score=self.avg_received_score)
+            return ContestantStats(
+                contestant=self.contestant.to_domain(),
+                avg_given_score=self.avg_given_score,
+                avg_received_score=self.avg_received_score,
+            )
 
     def to_orm(self) -> "ContestantStats.ORM":
-        return ContestantStats.ORM(contestant=self.contestant.to_orm(),
-                                   avg_given_score=self.avg_given_score,
-                                   avg_received_score=self.avg_received_score)
+        return ContestantStats.ORM(
+            contestant=self.contestant.to_orm(),
+            avg_given_score=self.avg_given_score,
+            avg_received_score=self.avg_received_score,
+        )
 
 
 @dataclass
@@ -448,9 +469,17 @@ class EntryStats(DomainModel):
 
         def to_domain(self) -> "EntryStats":
             # noinspection PyTypeChecker
-            return EntryStats(entry=self.entry.to_domain(), avg_score=self.avg_score, ranking_place=self.ranking_place,
-                              ranking_sequence=self.ranking_sequence)
+            return EntryStats(
+                entry=self.entry.to_domain(),
+                avg_score=self.avg_score,
+                ranking_place=self.ranking_place,
+                ranking_sequence=self.ranking_sequence,
+            )
 
     def to_orm(self) -> "EntryStats.ORM":
-        return EntryStats.ORM(entry=self.entry.to_orm(), avg_score=self.avg_score, ranking_place=self.ranking_place,
-                              ranking_sequence=self.ranking_sequence)
+        return EntryStats.ORM(
+            entry=self.entry.to_orm(),
+            avg_score=self.avg_score,
+            ranking_place=self.ranking_place,
+            ranking_sequence=self.ranking_sequence,
+        )

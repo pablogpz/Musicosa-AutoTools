@@ -15,13 +15,15 @@ from stage_6_video_gen.custom_types import EntryVideoOptions, TransitionOptions
 from stage_6_video_gen.logic.helpers import get_video_duration_seconds
 
 
-def generate_final_video(artifacts_folder: str,
-                         video_bits_folder: str,
-                         final_video_folder: str,
-                         final_video_name: str,
-                         quiet_ffmpeg: bool,
-                         vid_opts: list[EntryVideoOptions],
-                         transition_options: TransitionOptions) -> str:
+def generate_final_video(
+    artifacts_folder: str,
+    video_bits_folder: str,
+    final_video_folder: str,
+    final_video_name: str,
+    quiet_ffmpeg: bool,
+    vid_opts: list[EntryVideoOptions],
+    transition_options: TransitionOptions,
+) -> str:
     presentation_duration = transition_options.presentation_duration
     transition_duration = transition_options.transition_duration
     transition_type = transition_options.type
@@ -32,11 +34,9 @@ def generate_final_video(artifacts_folder: str,
         timeline_cursor = 0
 
         for video_option in vid_opts:
-
             # Check video sources
 
-            presentation_file = \
-                f"{artifacts_folder}/{slugify(video_option.entry_title)}-{PRESENTATION_IMG_FILE_SUFFIX}.{TEMPLATE_IMG_FORMAT}"
+            presentation_file = f"{artifacts_folder}/{slugify(video_option.entry_title)}-{PRESENTATION_IMG_FILE_SUFFIX}.{TEMPLATE_IMG_FORMAT}"
             video_bit_file = f"{video_bits_folder}/{video_option.sequence_number}.{VIDEO_FORMAT}"
 
             if not path.isfile(presentation_file):
@@ -53,28 +53,33 @@ def generate_final_video(artifacts_folder: str,
             video_bit_duration = get_video_duration_seconds(video_bit_file)
 
             video_streams.append(
-                xfade(presentation_stream
-                      .fps(fps=VIDEO_FPS)
-                      .settb(expr="AVTB")
-                      .fade(type="in", duration=TRANSITION_FADE_DURATION_SECONDS),
-                      video_bit_stream
-                      .settb(expr="AVTB")
-                      .fade(type="out", duration=TRANSITION_FADE_DURATION_SECONDS,
-                            start_time=video_bit_duration - TRANSITION_FADE_DURATION_SECONDS),
-                      transition=transition_type,
-                      duration=transition_duration,
-                      offset=presentation_duration - transition_duration / 2))
+                xfade(
+                    presentation_stream.fps(fps=VIDEO_FPS)
+                    .settb(expr="AVTB")
+                    .fade(type="in", duration=TRANSITION_FADE_DURATION_SECONDS),
+                    video_bit_stream.settb(expr="AVTB").fade(
+                        type="out",
+                        duration=TRANSITION_FADE_DURATION_SECONDS,
+                        start_time=video_bit_duration - TRANSITION_FADE_DURATION_SECONDS,
+                    ),
+                    transition=transition_type,
+                    duration=transition_duration,
+                    offset=presentation_duration - transition_duration / 2,
+                )
+            )
 
             start_of_audio_track = timeline_cursor + presentation_duration - transition_duration / 2
 
             audio_streams.append(
-                video_bit_stream
-                .adelay(delays="|".join(2 * [str(start_of_audio_track * 1000)]))
+                video_bit_stream.adelay(delays="|".join(2 * [str(start_of_audio_track * 1000)]))
                 .afade(type="in", duration=TRANSITION_FADE_DURATION_SECONDS, curve="tri")
-                .afade(type="out",
-                       duration=TRANSITION_FADE_DURATION_SECONDS,
-                       start_time=(start_of_audio_track + video_bit_duration) - TRANSITION_FADE_DURATION_SECONDS,
-                       curve="tri"))
+                .afade(
+                    type="out",
+                    duration=TRANSITION_FADE_DURATION_SECONDS,
+                    start_time=(start_of_audio_track + video_bit_duration) - TRANSITION_FADE_DURATION_SECONDS,
+                    curve="tri",
+                )
+            )
 
             timeline_cursor = start_of_audio_track + video_bit_duration
 
@@ -83,13 +88,13 @@ def generate_final_video(artifacts_folder: str,
         fragment_path = f"{final_video_folder}/{final_video_name}.fragment-{fragment_id}.{VIDEO_FORMAT}"
 
         try:
-            ffmpeg_cmd = (ffmpeg
-                          .output(concat(*video_streams, n=len(video_streams), v=1, a=0).video(0),
-                                  amix(*audio_streams, inputs=len(audio_streams), duration="longest", normalize=False),
-                                  filename=fragment_path,
-                                  vcodec="libx264",
-                                  b="6000k")
-                          .compile(overwrite_output=True))
+            ffmpeg_cmd = ffmpeg.output(
+                concat(*video_streams, n=len(video_streams), v=1, a=0).video(0),
+                amix(*audio_streams, inputs=len(audio_streams), duration="longest", normalize=False),
+                filename=fragment_path,
+                vcodec="libx264",
+                b="6000k",
+            ).compile(overwrite_output=True)
         except FFMpegError as error:
             raise StageException(f"Bad ffmpeg command for fragment '{fragment_id}'. Cause: {error}") from error
 
@@ -97,7 +102,7 @@ def generate_final_video(artifacts_folder: str,
 
         cmd_config_and_inputs = ffmpeg_cmd[:filtergraph_arg_idx]
         cmd_filtergraph = ffmpeg_cmd[filtergraph_arg_idx + 1]
-        cmd_output = ffmpeg_cmd[filtergraph_arg_idx + 2:]
+        cmd_output = ffmpeg_cmd[filtergraph_arg_idx + 2 :]
 
         if quiet_ffmpeg:
             cmd_config_and_inputs.append("-hide_banner -loglevel error")
@@ -133,9 +138,10 @@ def generate_final_video(artifacts_folder: str,
     final_video_fragments_files = []
     fragment_id = 0
     while fragment_id < len(sorted_vid_opts):
-        vid_opts_slice = sorted_vid_opts[fragment_id:fragment_id + ENTRIES_PER_FRAGMENT]
+        vid_opts_slice = sorted_vid_opts[fragment_id : fragment_id + ENTRIES_PER_FRAGMENT]
         final_video_fragments_files.append(
-            generate_final_video_fragment(vid_opts_slice, fragment_id // ENTRIES_PER_FRAGMENT))
+            generate_final_video_fragment(vid_opts_slice, fragment_id // ENTRIES_PER_FRAGMENT)
+        )
         fragment_id += len(vid_opts_slice)
 
     final_video_path = f"{final_video_folder}/{final_video_name}.{VIDEO_FORMAT}"
@@ -155,9 +161,10 @@ def generate_final_video(artifacts_folder: str,
         try:
             ffmpeg_exit_code = system(
                 f"ffmpeg -y"
-                f" {"-hide_banner -loglevel error" if quiet_ffmpeg else ""}"
+                f" {'-hide_banner -loglevel error' if quiet_ffmpeg else ''}"
                 f" -f concat -safe 0 -i {concat_list_file}"
-                f" -c:v copy {final_video_path}")
+                f" -c:v copy {final_video_path}"
+            )
         except RuntimeError as err:
             raise StageException(f"Failed to concatenate final video fragments. Cause: {err}") from err
 

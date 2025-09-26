@@ -17,7 +17,7 @@ def bulk_pack(collection: Iterable) -> list[dict[Any, Any]]:
 
         orm_entity = item.to_orm()
 
-        if not getattr(orm_entity, '__data__', None):
+        if not getattr(orm_entity, "__data__", None):
             # Fucked around and found out (:
             raise TypeError(f"ORM entity '{orm_entity}' doesn't store its data in '__data__'")
 

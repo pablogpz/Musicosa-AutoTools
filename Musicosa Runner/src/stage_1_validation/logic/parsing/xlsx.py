@@ -7,23 +7,23 @@ from stage_1_validation.custom_types import ContestantSubmissionEntry, Contestan
 from stage_1_validation.logic.parsing.utils import parse_score_str, parse_video_timestamp_str, parse_entry_topic_str
 
 
-def parse_contestant_forms_xlsx_folder(forms_folder: str,
-                                       contestant_name_coords: str,
-                                       entries_data_coords: str) -> list[ContestantSubmission]:
+def parse_contestant_forms_xlsx_folder(
+    forms_folder: str, contestant_name_coords: str, entries_data_coords: str
+) -> list[ContestantSubmission]:
     submissions: list[ContestantSubmission] = []
-    form_files = [file for file in os.listdir(forms_folder) if file.endswith('.xlsx')]
+    form_files = [file for file in os.listdir(forms_folder) if file.endswith(".xlsx")]
 
     for form_file in form_files:
-        submissions.append(parse_contestant_form_xlsx(f"{forms_folder}/{form_file}",
-                                                      contestant_name_coords,
-                                                      entries_data_coords))
+        submissions.append(
+            parse_contestant_form_xlsx(f"{forms_folder}/{form_file}", contestant_name_coords, entries_data_coords)
+        )
 
     return submissions
 
 
-def parse_contestant_form_xlsx(form_file: str,
-                               contestant_name_coords: str,
-                               entries_data_coords: str) -> ContestantSubmission:
+def parse_contestant_form_xlsx(
+    form_file: str, contestant_name_coords: str, entries_data_coords: str
+) -> ContestantSubmission:
     submission_entries: list[ContestantSubmissionEntry] = []
 
     workbook = load_workbook(form_file, data_only=True, read_only=True)
@@ -49,14 +49,15 @@ def parse_contestant_form_xlsx(form_file: str,
             score = parse_score_str(str(raw_score))
         except ValueError as err:
             raise StageException(
-                f"[{contestant_name}][{title}] Error parsing score value '{raw_score}': {err}") from err
+                f"[{contestant_name}][{title}] Error parsing score value '{raw_score}': {err}"
+            ) from err
 
         is_author = raw_is_author.strip() != "" if raw_is_author else False
 
         if not is_author:
             submission_entries.append(
-                ContestantSubmissionEntry(title, score, is_author, video_url=None, video_timestamp=None,
-                                          topic=None))
+                ContestantSubmissionEntry(title, score, is_author, video_url=None, video_timestamp=None, topic=None)
+            )
             continue
 
         video_url = raw_video_url.strip() if raw_video_url else None
@@ -71,8 +72,7 @@ def parse_contestant_form_xlsx(form_file: str,
 
         topic = parse_entry_topic_str(raw_topic) if raw_topic else None
 
-        submission_entries.append(
-            ContestantSubmissionEntry(title, score, is_author, video_url, video_timestamp, topic))
+        submission_entries.append(ContestantSubmissionEntry(title, score, is_author, video_url, video_timestamp, topic))
     workbook.close()
 
     return ContestantSubmission(contestant_name, submission_entries)

@@ -7,7 +7,10 @@ from stage_1_validation.logic.validation import validate_contestant_submission_c
 
 def execute(stage_input: StageOneInput) -> StageOneOutput:
     submissions, valid_titles, entry_topics = (
-        stage_input.submissions, stage_input.valid_titles, stage_input.entry_topics)
+        stage_input.submissions,
+        stage_input.valid_titles,
+        stage_input.entry_topics,
+    )
 
     if not is_setting_set(SettingKeys.GLOBAL_ROUND_COUNT):
         raise StageException(f"Setting '{SettingKeys.GLOBAL_ROUND_COUNT}' not set")

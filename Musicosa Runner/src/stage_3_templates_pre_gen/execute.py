@@ -2,9 +2,13 @@ from common.custom_types import StageException
 from common.model.models import SettingKeys
 from common.model.settings import is_setting_set
 from stage_3_templates_pre_gen.custom_types import StageThreeOutput, StageThreeInput
-from stage_3_templates_pre_gen.logic.fulfillment import fulfill_unfulfilled_avatar_pairings, \
-    fulfill_unfulfilled_frame_settings, fulfill_unfulfilled_templates, fulfill_unfulfilled_video_options, \
-    fulfill_unfulfilled_generation_settings
+from stage_3_templates_pre_gen.logic.fulfillment import (
+    fulfill_unfulfilled_avatar_pairings,
+    fulfill_unfulfilled_frame_settings,
+    fulfill_unfulfilled_templates,
+    fulfill_unfulfilled_video_options,
+    fulfill_unfulfilled_generation_settings,
+)
 
 
 def execute(stage_input: StageThreeInput) -> StageThreeOutput:

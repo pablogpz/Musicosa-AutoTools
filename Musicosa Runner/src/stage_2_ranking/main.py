@@ -8,7 +8,6 @@ from stage_2_ranking.stage_input import load_musicosa_from_db
 from stage_2_ranking.summary import stage_summary
 
 if __name__ == "__main__":
-
     # Data retrieval
 
     try:
@@ -40,22 +39,36 @@ if __name__ == "__main__":
 
     with db.atomic() as tx:
         try:
-            (ContestantStats.ORM
-             .insert_many(bulk_pack(
-                [ContestantStats(contestant=contestants_by_name[stat.contestant.name],
-                                 avg_given_score=stat.avg_given_score,
-                                 avg_received_score=stat.avg_received_score)
-                 for stat in contestants_stats]))
-             .execute())
+            (
+                ContestantStats.ORM.insert_many(
+                    bulk_pack(
+                        [
+                            ContestantStats(
+                                contestant=contestants_by_name[stat.contestant.name],
+                                avg_given_score=stat.avg_given_score,
+                                avg_received_score=stat.avg_received_score,
+                            )
+                            for stat in contestants_stats
+                        ]
+                    )
+                ).execute()
+            )
 
-            (EntryStats.ORM
-             .insert_many(bulk_pack(
-                [EntryStats(entry=entries_by_title[stat.entry.title],
-                            avg_score=stat.avg_score,
-                            ranking_place=stat.ranking_place,
-                            ranking_sequence=stat.ranking_sequence)
-                 for stat in entries_stats]))
-             .execute())
+            (
+                EntryStats.ORM.insert_many(
+                    bulk_pack(
+                        [
+                            EntryStats(
+                                entry=entries_by_title[stat.entry.title],
+                                avg_score=stat.avg_score,
+                                ranking_place=stat.ranking_place,
+                                ranking_sequence=stat.ranking_sequence,
+                            )
+                            for stat in entries_stats
+                        ]
+                    )
+                ).execute()
+            )
         except Exception as err:
             tx.rollback()
             print(f"[Stage 2 | Data persistence] {err}")

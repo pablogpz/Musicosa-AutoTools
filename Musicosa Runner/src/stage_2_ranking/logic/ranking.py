@@ -13,35 +13,38 @@ def rank_musicosa(musicosa: Musicosa) -> tuple[list[ContestantStats], list[Entry
     entries_avg_scores = calculate_entries_avg_scores(
         [score for contestant in musicosa.contestants for score in contestant.scores],
         len(musicosa.contestants),
-        significant_decimal_digits)
+        significant_decimal_digits,
+    )
     entries_avg_scores_by_title = {title: avg_score for title, avg_score in entries_avg_scores}
 
     # Contestant's average given score
 
-    contestants_avg_given_scores = calculate_contestants_avg_given_scores(musicosa.contestants,
-                                                                          significant_decimal_digits)
+    contestants_avg_given_scores = calculate_contestants_avg_given_scores(
+        musicosa.contestants, significant_decimal_digits
+    )
     contestants_avg_given_scores_by_name = {name: avg_score for name, avg_score in contestants_avg_given_scores}
 
     # Contestant's average received score
 
-    contestants_avg_received_scores = calculate_contestants_avg_received_scores(musicosa.contestants,
-                                                                                musicosa.entries,
-                                                                                entries_avg_scores,
-                                                                                significant_decimal_digits)
+    contestants_avg_received_scores = calculate_contestants_avg_received_scores(
+        musicosa.contestants, musicosa.entries, entries_avg_scores, significant_decimal_digits
+    )
     # Contestants' stats
 
     contestants_by_name = {contestant.name: contestant for contestant in musicosa.contestants}
-    contestant_stats_collection = [ContestantStats(contestants_by_name[contestant], avg_given, avg_received)
-                                   for (contestant, avg_given), (_, avg_received)
-                                   in zip(contestants_avg_given_scores, contestants_avg_received_scores)]
+    contestant_stats_collection = [
+        ContestantStats(contestants_by_name[contestant], avg_given, avg_received)
+        for (contestant, avg_given), (_, avg_received) in zip(
+            contestants_avg_given_scores, contestants_avg_received_scores
+        )
+    ]
 
     # Ranking algorithm
 
-    entry_stats_collection = [EntryStats(entry,
-                                         entries_avg_scores_by_title[entry.title],
-                                         ranking_place=None,
-                                         ranking_sequence=None)
-                              for entry in musicosa.entries]
+    entry_stats_collection = [
+        EntryStats(entry, entries_avg_scores_by_title[entry.title], ranking_place=None, ranking_sequence=None)
+        for entry in musicosa.entries
+    ]
     entry_stats_collection.sort(key=lambda stat: stat.avg_score)  # pyright: ignore [reportArgumentType]
     entry_count = len(entry_stats_collection)
 
@@ -65,8 +68,9 @@ def rank_musicosa(musicosa: Musicosa) -> tuple[list[ContestantStats], list[Entry
 
         if len(draw_group) > 1:
             # Tiebreaker: contestant avg. given score
-            sorted_draw_group = sorted(draw_group,
-                                       key=lambda stat: contestants_avg_given_scores_by_name[stat.entry.author_name])
+            sorted_draw_group = sorted(
+                draw_group, key=lambda stat: contestants_avg_given_scores_by_name[stat.entry.author_name]
+            )
             for entry in sorted_draw_group:
                 entry.ranking_place = current_ranking_place - len(draw_group) + 1
                 entry.ranking_sequence = ranking_sequence
@@ -75,8 +79,9 @@ def rank_musicosa(musicosa: Musicosa) -> tuple[list[ContestantStats], list[Entry
     return contestant_stats_collection, entry_stats_collection
 
 
-def calculate_contestants_avg_given_scores(contestants: list[Contestant], significant_decimal_digits: int) \
-        -> list[tuple[str, float]]:
+def calculate_contestants_avg_given_scores(
+    contestants: list[Contestant], significant_decimal_digits: int
+) -> list[tuple[str, float]]:
     contestants_avg_given_scores: list[tuple[str, float]] = []
 
     for contestant in contestants:
@@ -90,10 +95,12 @@ def calculate_contestants_avg_given_scores(contestants: list[Contestant], signif
     return contestants_avg_given_scores
 
 
-def calculate_contestants_avg_received_scores(contestants: list[Contestant],
-                                              entries: list[Entry],
-                                              all_entries_avg_scores: list[tuple[str, float]],
-                                              significant_decimal_digits: int) -> list[tuple[str, float]]:
+def calculate_contestants_avg_received_scores(
+    contestants: list[Contestant],
+    entries: list[Entry],
+    all_entries_avg_scores: list[tuple[str, float]],
+    significant_decimal_digits: int,
+) -> list[tuple[str, float]]:
     contestants_avg_received_scores: list[tuple[str, float]] = []
     entries_by_name = {title: avg_score for title, avg_score in all_entries_avg_scores}
 
@@ -101,18 +108,18 @@ def calculate_contestants_avg_received_scores(contestants: list[Contestant],
         authored_entries = [entry for entry in entries if entry.author_name == contestant.name]
 
         avg_received_score = round(
-            reduce(lambda acc, entry:
-                   acc + entries_by_name[entry.title], authored_entries, 0) / len(authored_entries),
-            significant_decimal_digits)
+            reduce(lambda acc, entry: acc + entries_by_name[entry.title], authored_entries, 0) / len(authored_entries),
+            significant_decimal_digits,
+        )
 
         contestants_avg_received_scores.append((contestant.name, avg_received_score))
 
     return contestants_avg_received_scores
 
 
-def calculate_entries_avg_scores(all_contestant_scores: list[Score],
-                                 contestants_count: int,
-                                 significant_decimal_digits: int) -> list[tuple[str, float]]:
+def calculate_entries_avg_scores(
+    all_contestant_scores: list[Score], contestants_count: int, significant_decimal_digits: int
+) -> list[tuple[str, float]]:
     entries_avg_scores: dict[str, float] = {}
 
     for score in all_contestant_scores:
