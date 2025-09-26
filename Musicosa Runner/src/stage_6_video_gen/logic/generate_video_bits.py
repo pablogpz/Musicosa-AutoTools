@@ -1,11 +1,11 @@
+from math import ceil
 from os import path
 
 import ffmpeg
 from ffmpeg.exceptions import FFMpegError
 from ffmpeg_normalize import FFmpegNormalize
-from math import ceil
 
-from common.constants import VIDEOCLIPS_OVERRIDE_DURATION_LIMIT, TEMPLATE_IMG_FORMAT, VIDEO_FORMAT
+from common.constants import TEMPLATE_IMG_FORMAT, VIDEO_FORMAT, VIDEOCLIPS_OVERRIDE_DURATION_LIMIT
 from common.custom_types import StageException
 from common.formatting.tabulate import tab
 from common.model.models import SettingKeys
@@ -13,16 +13,16 @@ from common.model.settings import get_setting_by_key
 from common.naming.slugify import slugify
 from common.time.utils import parse_time, time_to_seconds
 from stage_6_video_gen.constants import (
-    VIDEO_FPS,
-    VIDEO_CODEC,
-    VIDEO_BITRATE,
-    NORMALIZATION_TYPE,
-    NORMALIZATION_TARGET_LEVEL,
-    NORMALIZATION_LOUDNESS_RANGE_TARGET,
     NORMALIZATION_AUDIO_CODEC,
     NORMALIZATION_AUDIO_SAMPLE_RATE,
+    NORMALIZATION_LOUDNESS_RANGE_TARGET,
+    NORMALIZATION_TARGET_LEVEL,
+    NORMALIZATION_TYPE,
+    VIDEO_BITRATE,
+    VIDEO_CODEC,
+    VIDEO_FPS,
 )
-from stage_6_video_gen.custom_types import VideoGenerationResult, EntryVideoOptions
+from stage_6_video_gen.custom_types import EntryVideoOptions, VideoGenerationResult
 from stage_6_video_gen.logic.helpers import get_video_duration_seconds
 
 

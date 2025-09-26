@@ -5,12 +5,12 @@ from os.path import basename
 import ffmpeg
 from ffmpeg import AudioStream, VideoStream
 from ffmpeg.exceptions import FFMpegError
-from ffmpeg.filters import xfade, amix, concat
+from ffmpeg.filters import amix, concat, xfade
 
-from common.constants import VIDEO_FORMAT, PRESENTATION_IMG_FILE_SUFFIX, TEMPLATE_IMG_FORMAT
+from common.constants import PRESENTATION_IMG_FILE_SUFFIX, TEMPLATE_IMG_FORMAT, VIDEO_FORMAT
 from common.custom_types import StageException
 from common.naming.slugify import slugify
-from stage_6_video_gen.constants import VIDEO_FPS, TRANSITION_FADE_DURATION_SECONDS, ENTRIES_PER_FRAGMENT
+from stage_6_video_gen.constants import ENTRIES_PER_FRAGMENT, TRANSITION_FADE_DURATION_SECONDS, VIDEO_FPS
 from stage_6_video_gen.custom_types import EntryVideoOptions, TransitionOptions
 from stage_6_video_gen.logic.helpers import get_video_duration_seconds
 

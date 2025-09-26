@@ -1,6 +1,6 @@
 from peewee import JOIN
 
-from common.model.models import Entry, EntryStats, VideoOptions, Template
+from common.model.models import Entry, EntryStats, Template, VideoOptions
 from stage_6_video_gen.custom_types import EntryVideoOptions, Timestamp
 
 

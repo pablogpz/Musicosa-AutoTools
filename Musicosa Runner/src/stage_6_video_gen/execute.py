@@ -1,12 +1,12 @@
 import os
 from os import path
-from typing import get_args, cast
+from typing import cast, get_args
 
 from common.config.config import Config
 from common.custom_types import StageException
 from common.model.models import SettingKeys
 from common.model.settings import is_setting_set
-from stage_6_video_gen.custom_types import TransitionOptions, StageSixInput, StageSixOutput, TransitionType
+from stage_6_video_gen.custom_types import StageSixInput, StageSixOutput, TransitionOptions, TransitionType
 from stage_6_video_gen.logic.generate_final_video import generate_final_video
 from stage_6_video_gen.logic.generate_video_bits import generate_video_bit_collection
 

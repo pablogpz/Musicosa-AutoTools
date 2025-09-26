@@ -1,4 +1,4 @@
-from os import path, getenv
+from os import getenv, path
 from os.path import basename
 
 import ffmpeg
@@ -10,7 +10,6 @@ from common.formatting.tabulate import tab
 from common.model.models import Entry
 from common.naming.slugify import slugify
 from stage_5_videoclips_acquisition.custom_types import VideoclipsDownloadResult
-
 
 # pyright: reportIndexIssue=false, reportOptionalSubscript=false, reportTypedDictNotRequiredAccess=false, reportAttributeAccessIssue=false
 

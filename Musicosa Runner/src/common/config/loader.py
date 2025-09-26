@@ -1,7 +1,7 @@
 import tomllib
 from os import path
 
-from common.config.config import Config, StageOneConfig, StageFourConfig, StageFiveConfig, StageSixConfig
+from common.config.config import Config, StageFiveConfig, StageFourConfig, StageOneConfig, StageSixConfig
 from common.config.defaults import DEFAULT_CONFIG_FILE_NAME
 
 

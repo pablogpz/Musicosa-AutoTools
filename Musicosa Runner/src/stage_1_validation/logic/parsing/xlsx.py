@@ -3,8 +3,8 @@ import os
 from openpyxl.reader.excel import load_workbook
 
 from common.custom_types import StageException
-from stage_1_validation.custom_types import ContestantSubmissionEntry, ContestantSubmission
-from stage_1_validation.logic.parsing.utils import parse_score_str, parse_video_timestamp_str, parse_entry_topic_str
+from stage_1_validation.custom_types import ContestantSubmission, ContestantSubmissionEntry
+from stage_1_validation.logic.parsing.utils import parse_entry_topic_str, parse_score_str, parse_video_timestamp_str
 
 
 def parse_contestant_forms_xlsx_folder(

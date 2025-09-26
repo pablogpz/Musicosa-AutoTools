@@ -1,6 +1,6 @@
 from peewee import JOIN
 
-from common.model.models import Contestant, Entry, Avatar, EntryStats, Template, VideoOptions
+from common.model.models import Avatar, Contestant, Entry, EntryStats, Template, VideoOptions
 from stage_3_templates_pre_gen.custom_types import Musicosa
 
 

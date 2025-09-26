@@ -7,12 +7,12 @@ from common.constants import VIDEO_TIMESTAMP_SEPARATOR
 from common.custom_types import StageException
 from common.db.database import db
 from common.db.peewee_helpers import bulk_pack
-from common.model.models import Entry, Scoring, VideoOptions, Contestant, EntryTopic
+from common.model.models import Contestant, Entry, EntryTopic, Scoring, VideoOptions
 from common.naming.identifiers import generate_contestant_uuid5, generate_entry_uuid5
 from common.time.utils import parse_time
 from stage_1_validation.custom_types import StageOneInput
 from stage_1_validation.execute import execute
-from stage_1_validation.stage_input import get_submissions_from_forms_folder, get_valid_titles, get_entry_topics_from_db
+from stage_1_validation.stage_input import get_entry_topics_from_db, get_submissions_from_forms_folder, get_valid_titles
 from stage_1_validation.summary import stage_summary
 
 if __name__ == "__main__":

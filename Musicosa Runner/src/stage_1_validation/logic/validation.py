@@ -1,11 +1,12 @@
-from validators import url as validate_url, ValidationError
+from validators import ValidationError
+from validators import url as validate_url
 
 from common.constants import VIDEO_TIMESTAMP_SEPARATOR
 from common.formatting.tabulate import tab
 from common.model.models import EntryTopic, SettingKeys
 from common.model.settings import get_setting_by_key
-from common.time.utils import validate_time_str, parse_time, seconds_between
-from stage_1_validation.custom_types import ContestantSubmissionEntry, ContestantSubmission
+from common.time.utils import parse_time, seconds_between, validate_time_str
+from stage_1_validation.custom_types import ContestantSubmission, ContestantSubmissionEntry
 from stage_1_validation.logic.helpers import find_duplicates
 
 

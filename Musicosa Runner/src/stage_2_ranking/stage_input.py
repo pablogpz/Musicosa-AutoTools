@@ -1,5 +1,8 @@
-from common.model.models import Contestant, Scoring, Entry
-from stage_2_ranking.custom_types import Musicosa, Contestant as S2_Contestant, Score as S2_Score, Entry as S2_Entry
+from common.model.models import Contestant, Entry, Scoring
+from stage_2_ranking.custom_types import Contestant as S2_Contestant
+from stage_2_ranking.custom_types import Entry as S2_Entry
+from stage_2_ranking.custom_types import Musicosa
+from stage_2_ranking.custom_types import Score as S2_Score
 
 
 def load_musicosa_from_db() -> Musicosa:

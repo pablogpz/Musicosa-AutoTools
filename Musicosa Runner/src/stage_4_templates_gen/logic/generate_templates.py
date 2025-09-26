@@ -4,13 +4,13 @@ from os.path import basename
 import playwright.sync_api
 from playwright.sync_api import ViewportSize, sync_playwright
 
-from common.constants import TEMPLATE_IMG_FORMAT, PRESENTATION_IMG_FILE_SUFFIX
+from common.constants import PRESENTATION_IMG_FILE_SUFFIX, TEMPLATE_IMG_FORMAT
 from common.custom_types import TemplateType
 from common.formatting.tabulate import tab
 from common.model.models import SettingKeys
 from common.model.settings import get_setting_by_key
 from common.naming.slugify import slugify
-from stage_4_templates_gen.custom_types import TemplateGenerationResult, Template
+from stage_4_templates_gen.custom_types import Template, TemplateGenerationResult
 
 
 def generate_templates(

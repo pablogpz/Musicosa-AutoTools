@@ -1,5 +1,5 @@
 import os
-from os import path, getenv
+from os import getenv, path
 
 from common.config.config import Config
 from common.custom_types import StageException

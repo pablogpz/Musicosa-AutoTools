@@ -2,7 +2,7 @@ from functools import reduce
 
 from common.model.models import SettingKeys
 from common.model.settings import get_setting_by_key
-from stage_2_ranking.custom_types import Musicosa, Contestant, ContestantStats, EntryStats, Score, Entry
+from stage_2_ranking.custom_types import Contestant, ContestantStats, Entry, EntryStats, Musicosa, Score
 
 
 def rank_musicosa(musicosa: Musicosa) -> tuple[list[ContestantStats], list[EntryStats]]:

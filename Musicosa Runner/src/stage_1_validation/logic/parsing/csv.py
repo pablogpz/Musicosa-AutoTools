@@ -2,9 +2,9 @@ import os
 from os.path import basename
 
 from common.custom_types import StageException
-from stage_1_validation.constants import CSV_SEPARATOR, CSV_FIELDS_COUNT
-from stage_1_validation.custom_types import ContestantSubmissionEntry, ContestantSubmission
-from stage_1_validation.logic.parsing.utils import parse_score_str, parse_video_timestamp_str, parse_entry_topic_str
+from stage_1_validation.constants import CSV_FIELDS_COUNT, CSV_SEPARATOR
+from stage_1_validation.custom_types import ContestantSubmission, ContestantSubmissionEntry
+from stage_1_validation.logic.parsing.utils import parse_entry_topic_str, parse_score_str, parse_video_timestamp_str
 
 
 def parse_contestant_forms_csv_folder(forms_folder: str) -> list[ContestantSubmission]:

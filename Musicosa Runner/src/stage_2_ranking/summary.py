@@ -1,5 +1,5 @@
 from common.formatting.tabulate import tab
-from stage_2_ranking.custom_types import StageTwoOutput, StageTwoInput
+from stage_2_ranking.custom_types import StageTwoInput, StageTwoOutput
 
 
 def stage_summary(stage_input: StageTwoInput, stage_output: StageTwoOutput) -> str:

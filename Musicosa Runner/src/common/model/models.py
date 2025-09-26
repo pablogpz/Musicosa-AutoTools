@@ -1,9 +1,10 @@
 from dataclasses import dataclass
 from datetime import time
 from enum import StrEnum
-from typing import Literal, Any
+from typing import Any, Literal
 
-from peewee import Model as PeeweeModel, TextField, CompositeKey, AutoField, FloatField, ForeignKeyField, IntegerField
+from peewee import AutoField, CompositeKey, FloatField, ForeignKeyField, IntegerField, TextField
+from peewee import Model as PeeweeModel
 
 from common.db.database import db
 from common.time.utils import parse_time

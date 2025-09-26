@@ -1,4 +1,4 @@
-from common.custom_types import Stage, STAGE_ONE
+from common.custom_types import STAGE_ONE, Stage
 
 DEFAULT_CONFIG_FILE_NAME = "config.toml"
 

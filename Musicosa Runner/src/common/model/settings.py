@@ -1,6 +1,6 @@
 from peewee import PeeweeException
 
-from common.model.models import Setting, SettingKeys, SETTING_KEY_SEPARATOR
+from common.model.models import SETTING_KEY_SEPARATOR, Setting, SettingKeys
 
 
 def get_setting_by_key(key: SettingKeys) -> Setting | None:
