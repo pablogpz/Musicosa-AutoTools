@@ -24,11 +24,13 @@ def parse_contestant_forms_xlsx_folder(forms_folder: str,
 def parse_contestant_form_xlsx(form_file: str,
                                contestant_name_coords: str,
                                entries_data_coords: str) -> ContestantSubmission:
-    contestant_submission: ContestantSubmission
     submission_entries: list[ContestantSubmissionEntry] = []
 
     workbook = load_workbook(form_file, data_only=True, read_only=True)
     worksheet = workbook.active
+
+    if worksheet is None:
+        raise StageException(f"Error loading worksheet from workbook (file '{form_file}')")
 
     contestant_name = worksheet[contestant_name_coords].value
     data_cells_matrix = worksheet[entries_data_coords]

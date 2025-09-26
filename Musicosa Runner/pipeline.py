@@ -1,4 +1,5 @@
 import argparse
+import functools
 import inspect
 from collections.abc import Callable
 from typing import Literal, Never, Protocol, Any
@@ -48,17 +49,16 @@ from stage_6_video_gen.summary import stage_summary as stage_6_summary
 from time import sleep
 
 
-# PIPELINE STEP FLOW GATE Types
+# PIPELINE STEP EXECUTOR Types
 
 class PipelineStep[D, O](Protocol):
-    def __call__(self, config: Config | None, reloadable_data: D | None, *args: Any, **kwargs: Any) -> O:
-        pass
+    def __call__(self, config: Config, reloadable_data: D, /, *args: Any, **kwargs: Any) -> O: ...
 
 
 type ConfigLoader = Callable[[], Config]
-type DataCollector[D] = Callable[[Config], D]
+type DataCollector[D] = Callable[[], D] | Callable[[Config], D]
 
-# PIPELINE STEP FLOW GATE Controls
+# PIPELINE STEP EXECUTOR Flow Controls
 
 CONTINUE: Literal["c"] = "c"
 CONTINUE_AND_SKIP: Literal["sk"] = "sk"
@@ -68,11 +68,11 @@ RELOAD_DATA: Literal["rd"] = "rd"
 RELOAD_CONFIG_AND_DATA: Literal["re"] = "re"
 ABORT: Literal["a"] = "a"
 
-type GateControl = Literal["c", "sk", "r", "rc", "rd", "re", "a"]
+type FlowControl = Literal["c", "sk", "r", "rc", "rd", "re", "a"]
 
 ALLOWED_CONTROLS_ON_ERROR = {RETRY, RELOAD_CONFIG, RELOAD_DATA, RELOAD_CONFIG_AND_DATA, ABORT}
 
-GATE_MESSAGES: dict[GateControl, str] = {
+CONTROL_MESSAGES: dict[FlowControl, str] = {
     CONTINUE: "continue",
     CONTINUE_AND_SKIP: "continue, skip future continuation breaks",
     RETRY: "retry",
@@ -83,9 +83,9 @@ GATE_MESSAGES: dict[GateControl, str] = {
 }
 
 
-# PIPELINE STEP FLOW GATE Definition
+# PIPELINE STEP EXECUTOR Definition
 
-class FlowGate:
+class StepExecutor:
     _skip_continuation: bool
 
     def __init__(self):
@@ -95,20 +95,20 @@ class FlowGate:
                        step_args: tuple[Any, ...],
                        step_kwargs: dict[str, Any],
                        /, *,
-                       controls: set[GateControl],
+                       controls: set[FlowControl],
                        err_header: str | None = None,
                        config_loader: ConfigLoader | None = None,
-                       data_collector: DataCollector[D] | None = None) -> O | Never:
+                       data_collector: DataCollector | None = None) -> O | Never:
         """
-           :param step: Pipeline step function to be executed (see PipelineStep)
-           :param step_args: step's args
-           :param step_kwargs: step's kwargs
-           :param controls: Set of gate controls that are available to this step (see GateControl)
-           :param err_header: Error header to show to the user if an exception is raised by the step
-           :param config_loader: Function used to reload the configuration of the step
-           :param data_collector: Function to be used to reload the step's data
-           :return: step's result or nothing if aborted
-           """
+        :param step: Pipeline step function to be executed (see PipelineStep)
+        :param step_args: step's args
+        :param step_kwargs: step's kwargs
+        :param controls: Execution flow controls that are available to this step (see GateControl)
+        :param err_header: Error header to show to the user if an exception is raised by the step
+        :param config_loader: Function used to reload the configuration of the step
+        :param data_collector: Function to be used to reload the step's data
+        :return: step's result or nothing if aborted
+        """
         controls = {*controls, ABORT}  # Should always have the option to abort
 
         # Runtime checks
@@ -126,12 +126,15 @@ class FlowGate:
                 raise RuntimeError(
                     f"Step function '{step}' supports data reloading but does not provide a data collector")
 
-        def adapted_data_collector(config: Config):
+        def adapted_data_collector(config: Config) -> D:
             # Adapt for data collectors with and without config dependency
-            if len(inspect.getfullargspec(data_collector).args) > 0:
-                return data_collector(config)
+            if len(inspect.getfullargspec(data_collector).args) == 0:
+                return data_collector()  # pyright: ignore [reportOptionalCall, reportCallIssue]
+            elif len(inspect.getfullargspec(data_collector).args) == 1:
+                return data_collector(config)  # pyright: ignore [reportOptionalCall, reportCallIssue]
             else:
-                return data_collector()
+                raise RuntimeError(f"Data collector function '{data_collector}' takes more than 1 arguments "
+                                   f"(non-compliant with DataCollector type)")
 
         # Step execution
 
@@ -139,12 +142,12 @@ class FlowGate:
         step_result = None
 
         on_success_msg = (f"< Pipeline Step Gate >\n"
-                          f"{"\n".join([tab(1, f"[{k}] {v}") for k, v in GATE_MESSAGES.items() if k in controls])}"
+                          f"{"\n".join([tab(1, f"[{k}] {v}") for k, v in CONTROL_MESSAGES.items() if k in controls])}"
                           f"\n")
 
         error_controls = {ctrl for ctrl in controls if ctrl in ALLOWED_CONTROLS_ON_ERROR}
         on_error_msg = (f"< (!) Action required >\n"
-                        f"{"\n".join([tab(1, f"[{k}] {v}") for k, v in GATE_MESSAGES.items() if k in error_controls])}"
+                        f"{"\n".join([tab(1, f"[{k}] {v}") for k, v in CONTROL_MESSAGES.items() if k in error_controls])}"
                         f"\n")
 
         while True:
@@ -177,32 +180,33 @@ class FlowGate:
                 continue
 
             if choice == RELOAD_CONFIG or choice == RELOAD_CONFIG_AND_DATA:
-                config_arg = config_loader()
+                config_arg = config_loader()  # pyright: ignore [reportOptionalCall]
 
             if choice == RELOAD_DATA or choice == RELOAD_CONFIG_AND_DATA:
                 reloadable_data_arg = adapted_data_collector(config_arg)
 
-        return step_result
+        return step_result  # pyright: ignore [reportReturnType]
 
 
-flow_gate = FlowGate()
+step_executor = StepExecutor()
 
 
-# PIPELINE STEP FLOW GATE Decorators
+# PIPELINE STEP EXECUTOR Decorators
 
-def flow_gate_decorator[D, O](
-        controls: set[GateControl],
+def step_executor_decorator[D, O](
+        controls: set[FlowControl],
         err_header: str | None = None,
         config_loader: ConfigLoader | None = None,
         data_collector: DataCollector[D] | None = None
 ) -> Callable[[PipelineStep[D, O]], PipelineStep[D, O]]:
     def generator(step_func: PipelineStep[D, O]) -> PipelineStep[D, O]:
+        @functools.wraps(step_func)
         def wrap(*args: Any, **kwargs: Any) -> O:
-            return flow_gate(step_func, args, kwargs,
-                             controls=controls,
-                             err_header=err_header,
-                             config_loader=config_loader,
-                             data_collector=data_collector)
+            return step_executor(step_func, args, kwargs,
+                                 controls=controls,
+                                 err_header=err_header,
+                                 config_loader=config_loader,
+                                 data_collector=data_collector)
 
         return wrap
 
@@ -211,17 +215,18 @@ def flow_gate_decorator[D, O](
 
 class RetryPipelineStep[O](Protocol):
     def __call__(self, *args: Any, **kwargs: Any) -> O:
-        pass
+        ...
 
 
-def retry[O](err_header: str | None = None) -> Callable[[PipelineStep[None, O]], RetryPipelineStep[O]]:
-    decorator = flow_gate_decorator(controls={RETRY, ABORT}, err_header=err_header)
+def retry[O](err_header: str | None = None) -> Callable[[RetryPipelineStep[O]], RetryPipelineStep[O]]:
+    decorator = step_executor_decorator(controls={RETRY, ABORT}, err_header=err_header)
 
-    def generator(func: PipelineStep[None, O]) -> RetryPipelineStep[O]:
+    def generator(func: RetryPipelineStep[O]) -> RetryPipelineStep[O]:
         adapted_step_func: PipelineStep[None, O] = lambda _c, _d, *args, **kwargs: func(*args, **kwargs)
 
+        @functools.wraps(func)
         def wrap(*args: Any, **kwargs: Any) -> O:
-            return decorator(adapted_step_func)(None, None, *args, **kwargs)
+            return decorator(adapted_step_func)(Config.NULL, None, *args, **kwargs)
 
         return wrap
 
@@ -229,21 +234,22 @@ def retry[O](err_header: str | None = None) -> Callable[[PipelineStep[None, O]],
 
 
 class RetryReconfigPipelineStep[O](Protocol):
-    def __call__(self, config: Config, *args: Any, **kwargs: Any) -> O:
-        pass
+    def __call__(self, config: Config, /, *args: Any, **kwargs: Any) -> O:
+        ...
 
 
 def retry_or_reconfig[O](
         config_loader: ConfigLoader,
         err_header: str | None = None
-) -> Callable[[PipelineStep[None, O]], RetryReconfigPipelineStep[O]]:
-    decorator = flow_gate_decorator(controls={RETRY, RELOAD_CONFIG, ABORT},
-                                    err_header=err_header,
-                                    config_loader=config_loader)
+) -> Callable[[RetryReconfigPipelineStep[O]], RetryReconfigPipelineStep[O]]:
+    decorator = step_executor_decorator(controls={RETRY, RELOAD_CONFIG, ABORT},
+                                        err_header=err_header,
+                                        config_loader=config_loader)
 
-    def generator(func: PipelineStep[None, O]) -> RetryReconfigPipelineStep[O]:
+    def generator(func: RetryReconfigPipelineStep[O]) -> RetryReconfigPipelineStep[O]:
         adapted_step_func: PipelineStep[None, O] = lambda config, _d, *args, **kwargs: func(config, *args, **kwargs)
 
+        @functools.wraps(func)
         def wrap(config: Config, *args: Any, **kwargs: Any) -> O:
             return decorator(adapted_step_func)(config, None, *args, **kwargs)
 
@@ -253,23 +259,24 @@ def retry_or_reconfig[O](
 
 
 class ConfiglessStagePipelineStep[D, O](Protocol):
-    def __call__(self, reloadable_data: D, *args: Any, **kwargs: Any) -> O:
-        pass
+    def __call__(self, reloadable_data: D, /, *args: Any, **kwargs: Any) -> O:
+        ...
 
 
 def configless_stage[D, O](
         data_collector: DataCollector[D],
         err_header: str | None = None
-) -> Callable[[PipelineStep[D, O]], ConfiglessStagePipelineStep[D, O]]:
-    decorator = flow_gate_decorator(controls={CONTINUE, CONTINUE_AND_SKIP, RETRY, RELOAD_DATA, ABORT},
-                                    err_header=err_header,
-                                    data_collector=data_collector)
+) -> Callable[[ConfiglessStagePipelineStep[D, O]], ConfiglessStagePipelineStep[D, O]]:
+    decorator = step_executor_decorator(controls={CONTINUE, CONTINUE_AND_SKIP, RETRY, RELOAD_DATA, ABORT},
+                                        err_header=err_header,
+                                        data_collector=data_collector)
 
-    def generator(func: PipelineStep[D, O]) -> ConfiglessStagePipelineStep[D, O]:
+    def generator(func: ConfiglessStagePipelineStep[D, O]) -> ConfiglessStagePipelineStep[D, O]:
         adapted_step_func: PipelineStep[D, O] = lambda _c, data, *args, **kwargs: func(data, *args, **kwargs)
 
-        def wrap(data: D, *args: Any, **kwargs: Any) -> O:
-            return decorator(adapted_step_func)(None, data, *args, **kwargs)
+        @functools.wraps(func)
+        def wrap(reloadable_data: D, *args: Any, **kwargs: Any) -> O:
+            return decorator(adapted_step_func)(Config.NULL, reloadable_data, *args, **kwargs)
 
         return wrap
 
@@ -281,7 +288,7 @@ def stage[D, O](
         data_collector: DataCollector[D],
         err_header: str | None = None
 ) -> Callable[[PipelineStep[D, O]], PipelineStep[D, O]]:
-    return flow_gate_decorator(
+    return step_executor_decorator(
         controls={CONTINUE, CONTINUE_AND_SKIP, RETRY, RELOAD_CONFIG, RELOAD_DATA, RELOAD_CONFIG_AND_DATA, ABORT},
         err_header=err_header,
         config_loader=config_loader,
@@ -331,8 +338,8 @@ class PipelineStateManager:
         self.entries_by_title = dict([(entry.title, entry) for entry in entries])
 
     def checkpoint(self):
-        try:
-            with db.atomic() as tx:
+        with db.atomic() as tx:
+            try:
                 if len(self.new_avatars_paired) > 0:
                     for contestant, new_avatar in self.new_avatars_paired:
                         inserted_avatar = Avatar.ORM.create(**vars(new_avatar))
@@ -361,9 +368,9 @@ class PipelineStateManager:
 
                 if len(self.video_options) > 0:
                     VideoOptions.ORM.replace_many(bulk_pack(self.video_options)).execute()
-        except PeeweeException as error:
-            tx.rollback()
-            raise RuntimeError(f"DB transaction was rolled back due to an error: {error}") from error
+            except PeeweeException as error:
+                tx.rollback()
+                raise RuntimeError(f"DB transaction was rolled back due to an error: {error}") from error
 
     def register_submissions(self, submissions: list[ContestantSubmission]) -> None:
         # First iteration. Register new contestants and entries
@@ -376,13 +383,13 @@ class PipelineStateManager:
             for entry in sub.entries:
                 if entry.is_author:
                     # noinspection PyTypeChecker
-                    topic = EntryTopic(designation=entry.topic) if entry.topic else None
+                    entry_topic = EntryTopic(designation=entry.topic) if entry.topic else None
 
                     new_entry = Entry(id=generate_entry_uuid5(entry.title).hex,
                                       title=entry.title,
                                       author=new_contestant,
-                                      video_url=entry.video_url,
-                                      topic=topic)
+                                      video_url=entry.video_url,  # pyright: ignore [reportArgumentType]
+                                      topic=entry_topic)
 
                     if entry.video_timestamp:
                         start, end = entry.video_timestamp.split(VIDEO_TIMESTAMP_SEPARATOR)
@@ -404,13 +411,13 @@ class PipelineStateManager:
         s2_contestants: list[S2_Contestant] = []
 
         for contestant in self.contestants:
-            contestant_scorings = [s for s in self.scoring_entries if s.contestant.id == contestant.id]
+            contestant_scorings = [s for s in self.scoring_entries if s.contestant.id == contestant.id]  # pyright: ignore [reportOptionalMemberAccess]
 
             s2_contestants.append(
                 S2_Contestant(name=contestant.name,
                               scores=[S2_Score(scoring.entry.title, scoring.score) for scoring in contestant_scorings]))
 
-        s2_entries = [S2_Entry(entry.title, entry.author.name) for entry in self.entries]
+        s2_entries = [S2_Entry(entry.title, entry.author.name) for entry in self.entries]  # pyright: ignore [reportOptionalMemberAccess]
 
         return StageTwoInput(S2_Musicosa(s2_contestants, s2_entries))
 
@@ -434,14 +441,15 @@ class PipelineStateManager:
         if len(self.avatars) == 0:
             self.avatars = load_avatars_from_db()
 
-        entries_index_of_unfulfilled_templates: dict[int, Entry] = (dict([(stat.ranking_sequence, stat.entry)
-                                                                          for stat in self.entry_stats_collection]))
+        entries_index_of_unfulfilled_templates: dict[int, Entry] = (
+            dict([(stat.ranking_sequence, stat.entry) for stat in
+                  self.entry_stats_collection]))  # pyright: ignore [reportAssignmentType]
 
         entry_ids_with_video_options = [options.entry.id for options in self.video_options]
         entries_index_of_unfulfilled_video_options: dict[int, Entry] = (
             dict([(stat.ranking_sequence, stat.entry)
                   for stat in self.entry_stats_collection
-                  if stat.entry.id not in entry_ids_with_video_options]))
+                  if stat.entry.id not in entry_ids_with_video_options]))  # pyright: ignore [reportAssignmentType]
 
         return StageThreeInput(
             S3_Musicosa(unfulfilled_contestants, self.avatars, entries_index_of_unfulfilled_templates,
@@ -492,8 +500,8 @@ class PipelineStateManager:
             entries_video_options.append(
                 EntryVideoOptions(entry_id=entry_id,
                                   entry_title=entry_title,
-                                  ranking_place=ranking_place,
-                                  sequence_number=sequence_number,
+                                  ranking_place=ranking_place,  # pyright: ignore [reportArgumentType]
+                                  sequence_number=sequence_number,  # pyright: ignore [reportArgumentType]
                                   timestamp=Timestamp(start=str(video_options.timestamp_start),
                                                       end=str(video_options.timestamp_end)),
                                   width=template.video_box_width_px,
@@ -527,9 +535,9 @@ if __name__ == '__main__':
 
     # PIPELINE EXECUTION
 
-    musicosa_edition = get_metadata_by_field(MetadataFields.EDITION).value
-    musicosa_topic = get_metadata_by_field(MetadataFields.TOPIC).value
-    musicosa_organiser = get_metadata_by_field(MetadataFields.ORGANISER).value
+    musicosa_edition = edition.value if (edition := get_metadata_by_field(MetadataFields.EDITION)) else ""
+    musicosa_topic = topic.value if (topic := get_metadata_by_field(MetadataFields.TOPIC)) else ""
+    musicosa_organiser = organiser.value if (organiser := get_metadata_by_field(MetadataFields.ORGANISER)) else ""
 
     print(f"[MUSICOSA {musicosa_edition}º EDITION]")
     print(f"  Topic: {musicosa_topic}")

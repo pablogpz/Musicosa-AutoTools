@@ -2,7 +2,7 @@ from os import path
 from os.path import basename
 
 import playwright.sync_api
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import ViewportSize, sync_playwright
 
 from common.constants import TEMPLATE_IMG_FORMAT, PRESENTATION_IMG_FILE_SUFFIX
 from common.custom_types import TemplateType
@@ -27,23 +27,24 @@ def generate_templates(templates_api_url: str,
     failed_entry_template_ids: list[str] = []
     failed_presentation_template_ids: list[str] = []
 
-    frame_width: int = get_setting_by_key(SettingKeys.FRAME_WIDTH_PX).value
-    frame_height: int = get_setting_by_key(SettingKeys.FRAME_HEIGHT_PX).value
+    frame_width: int = get_setting_by_key(SettingKeys.FRAME_WIDTH_PX).value  # pyright: ignore [reportOptionalMemberAccess, reportAssignmentType]
+    frame_height: int = get_setting_by_key(SettingKeys.FRAME_HEIGHT_PX).value  # pyright: ignore [reportOptionalMemberAccess, reportAssignmentType]
 
     def load_template_page(url: str, template_type: TemplateType) -> int:
-        print(f"[LOADING #{idx + 1}] {template_type.name.upper()} {url}")
+        print(f"[LOADING #{idx + 1}] {template_type.name.upper()} {url}")  # pyright: ignore [reportOptionalMemberAccess]
         try:
-            return page.goto(url).status
+            response = page.goto(url)
+            return response.status if response else 0
         except playwright.sync_api.Error:
             return 0
 
     def take_screenshot(template_path: str, template_type: TemplateType) -> None:
-        print(f"[GENERATING #{idx + 1}] {template_type.name.upper()} {basename(template_path)}")
+        print(f"[GENERATING #{idx + 1}] {template_type.name.upper()} {basename(template_path)}")  # pyright: ignore [reportOptionalMemberAccess]
         page.screenshot(path=template_path, full_page=True)
 
     def generate_template(template_path: str, url: str, template_type: TemplateType, overwrite: bool) -> bool | None:
         if not overwrite and path.isfile(template_path):
-            print(f"[SKIPPING #{idx + 1}] {template_type.name.upper()} {template.entry_title}")
+            print(f"[SKIPPING #{idx + 1}] {template_type.name.upper()} {template.entry_title}")  # pyright: ignore [reportOptionalMemberAccess]
             return None
 
         response = load_template_page(url, template_type)
@@ -52,10 +53,10 @@ def generate_templates(templates_api_url: str,
             take_screenshot(template_path, template_type)
             return True
         elif response == 404:
-            print(f"[FAILED #{idx + 1}] {template_type.name.upper()} Not found: {template.entry_title}")
+            print(f"[FAILED #{idx + 1}] {template_type.name.upper()} Not found: {template.entry_title}")  # pyright: ignore [reportOptionalMemberAccess]
             return False
         else:
-            print(f"[FAILED #{idx + 1}] {template_type.name.upper()} "
+            print(f"[FAILED #{idx + 1}] {template_type.name.upper()} "  # pyright: ignore [reportOptionalMemberAccess]
                   f"{template.entry_title} (HTTP status code: {response})")
             print(tab(1, f"Re-attempting to generate up to {retry_attempts} times"))
 
@@ -74,7 +75,7 @@ def generate_templates(templates_api_url: str,
     with sync_playwright() as p:
         browser = p.chromium.launch()
         # noinspection PyTypeChecker
-        page = browser.new_page(viewport={"width": frame_width, "height": frame_height})
+        page = browser.new_page(viewport=ViewportSize(width=frame_width, height=frame_height))
 
         for idx, template in enumerate(templates):
             if TemplateType.ENTRY in template.types:

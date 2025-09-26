@@ -14,4 +14,4 @@ def find_duplicates[T](collection: Iterable[T]) -> list[tuple[T, int]] | None:
             else:
                 duplicates_registry[item] = 1
 
-    return [tuple(duplicate) for duplicate in duplicates_registry.items()] or None
+    return [duplicate for duplicate in duplicates_registry.items()] or None

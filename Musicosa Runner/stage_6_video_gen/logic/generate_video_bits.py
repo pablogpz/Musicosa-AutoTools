@@ -6,6 +6,7 @@ from ffmpeg_normalize import FFmpegNormalize
 from math import ceil
 
 from common.constants import VIDEOCLIPS_OVERRIDE_DURATION_LIMIT, TEMPLATE_IMG_FORMAT, VIDEO_FORMAT
+from common.custom_types import StageException
 from common.formatting.tabulate import tab
 from common.model.models import SettingKeys
 from common.model.settings import get_setting_by_key
@@ -73,12 +74,12 @@ def generate_video_bit(
         vid_opts: EntryVideoOptions,
         template_path: str,
         video_bit_path: str,
-        quiet_ffmpeg: bool = None
+        quiet_ffmpeg: bool
 ) -> str:
-    default_duration = get_setting_by_key(SettingKeys.VALIDATION_ENTRY_VIDEO_DURATION_SECONDS).value
-    override_top_n = get_setting_by_key(SettingKeys.GENERATION_VIDEOCLIPS_OVERRIDE_TOP_N_DURATION).value
-    override_duration_value = get_setting_by_key(
-        SettingKeys.GENERATION_VIDEOCLIPS_OVERRIDE_DURATION_UP_TO_X_SECONDS).value
+    default_duration: int = get_setting_by_key(SettingKeys.VALIDATION_ENTRY_VIDEO_DURATION_SECONDS).value  # pyright: ignore [reportOptionalMemberAccess, reportAssignmentType]
+    override_top_n: int = get_setting_by_key(SettingKeys.GENERATION_VIDEOCLIPS_OVERRIDE_TOP_N_DURATION).value  # pyright: ignore [reportOptionalMemberAccess, reportAssignmentType]
+    override_duration_value: int = get_setting_by_key(  # pyright: ignore [reportAssignmentType]
+        SettingKeys.GENERATION_VIDEOCLIPS_OVERRIDE_DURATION_UP_TO_X_SECONDS).value  # pyright: ignore [reportOptionalMemberAccess]
 
     videoclip_duration_seconds = get_video_duration_seconds(videoclip_path)
 
@@ -94,8 +95,14 @@ def generate_video_bit(
         else:
             ffmpeg_time_code_args = {"ss": 0, "t": override_duration_value}
     else:
-        timestamp_start_seconds = time_to_seconds(parse_time(vid_opts.timestamp.start))
-        timestamp_end_seconds = time_to_seconds(parse_time(vid_opts.timestamp.end))
+        timestamp_start_time = parse_time(vid_opts.timestamp.start)
+        timestamp_end_time = parse_time(vid_opts.timestamp.end)
+
+        if not timestamp_start_time or not timestamp_end_time:
+            raise StageException(f"Invalid timestamp strings ({vid_opts.timestamp})")
+
+        timestamp_start_seconds = time_to_seconds(timestamp_start_time)
+        timestamp_end_seconds = time_to_seconds(timestamp_end_time)
 
         ffmpeg_time_code_args = {"ss": vid_opts.timestamp.start, "to": vid_opts.timestamp.end}
 
@@ -111,7 +118,7 @@ def generate_video_bit(
     # Generate video bit
 
     try:
-        videoclip_stream = ffmpeg.input(filename=videoclip_path, **ffmpeg_time_code_args)
+        videoclip_stream = ffmpeg.input(filename=videoclip_path, **ffmpeg_time_code_args)  # pyright: ignore [reportArgumentType]
         videoclip_audio_stream = videoclip_stream.acopy()
 
         template_stream = ffmpeg.input(filename=template_path)

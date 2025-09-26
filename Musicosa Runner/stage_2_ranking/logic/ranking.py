@@ -6,7 +6,7 @@ from stage_2_ranking.custom_types import Musicosa, Contestant, ContestantStats, 
 
 
 def rank_musicosa(musicosa: Musicosa) -> tuple[list[ContestantStats], list[EntryStats]]:
-    significant_decimal_digits = get_setting_by_key(SettingKeys.RANKING_SIGNIFICANT_DECIMAL_DIGITS).value
+    significant_decimal_digits: int = get_setting_by_key(SettingKeys.RANKING_SIGNIFICANT_DECIMAL_DIGITS).value  # pyright: ignore [reportOptionalMemberAccess, reportAssignmentType]
 
     # Entry average scores -> To calculate contestants' average received scores
 
@@ -41,9 +41,8 @@ def rank_musicosa(musicosa: Musicosa) -> tuple[list[ContestantStats], list[Entry
                                          entries_avg_scores_by_title[entry.title],
                                          ranking_place=None,
                                          ranking_sequence=None)
-                              for entry in
-                              musicosa.entries]
-    entry_stats_collection.sort(key=lambda stat: stat.avg_score)
+                              for entry in musicosa.entries]
+    entry_stats_collection.sort(key=lambda stat: stat.avg_score)  # pyright: ignore [reportArgumentType]
     entry_count = len(entry_stats_collection)
 
     cursor = 0

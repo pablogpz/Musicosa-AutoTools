@@ -15,6 +15,6 @@ def load_musicosa_from_db() -> Musicosa:
         s2_contestants.append(S2_Contestant(contestant.name, s2_scores))
 
     entries: list[Entry] = [entry.to_domain() for entry in Entry.ORM.select()]
-    s2_entries: list[S2_Entry] = [S2_Entry(entry.title, entry.author.name) for entry in entries]
+    s2_entries: list[S2_Entry] = [S2_Entry(entry.title, entry.author.name if entry.author else "") for entry in entries]
 
     return Musicosa(s2_contestants, s2_entries)

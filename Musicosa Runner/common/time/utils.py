@@ -29,10 +29,10 @@ def validate_video_timestamp_str(timestamp_str: str, duration: int | None = None
 
     start_time, end_time = parse_time(start), parse_time(end)
 
-    if start_time >= end_time:
+    if start_time >= end_time:  # pyright: ignore [reportOperatorIssue]
         return False
 
-    if duration and seconds_between(start_time, end_time) != duration:
+    if duration and seconds_between(start_time, end_time) != duration:  # pyright: ignore [reportArgumentType]
         return False
 
     return True
@@ -45,11 +45,11 @@ def parse_time(time_str: str) -> time | None:
     return time.fromisoformat(time_str_zfill(time_str))
 
 
-def time_str_zfill(time_str: str) -> str | None:
+def time_str_zfill(time_str: str) -> str:
     time_bits = time_str.split(":")
 
     if not len(time_bits) in [2, 3]:
-        return None
+        return ""
 
     if len(time_bits) == 2:
         time_bits.insert(0, "00")
