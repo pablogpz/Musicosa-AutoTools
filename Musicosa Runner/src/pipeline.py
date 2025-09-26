@@ -162,7 +162,7 @@ class StepExecutor:
                                           lambda x: x in controls,
                                           error_message=lambda x: f"Invalid choice '{x}'")
             except Exception as error:
-                print(f"{err_header} {err}" if err_header else error)
+                print(f"{err_header} {error}" if err_header else error)
                 choice = better_input(on_error_msg,
                                       lambda x: x in error_controls,
                                       error_message=lambda x: f"Invalid choice '{x}'")
