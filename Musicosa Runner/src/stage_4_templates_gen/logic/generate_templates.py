@@ -90,7 +90,7 @@ def generate_templates(
 
                 if generation:
                     generated_entry_template_titles.append(template.entry_title)
-                elif not generation:
+                elif not generation and generation is not None:
                     failed_entry_template_ids.append(template.id)
                 elif generation is None:
                     skipped_entry_template_titles.append(template.entry_title)
@@ -105,7 +105,7 @@ def generate_templates(
 
                 if generation:
                     generated_presentation_template_titles.append(template.entry_title)
-                elif not generation:
+                elif not generation and generation is not None:
                     failed_presentation_template_ids.append(template.id)
                 elif generation is None:
                     skipped_presentation_template_titles.append(template.entry_title)

@@ -31,14 +31,15 @@ def stage_summary(config: Config, stage_input: StageFourInput, stage_output: Sta
             f"# Failed to generate ENTRY templates: {len(failed_entries)}\n"
             f"{'\n'.join([tab(1, f'* {template_id}') for template_id in failed_entries])}"
         )
-    f(f"# Successfully generated PRESENTATION templates: {len(generated_presentations)}")
-    if len(skipped_presentations) > 0:
-        f(f"# Skipped PRESENTATION templates: {len(skipped_presentations)}")
-    if len(failed_presentations) > 0:
-        f(
-            f"# Failed to generate PRESENTATION templates: {len(failed_presentations)}\n"
-            f"{'\n'.join([tab(1, f'* {template_id}') for template_id in failed_presentations])}"
-        )
+    if config.stitch_final_video:
+        f(f"# Successfully generated PRESENTATION templates: {len(generated_presentations)}")
+        if len(skipped_presentations) > 0:
+            f(f"# Skipped PRESENTATION templates: {len(skipped_presentations)}")
+        if len(failed_presentations) > 0:
+            f(
+                f"# Failed to generate PRESENTATION templates: {len(failed_presentations)}\n"
+                f"{'\n'.join([tab(1, f'* {template_id}') for template_id in failed_presentations])}"
+            )
     f("")
 
     return "\n".join(log_lines)
