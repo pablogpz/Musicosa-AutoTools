@@ -76,7 +76,7 @@ if __name__ == "__main__":
                 entries_by_title[entry.title] = Entry(id=generate_entry_uuid5(entry.title).hex,
                                                       title=entry.title,
                                                       author=contestants_by_name[sub.name],
-                                                      video_url=entry.video_url,
+                                                      video_url=entry.video_url,  # pyright: ignore [reportArgumentType]
                                                       topic=topic)
 
     scoring_entries: list[Scoring] = []
@@ -96,16 +96,16 @@ if __name__ == "__main__":
                                                   timestamp_start=parse_time(start),
                                                   timestamp_end=parse_time(end)))
 
-    try:
-        with db.atomic() as tx:
+    with db.atomic() as tx:
+        try:
             Contestant.ORM.insert_many(bulk_pack(contestants_by_name.values())).execute()
             Entry.ORM.insert_many(bulk_pack(entries_by_title.values())).execute()
             Scoring.ORM.insert_many(bulk_pack(scoring_entries)).execute()
             VideoOptions.ORM.insert_many(bulk_pack(video_options)).execute()
-    except PeeweeException as err:
-        tx.rollback()
-        print(f"[Stage 1 | Data persistence] {err}")
-        exit(1)
+        except PeeweeException as err:
+            tx.rollback()
+            print(f"[Stage 1 | Data persistence] {err}")
+            exit(1)
 
     # Stage execution summary
 

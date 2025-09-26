@@ -175,7 +175,7 @@ def fulfill_unfulfilled_templates(entries_sequence_number_index: dict[int, Entry
 
     def parse_selection(selection_str: str) -> list[int]:
         return parse_sequence_selection_of_kvstore(selection_str, entries_sequence_number_index,
-                                                   get_missing_templates())
+                                                   get_missing_templates()) or []
 
     last_avatar_scale = ""
     last_author_avatar_scale = ""
@@ -313,7 +313,7 @@ def fulfill_unfulfilled_video_options(entries_sequence_number_index: dict[int, E
         print("All entries have video options assigned ✔")
         return []
 
-    video_target_duration = get_setting_by_key(SettingKeys.VALIDATION_ENTRY_VIDEO_DURATION_SECONDS).value
+    video_target_duration: int = get_setting_by_key(SettingKeys.VALIDATION_ENTRY_VIDEO_DURATION_SECONDS).value  # pyright: ignore [reportOptionalMemberAccess, reportAssignmentType]
 
     def get_missing_options() -> list[int]:
         return [seq_num for seq_num in entries_sequence_number_index.keys() if seq_num not in video_options]
@@ -322,7 +322,9 @@ def fulfill_unfulfilled_video_options(entries_sequence_number_index: dict[int, E
         return validate_sequence_selection(selection_str, entries_sequence_number_index)
 
     def parse_selection(selection_str: str) -> list[int]:
-        return parse_sequence_selection_of_kvstore(selection_str, entries_sequence_number_index, get_missing_options())
+        return parse_sequence_selection_of_kvstore(selection_str,
+                                                   entries_sequence_number_index,
+                                                   get_missing_options()) or []
 
     last_video_timestamp = ""
 

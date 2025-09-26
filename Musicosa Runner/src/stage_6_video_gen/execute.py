@@ -67,12 +67,14 @@ def execute(config: Config, stage_input: StageSixInput) -> StageSixOutput:
     missing_templates, missing_videoclips, generation_result = (
         generate_video_bit_collection(artifacts_folder, video_bits_folder, overwrite, quiet_ffmpeg,
                                       entries_video_options))
-    generated, skipped, _failed = generation_result
+    generated, skipped, failed = generation_result
 
     if stitch_final_video:
         existing_video_bit_count = len(generated) + len(skipped)
 
-        if len(entries_video_options) != existing_video_bit_count:
+        if len(failed) != 0:
+            print(f"[SKIPPING FINAL VIDEO] {len(failed)} video bits failed to generate properly")
+        elif len(entries_video_options) != existing_video_bit_count:
             print(f"[SKIPPING FINAL VIDEO] There are "
                   f"{len(entries_video_options) - existing_video_bit_count}"
                   f" missing video bits")

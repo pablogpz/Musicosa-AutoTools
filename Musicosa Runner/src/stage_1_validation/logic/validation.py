@@ -57,7 +57,7 @@ def validate_contestant_submission(submission: ContestantSubmission,
                                    contestants_count: int,
                                    valid_titles: list[str],
                                    entry_topics: list[EntryTopic] | None) -> list[str] | None:
-    round_count = get_setting_by_key(SettingKeys.GLOBAL_ROUND_COUNT).value
+    round_count: int = get_setting_by_key(SettingKeys.GLOBAL_ROUND_COUNT).value  # pyright: ignore [reportOptionalMemberAccess, reportAssignmentType]
     estrelli_count: int = get_setting_by_key(SettingKeys.ESTRELLI_COUNT).value  # pyright: ignore [reportAssignmentType, reportOptionalMemberAccess]
 
     entries = submission.entries
@@ -79,14 +79,13 @@ def validate_contestant_submission(submission: ContestantSubmission,
             validation_errors.append(f"Entry '{title}' is duplicated {count} time{"s" if count > 1 else ""}")
 
     titles = set([entry.title for entry in entries])
-    valid_titles = set(valid_titles)
 
-    if invalid_titles := titles - valid_titles:
+    if invalid_titles := titles - set(valid_titles):
         validation_errors.append(
             f"Invalid entries ({len(invalid_titles)}):\n"
             f"{"\n".join([tab(2, f"* {title}") for title in invalid_titles])}")
 
-    if missing_titles := valid_titles - titles:
+    if missing_titles := set(valid_titles) - titles:
         validation_errors.append(
             f"Missing entries ({len(missing_titles)}):\n"
             f"{"\n".join([tab(2, f"* {title}") for title in missing_titles])}")
@@ -98,7 +97,7 @@ def validate_contestant_submission(submission: ContestantSubmission,
     if entry_topics:
         for topic in entry_topics:
             entries_with_topic = [entry for entry in entries if entry.topic is not None]
-            occurrences = [e for e in entries_with_topic if e.topic.lower() == topic.designation.lower()]
+            occurrences = [e for e in entries_with_topic if e.topic.lower() == topic.designation.lower()]  # pyright: ignore [reportOptionalMemberAccess]
 
             if len(occurrences) == 0:
                 validation_errors.append(f"There are no entries designated as '{topic.designation.upper()}'")
@@ -119,7 +118,6 @@ def validate_entry(entry: ContestantSubmissionEntry, entry_topics: list[EntryTop
     video_url = entry.video_url
     video_timestamp = entry.video_timestamp
     topic = entry.topic
-
     validation_errors: list[str] = []
 
     if is_author and estrelli:
@@ -137,21 +135,26 @@ def validate_entry(entry: ContestantSubmissionEntry, entry_topics: list[EntryTop
     min_score: int = get_setting_by_key(SettingKeys.VALIDATION_SCORE_MIN_VALUE).value  # pyright: ignore [reportAssignmentType, reportOptionalMemberAccess]
     max_score: int = get_setting_by_key(SettingKeys.VALIDATION_SCORE_MAX_VALUE).value  # pyright: ignore [reportAssignmentType, reportOptionalMemberAccess]
 
-    validation_errors.append(validate_title(title))
-    validation_errors.append(validate_score(score, min_score, max_score))
+    if errors := validate_title(title):
+        validation_errors.append(errors)
+    if errors := validate_score(score, min_score, max_score):  # pyright: ignore [reportArgumentType]
+        validation_errors.append(errors)
 
     if is_author and video_url:
-        validation_errors.append(validate_video_url(video_url))
+        if errors := validate_video_url(video_url):
+            validation_errors.append(errors)
 
     if is_author and video_timestamp:
-        validation_errors.append(validate_video_timestamp(video_timestamp))
+        if errors := validate_video_timestamp(video_timestamp):
+            validation_errors.append(errors)
 
     if is_author and topic:
         if not entry_topics:
             validation_errors.append(
                 f"Topic designation '{topic}' specified, but no entry topics are expected")
         else:
-            validation_errors.append(validate_topic(topic, entry_topics))
+            if errors := validate_topic(topic, entry_topics):
+                validation_errors.append(errors)
 
     return [f"[{title}] {err_msg}" for err_msg in validation_errors if err_msg is not None] or None
 
@@ -193,14 +196,14 @@ def validate_video_timestamp(video_timestamp: str) -> str | None:
 
     start_time, end_time = parse_time(start), parse_time(end)
 
-    if start_time >= end_time:
+    if start_time >= end_time:  # pyright: ignore [reportOperatorIssue]
         return f"Start is at or after the end ('{video_timestamp}')"
 
     # The duration is as set in the settings
 
-    allowed_video_duration = get_setting_by_key(SettingKeys.VALIDATION_ENTRY_VIDEO_DURATION_SECONDS).value
+    allowed_video_duration: int = get_setting_by_key(SettingKeys.VALIDATION_ENTRY_VIDEO_DURATION_SECONDS).value  # pyright: ignore [reportOptionalMemberAccess, reportAssignmentType]
 
-    if (duration := seconds_between(start_time, end_time)) != allowed_video_duration:
+    if (duration := seconds_between(start_time, end_time)) != allowed_video_duration:  # pyright: ignore [reportArgumentType]
         return f"Invalid video duration ({duration}s [{video_timestamp}]) (Should be {allowed_video_duration} seconds)"
 
     return None
