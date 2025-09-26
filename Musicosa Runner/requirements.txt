@@ -6,4 +6,5 @@ ffmpeg-normalize==1.33.1
 openpyxl==3.1.5
 # Dev Dependencies
 pyright==1.1.405
+ruff==0.13.2
 typed-ffmpeg==3.6
