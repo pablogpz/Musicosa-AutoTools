@@ -7,6 +7,7 @@ from ffmpeg_normalize import FFmpegNormalize
 from math import ceil
 
 from common.constants import TEMPLATE_IMG_FORMAT, VIDEO_FORMAT
+from common.custom_types import StageException
 from common.formatting.tabulate import tab
 from common.naming.slugify import slugify
 from common.time.utils import parse_time, time_to_seconds
@@ -75,10 +76,16 @@ def generate_video_bit(
         vid_opts: NominationVideoOptions,
         template_path: str,
         video_bit_path: str,
-        quiet_ffmpeg: bool = None
+        quiet_ffmpeg: bool
 ) -> str:
-    timestamp_start_seconds = time_to_seconds(parse_time(vid_opts.timestamp.start))
-    timestamp_end_seconds = time_to_seconds(parse_time(vid_opts.timestamp.end))
+    timestamp_start_time = parse_time(vid_opts.timestamp.start)
+    timestamp_end_time = parse_time(vid_opts.timestamp.end)
+
+    if not timestamp_start_time or not timestamp_end_time:
+        raise StageException(f"Invalid timestamp strings ({vid_opts.timestamp})")
+
+    timestamp_start_seconds = time_to_seconds(timestamp_start_time)
+    timestamp_end_seconds = time_to_seconds(timestamp_end_time)
 
     ffmpeg_time_code_args = {"ss": vid_opts.timestamp.start, "to": vid_opts.timestamp.end}
 
@@ -94,7 +101,7 @@ def generate_video_bit(
         ffmpeg_time_code_args = {"ss": 0, "t": videoclip_duration_seconds}
 
     try:
-        videoclip_stream = ffmpeg.input(filename=videoclip_path, **ffmpeg_time_code_args)
+        videoclip_stream = ffmpeg.input(filename=videoclip_path, **ffmpeg_time_code_args)  # pyright: ignore [reportArgumentType]
         videoclip_audio_stream = videoclip_stream.acopy()
 
         template_stream = ffmpeg.input(filename=template_path)

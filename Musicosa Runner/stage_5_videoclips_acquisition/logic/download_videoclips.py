@@ -12,6 +12,8 @@ from common.naming.slugify import slugify
 from stage_5_videoclips_acquisition.custom_types import VideoclipsDownloadResult
 
 
+# pyright: reportIndexIssue=false, reportOptionalSubscript=false, reportTypedDictNotRequiredAccess=false, reportAttributeAccessIssue=false
+
 def download_videoclips_collection(videoclips: list[Videoclip],
                                    artifacts_folder: str,
                                    use_cookies: bool,
@@ -40,7 +42,7 @@ def download_videoclips_collection(videoclips: list[Videoclip],
         # noinspection PyTypeChecker
         ytdl_options["cookiesfrombrowser"] = ("firefox",)  # For local use only
 
-    with yt_dlp.YoutubeDL(ytdl_options) as ytdl:
+    with yt_dlp.YoutubeDL(ytdl_options) as ytdl:  # pyright: ignore [reportArgumentType]
         ytdl.add_post_processor(MP4RemuxPostProcessor(quiet_ffmpeg))
 
         for idx, videoclip in enumerate(videoclips):

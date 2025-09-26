@@ -68,7 +68,7 @@ def fulfill_unfulfilled_templates(nominations_sequence_number_index: dict[int, N
 
     def parse_selection(selection_str: str) -> list[int]:
         return parse_sequence_selection_of_kvstore(selection_str, nominations_sequence_number_index,
-                                                   get_missing_templates())
+                                                   get_missing_templates()) or []
 
     last_avatar_scale = ""
     last_video_width = ""

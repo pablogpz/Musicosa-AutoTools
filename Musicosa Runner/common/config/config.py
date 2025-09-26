@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import ClassVar, cast
 
 from common.config.defaults import DEFAULT_ARTIFACTS_FOLDER, DEFAULT_START_FROM_STAGE, \
     DEFAULT_STITCH_FINAL_VIDEO_FLAG, DEFAULT_TEMPLATES_API_URL, \
@@ -92,6 +93,8 @@ class StageSixConfig:
 
 @dataclass
 class Config:
+    NULL: ClassVar["Config"] = cast("Config", cast(object, None))
+
     start_from: Stage
     artifacts_folder: str
     stitch_final_video: bool

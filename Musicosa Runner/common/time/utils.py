@@ -21,11 +21,11 @@ def parse_time(time_str: str) -> time | None:
     return time.fromisoformat(time_str_zfill(time_str))
 
 
-def time_str_zfill(time_str: str) -> str | None:
+def time_str_zfill(time_str: str) -> str:
     time_bits = time_str.split(":")
 
     if not len(time_bits) in [2, 3]:
-        return None
+        return ""
 
     if len(time_bits) == 2:
         time_bits.insert(0, "00")

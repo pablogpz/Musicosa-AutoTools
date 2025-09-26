@@ -65,13 +65,13 @@ if __name__ == "__main__":
                                  nomination=generate_nomination_uuid5_from_nomination_str(cast_vote.nomination,
                                                                                           award.award_slug).hex,
                                  score=cast_vote.score))
-    try:
-        with db.atomic() as tx:
+    with db.atomic() as tx:
+        try:
             CastVote.ORM.insert_many([vote.__data__ for vote in raw_cast_votes]).execute()  # CAREFUL!
-    except PeeweeException as err:
-        tx.rollback()
-        print(f"[Stage 1 | Data persistence] {err}")
-        exit(1)
+        except PeeweeException as err:
+            tx.rollback()
+            print(f"[Stage 1 | Data persistence] {err}")
+            exit(1)
 
     # Stage execution summary
 

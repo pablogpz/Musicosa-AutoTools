@@ -8,15 +8,16 @@ from peewee import Model as PeeweeModel, TextField, CompositeKey, AutoField, Flo
 from common.db.database import db
 from common.time.utils import parse_time
 
+# pyright: reportArgumentType=false
 
 class DomainModel:
     def to_orm(self) -> Any:
-        pass
+        ...
 
 
 class DatabaseModel:
     def to_domain(self) -> Any:
-        pass
+        ...
 
 
 class MetadataFields(StrEnum):
