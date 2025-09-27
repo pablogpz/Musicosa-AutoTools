@@ -17,23 +17,31 @@ def stage_summary(config: Config, stage_input: StageFourInput, stage_output: Sta
     f("[STAGE 4 SUMMARY | Templates Generation]")
     f("")
     f(f"# Templates to generate: {len(templates) if not config.stitch_final_video else len(templates) * 2}")
-    f(f"# Total generated or skipped templates: {len(generated_nominations)
-                                                 + len(skipped_nominations)
-                                                 + len(generated_presentations)
-                                                 + len(skipped_presentations)}")
+    f(
+        f"# Total generated or skipped templates: {
+            len(generated_nominations)
+            + len(skipped_nominations)
+            + len(generated_presentations)
+            + len(skipped_presentations)
+        }"
+    )
     f("")
     f(f"# Successfully generated NOMINATION templates: {len(generated_nominations)}")
     if len(skipped_nominations) > 0:
         f(f"# Skipped NOMINATION templates: {len(skipped_nominations)}")
     if len(failed_nominations) > 0:
-        f(f"# Failed to generate NOMINATION templates: {len(failed_nominations)}\n"
-          f"{"\n".join([tab(1, f"* {template_id}") for template_id in failed_nominations])}")
+        f(
+            f"# Failed to generate NOMINATION templates: {len(failed_nominations)}\n"
+            f"{'\n'.join([tab(1, f'* {template_id}') for template_id in failed_nominations])}"
+        )
     f(f"# Successfully generated PRESENTATION templates: {len(generated_presentations)}")
     if len(skipped_presentations) > 0:
         f(f"# Skipped PRESENTATION templates: {len(skipped_presentations)}")
     if len(failed_presentations) > 0:
-        f(f"# Failed to generate PRESENTATION templates: {len(failed_presentations)}\n"
-          f"{"\n".join([tab(1, f"* {template_id}") for template_id in failed_presentations])}")
+        f(
+            f"# Failed to generate PRESENTATION templates: {len(failed_presentations)}\n"
+            f"{'\n'.join([tab(1, f'* {template_id}') for template_id in failed_presentations])}"
+        )
     f("")
 
     return "\n".join(log_lines)

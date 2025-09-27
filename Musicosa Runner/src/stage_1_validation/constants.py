@@ -8,5 +8,5 @@ CSV_UNUSED_HEADERS = [
     "Current step",
     "Errors",
     "Url",
-    "Network ID"
+    "Network ID",
 ]

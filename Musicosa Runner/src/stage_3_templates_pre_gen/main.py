@@ -8,7 +8,6 @@ from stage_3_templates_pre_gen.stage_input import load_tfa_from_db
 from stage_3_templates_pre_gen.summary import stage_summary
 
 if __name__ == "__main__":
-
     # Data retrieval
 
     try:

@@ -10,7 +10,6 @@ from stage_5_videoclips_acquisition.stage_input import load_videoclips_from_db
 from stage_5_videoclips_acquisition.summary import stage_summary
 
 if __name__ == "__main__":
-
     # Configuration
 
     parser = argparse.ArgumentParser()

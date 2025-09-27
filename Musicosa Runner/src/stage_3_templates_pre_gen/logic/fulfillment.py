@@ -1,10 +1,13 @@
 import re
 
 from common.input.better_input import better_input
-from common.model.models import Setting, Template, Nomination, SettingGroupKeys, FrameSettingNames, SettingKeys
+from common.model.models import FrameSettingNames, Nomination, Setting, SettingGroupKeys, SettingKeys, Template
 from common.model.settings import is_setting_set
-from stage_3_templates_pre_gen.logic.helpers import parse_sequence_selection_of_kvstore, \
-    format_sequence_numbers, validate_sequence_selection
+from stage_3_templates_pre_gen.logic.helpers import (
+    format_sequence_numbers,
+    parse_sequence_selection_of_kvstore,
+    validate_sequence_selection,
+)
 
 
 def fulfill_unfulfilled_frame_settings() -> list[Setting]:
@@ -16,29 +19,41 @@ def fulfill_unfulfilled_frame_settings() -> list[Setting]:
 
     if not is_setting_set(SettingKeys.FRAME_WIDTH_PX):
         print("Frame width not set...")
-        total_width = better_input("Width of the frame where assets get rendered (px)",
-                                   lambda x: x.isdigit() and int(x) > 0,
-                                   error_message=lambda x: f"Invalid width '{x}' (Must be a positive number)",
-                                   indent_level=1)
+        total_width = better_input(
+            "Width of the frame where assets get rendered (px)",
+            lambda x: x.isdigit() and int(x) > 0,
+            error_message=lambda x: f"Invalid width '{x}' (Must be a positive number)",
+            indent_level=1,
+        )
 
-        frame_settings.append(Setting(group_key=SettingGroupKeys.FRAME,
-                                      setting=FrameSettingNames.WIDTH_PX,
-                                      value=int(total_width),
-                                      type="integer"))
+        frame_settings.append(
+            Setting(
+                group_key=SettingGroupKeys.FRAME,
+                setting=FrameSettingNames.WIDTH_PX,
+                value=int(total_width),
+                type="integer",
+            )
+        )
     else:
         print("Frame width set ✔")
 
     if not is_setting_set(SettingKeys.FRAME_HEIGHT_PX):
         print("Frame height not set...")
-        total_height = better_input("Height of the frame where assets get rendered (px)",
-                                    lambda x: x.isdigit() and int(x) > 0,
-                                    error_message=lambda x: f"Invalid height '{x}' (Must be a positive number)",
-                                    indent_level=1)
+        total_height = better_input(
+            "Height of the frame where assets get rendered (px)",
+            lambda x: x.isdigit() and int(x) > 0,
+            error_message=lambda x: f"Invalid height '{x}' (Must be a positive number)",
+            indent_level=1,
+        )
 
-        frame_settings.append(Setting(group_key=SettingGroupKeys.FRAME,
-                                      setting=FrameSettingNames.HEIGHT_PX,
-                                      value=int(total_height),
-                                      type="integer"))
+        frame_settings.append(
+            Setting(
+                group_key=SettingGroupKeys.FRAME,
+                setting=FrameSettingNames.HEIGHT_PX,
+                value=int(total_height),
+                type="integer",
+            )
+        )
     else:
         print("Frame height set ✔")
 
@@ -53,8 +68,9 @@ def fulfill_unfulfilled_templates(nominations_sequence_number_index: dict[int, N
     print("")
 
     if len(nominations_sequence_number_index) > 0:
-        print(f"Missing nomination templates: "
-              f"[{format_sequence_numbers(list(nominations_sequence_number_index.keys()))}]")
+        print(
+            f"Missing nomination templates: [{format_sequence_numbers(list(nominations_sequence_number_index.keys()))}]"
+        )
 
     if len(nominations_sequence_number_index) == 0:
         print("All nominations have a template assigned ✔")
@@ -67,8 +83,12 @@ def fulfill_unfulfilled_templates(nominations_sequence_number_index: dict[int, N
         return validate_sequence_selection(selection_str, nominations_sequence_number_index)
 
     def parse_selection(selection_str: str) -> list[int]:
-        return parse_sequence_selection_of_kvstore(selection_str, nominations_sequence_number_index,
-                                                   get_missing_templates()) or []
+        return (
+            parse_sequence_selection_of_kvstore(
+                selection_str, nominations_sequence_number_index, get_missing_templates()
+            )
+            or []
+        )
 
     last_avatar_scale = ""
     last_video_width = ""
@@ -83,56 +103,70 @@ def fulfill_unfulfilled_templates(nominations_sequence_number_index: dict[int, N
         print(f"{len(missing_templates)} remaining template(s) ({format_sequence_numbers(missing_templates)})")
 
         selection = parse_selection(
-            better_input("Templates selection (seq_num | [start]:[end] | empty to select all remaining)",
-                         validate_selection,
-                         error_message=lambda
-                             x: f"Invalid selection '{x}' (Use a valid index, range, omit a boundary or leave empty)",
-                         indent_level=1))
+            better_input(
+                "Templates selection (seq_num | [start]:[end] | empty to select all remaining)",
+                validate_selection,
+                error_message=lambda x: f"Invalid selection '{x}' (Use a valid index, range, omit a boundary or leave empty)",
+                indent_level=1,
+            )
+        )
 
         print("")
         print(f"Setting values for {len(selection)} template(s)...")
 
-        avatar_scale = better_input("Avatar scale (factor)",
-                                    lambda x: re.match(r"^\d+([.]\d+)?$", x) is not None,
-                                    default=last_avatar_scale,
-                                    error_message=lambda x: f"Invalid scale factor '{x}' (Must be a numeric factor)",
-                                    indent_level=1)
+        avatar_scale = better_input(
+            "Avatar scale (factor)",
+            lambda x: re.match(r"^\d+([.]\d+)?$", x) is not None,
+            default=last_avatar_scale,
+            error_message=lambda x: f"Invalid scale factor '{x}' (Must be a numeric factor)",
+            indent_level=1,
+        )
         last_avatar_scale = avatar_scale
 
-        video_width = better_input("Videoclip width (px)",
-                                   lambda x: x.isdigit() and int(x) > 0,
-                                   default=last_video_width,
-                                   error_message=lambda x: f"Invalid width '{x}' (Must be a positive number)",
-                                   indent_level=1)
+        video_width = better_input(
+            "Videoclip width (px)",
+            lambda x: x.isdigit() and int(x) > 0,
+            default=last_video_width,
+            error_message=lambda x: f"Invalid width '{x}' (Must be a positive number)",
+            indent_level=1,
+        )
         last_video_width = video_width
 
-        video_height = better_input("Videoclip height (px)",
-                                    lambda x: x.isdigit() and int(x) > 0,
-                                    default=last_video_height,
-                                    error_message=lambda x: f"Invalid height '{x}' (Must be a positive number)",
-                                    indent_level=1)
+        video_height = better_input(
+            "Videoclip height (px)",
+            lambda x: x.isdigit() and int(x) > 0,
+            default=last_video_height,
+            error_message=lambda x: f"Invalid height '{x}' (Must be a positive number)",
+            indent_level=1,
+        )
         last_video_height = video_height
 
-        video_top = better_input("Videoclip absolute top position (px)",
-                                 lambda x: x.isdigit() and int(x) >= 0,
-                                 default=last_video_top,
-                                 error_message=lambda x: f"Invalid position '{x}' (Must be a non-negative number)",
-                                 indent_level=1)
+        video_top = better_input(
+            "Videoclip absolute top position (px)",
+            lambda x: x.isdigit() and int(x) >= 0,
+            default=last_video_top,
+            error_message=lambda x: f"Invalid position '{x}' (Must be a non-negative number)",
+            indent_level=1,
+        )
         last_video_top = video_top
 
-        video_left = better_input("Videoclip absolute left position (px)",
-                                  lambda x: x.isdigit() and int(x) >= 0,
-                                  default=last_video_left,
-                                  error_message=lambda x: f"Invalid position '{x}' (Must be a non-negative number)",
-                                  indent_level=1)
+        video_left = better_input(
+            "Videoclip absolute left position (px)",
+            lambda x: x.isdigit() and int(x) >= 0,
+            default=last_video_left,
+            error_message=lambda x: f"Invalid position '{x}' (Must be a non-negative number)",
+            indent_level=1,
+        )
         last_video_left = video_left
 
         for sequence_number in selection:
-            templates[sequence_number] = Template(nomination=nominations_sequence_number_index[sequence_number],
-                                                  avatar_scale=float(avatar_scale),
-                                                  video_box_width_px=int(video_width),
-                                                  video_box_height_px=int(video_height),
-                                                  video_box_position_top_px=int(video_top),
-                                                  video_box_position_left_px=int(video_left))
+            templates[sequence_number] = Template(
+                nomination=nominations_sequence_number_index[sequence_number],
+                avatar_scale=float(avatar_scale),
+                video_box_width_px=int(video_width),
+                video_box_height_px=int(video_height),
+                video_box_position_top_px=int(video_top),
+                video_box_position_left_px=int(video_left),
+            )
 
     return list(templates.values())

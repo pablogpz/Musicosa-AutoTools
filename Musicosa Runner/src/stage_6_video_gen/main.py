@@ -10,7 +10,6 @@ from stage_6_video_gen.stage_input import load_video_options_from_db
 from stage_6_video_gen.summary import stage_summary
 
 if __name__ == "__main__":
-
     # Configuration
 
     parser = argparse.ArgumentParser()

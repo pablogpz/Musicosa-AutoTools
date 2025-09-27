@@ -1,7 +1,9 @@
 from common.custom_types import StageException
 from stage_3_templates_pre_gen.custom_types import StageThreeInput, StageThreeOutput
-from stage_3_templates_pre_gen.logic.fulfillment import fulfill_unfulfilled_frame_settings, \
-    fulfill_unfulfilled_templates
+from stage_3_templates_pre_gen.logic.fulfillment import (
+    fulfill_unfulfilled_frame_settings,
+    fulfill_unfulfilled_templates,
+)
 
 
 def execute(stage_input: StageThreeInput) -> StageThreeOutput:

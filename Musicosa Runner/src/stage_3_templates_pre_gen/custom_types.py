@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from common.model.models import Template, Setting, Nomination
+from common.model.models import Nomination, Setting, Template
 
 
 @dataclass

@@ -89,6 +89,7 @@ class VideoGenerationResult(NamedTuple):
     skipped_video_bit_titles: list[str]
     failed_video_bit_titles: list[str]
 
+
 @dataclass
 class StageSixOutput:
     missing_templates: list[str]

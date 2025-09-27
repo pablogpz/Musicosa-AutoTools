@@ -1,4 +1,4 @@
-from common.model.models import MetadataFields, Metadata
+from common.model.models import Metadata, MetadataFields
 
 
 def get_metadata_by_field(field: MetadataFields) -> Metadata | None:

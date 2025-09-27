@@ -1,23 +1,23 @@
 from dataclasses import dataclass
 from datetime import time
 from enum import StrEnum
-from typing import Literal, Any
+from typing import Any, Literal
 
-from peewee import Model as PeeweeModel, TextField, CompositeKey, AutoField, FloatField, ForeignKeyField, IntegerField
+from peewee import AutoField, CompositeKey, FloatField, ForeignKeyField, IntegerField, TextField
+from peewee import Model as PeeweeModel
 
 from common.db.database import db
 from common.time.utils import parse_time
 
 # pyright: reportArgumentType=false
 
+
 class DomainModel:
-    def to_orm(self) -> Any:
-        ...
+    def to_orm(self) -> Any: ...
 
 
 class DatabaseModel:
-    def to_domain(self) -> Any:
-        ...
+    def to_domain(self) -> Any: ...
 
 
 class MetadataFields(StrEnum):
@@ -83,16 +83,17 @@ SETTING_KEY_SEPARATOR = "."
 
 
 class SettingKeys(StrEnum):
-    VALIDATION_SCORE_MIN_VALUE = \
+    VALIDATION_SCORE_MIN_VALUE = (
         f"{SettingGroupKeys.VALIDATION}{SETTING_KEY_SEPARATOR}{ValidationSettingNames.SCORE_MIN_VALUE}"
-    VALIDATION_SCORE_MAX_VALUE = \
+    )
+    VALIDATION_SCORE_MAX_VALUE = (
         f"{SettingGroupKeys.VALIDATION}{SETTING_KEY_SEPARATOR}{ValidationSettingNames.SCORE_MAX_VALUE}"
-    RANKING_SIGNIFICANT_DECIMAL_DIGITS = \
+    )
+    RANKING_SIGNIFICANT_DECIMAL_DIGITS = (
         f"{SettingGroupKeys.RANKING}{SETTING_KEY_SEPARATOR}{RankingSettingNames.SIGNIFICANT_DECIMAL_DIGITS}"
-    FRAME_WIDTH_PX = \
-        f"{SettingGroupKeys.FRAME}{SETTING_KEY_SEPARATOR}{FrameSettingNames.WIDTH_PX}"
-    FRAME_HEIGHT_PX = \
-        f"{SettingGroupKeys.FRAME}{SETTING_KEY_SEPARATOR}{FrameSettingNames.HEIGHT_PX}"
+    )
+    FRAME_WIDTH_PX = f"{SettingGroupKeys.FRAME}{SETTING_KEY_SEPARATOR}{FrameSettingNames.WIDTH_PX}"
+    FRAME_HEIGHT_PX = f"{SettingGroupKeys.FRAME}{SETTING_KEY_SEPARATOR}{FrameSettingNames.HEIGHT_PX}"
 
 
 @dataclass
@@ -106,8 +107,9 @@ class Setting(DomainModel):
         group_key = TextField(column_name="group_key")
         setting = TextField(column_name="setting")
         value = TextField(column_name="value", null=True)
-        type = TextField(column_name="type", choices=[t.value for t in SettingValueTypes],
-                         default=SettingValueTypes.STRING)
+        type = TextField(
+            column_name="type", choices=[t.value for t in SettingValueTypes], default=SettingValueTypes.STRING
+        )
 
         class Meta:
             database = db
@@ -116,8 +118,12 @@ class Setting(DomainModel):
 
         def to_domain(self) -> "Setting":
             # noinspection PyTypeChecker
-            return Setting(group_key=self.group_key, setting=self.setting, type=self.type,
-                           value=Setting.parse_setting_value(value=self.value, type_str=self.type))
+            return Setting(
+                group_key=self.group_key,
+                setting=self.setting,
+                type=self.type,
+                value=Setting.parse_setting_value(value=self.value, type_str=self.type),
+            )
 
     @staticmethod
     def parse_setting_value(value: str, type_str: SettingValueTypes) -> SettingValueTypeSpec:
@@ -163,22 +169,26 @@ class Avatar(DomainModel):
 
         def to_domain(self) -> "Avatar":
             # noinspection PyTypeChecker
-            return Avatar(id=self.id,
-                          image_filename=self.image_filename,
-                          image_height=self.image_height,
-                          score_box_position_top=self.score_box_position_top,
-                          score_box_position_left=self.score_box_position_left,
-                          score_box_font_scale=self.score_box_font_scale,
-                          score_box_font_color=self.score_box_font_color)
+            return Avatar(
+                id=self.id,
+                image_filename=self.image_filename,
+                image_height=self.image_height,
+                score_box_position_top=self.score_box_position_top,
+                score_box_position_left=self.score_box_position_left,
+                score_box_font_scale=self.score_box_font_scale,
+                score_box_font_color=self.score_box_font_color,
+            )
 
     def to_orm(self) -> "Avatar.ORM":
-        return Avatar.ORM(id=self.id,
-                          image_filename=self.image_filename,
-                          image_height=self.image_height,
-                          score_box_position_top=self.score_box_position_top,
-                          score_box_position_left=self.score_box_position_left,
-                          score_box_font_scale=self.score_box_font_scale,
-                          score_box_font_color=self.score_box_font_color)
+        return Avatar.ORM(
+            id=self.id,
+            image_filename=self.image_filename,
+            image_height=self.image_height,
+            score_box_position_top=self.score_box_position_top,
+            score_box_position_left=self.score_box_position_left,
+            score_box_font_scale=self.score_box_font_scale,
+            score_box_font_color=self.score_box_font_color,
+        )
 
 
 @dataclass
@@ -244,16 +254,12 @@ class Nomination(DomainModel):
 
         def to_domain(self) -> "Nomination":
             # noinspection PyTypeChecker
-            return Nomination(id=self.id,
-                              game_title=self.game_title,
-                              nominee=self.nominee,
-                              award=self.award.to_domain())
+            return Nomination(
+                id=self.id, game_title=self.game_title, nominee=self.nominee, award=self.award.to_domain()
+            )
 
     def to_orm(self) -> "Nomination.ORM":
-        return Nomination.ORM(id=self.id,
-                              game_title=self.game_title,
-                              nominee=self.nominee,
-                              award=self.award.to_orm())
+        return Nomination.ORM(id=self.id, game_title=self.game_title, nominee=self.nominee, award=self.award.to_orm())
 
 
 @dataclass
@@ -279,20 +285,24 @@ class Template(DomainModel):
 
         def to_domain(self) -> "Template":
             # noinspection PyTypeChecker
-            return Template(nomination=self.nomination.to_domain(),
-                            avatar_scale=self.avatar_scale,
-                            video_box_width_px=self.video_box_width_px,
-                            video_box_height_px=self.video_box_height_px,
-                            video_box_position_top_px=self.video_box_position_top_px,
-                            video_box_position_left_px=self.video_box_position_left_px)
+            return Template(
+                nomination=self.nomination.to_domain(),
+                avatar_scale=self.avatar_scale,
+                video_box_width_px=self.video_box_width_px,
+                video_box_height_px=self.video_box_height_px,
+                video_box_position_top_px=self.video_box_position_top_px,
+                video_box_position_left_px=self.video_box_position_left_px,
+            )
 
     def to_orm(self) -> "Template.ORM":
-        return Template.ORM(nomination=self.nomination.to_orm(),
-                            avatar_scale=self.avatar_scale,
-                            video_box_width_px=self.video_box_width_px,
-                            video_box_height_px=self.video_box_height_px,
-                            video_box_position_top_px=self.video_box_position_top_px,
-                            video_box_position_left_px=self.video_box_position_left_px)
+        return Template.ORM(
+            nomination=self.nomination.to_orm(),
+            avatar_scale=self.avatar_scale,
+            video_box_width_px=self.video_box_width_px,
+            video_box_height_px=self.video_box_height_px,
+            video_box_position_top_px=self.video_box_position_top_px,
+            video_box_position_left_px=self.video_box_position_left_px,
+        )
 
 
 @dataclass
@@ -335,16 +345,20 @@ class VideoOptions(DomainModel):
 
         def to_domain(self) -> "VideoOptions":
             # noinspection PyTypeChecker
-            return VideoOptions(nomination=self.nomination.to_domain(),
-                                videoclip=self.videoclip.to_domain(),
-                                timestamp_start=parse_time(self.timestamp_start),
-                                timestamp_end=parse_time(self.timestamp_end))
+            return VideoOptions(
+                nomination=self.nomination.to_domain(),
+                videoclip=self.videoclip.to_domain(),
+                timestamp_start=parse_time(self.timestamp_start),
+                timestamp_end=parse_time(self.timestamp_end),
+            )
 
     def to_orm(self) -> "VideoOptions.ORM":
-        return VideoOptions.ORM(nomination=self.nomination.to_orm(),
-                                videoclip=self.videoclip.to_orm(),
-                                timestamp_start=str(self.timestamp_start),
-                                timestamp_end=str(self.timestamp_end))
+        return VideoOptions.ORM(
+            nomination=self.nomination.to_orm(),
+            videoclip=self.videoclip.to_orm(),
+            timestamp_start=str(self.timestamp_start),
+            timestamp_end=str(self.timestamp_end),
+        )
 
 
 @dataclass
@@ -365,14 +379,16 @@ class CastVote(DomainModel):
 
         def to_domain(self) -> "CastVote":
             # noinspection PyTypeChecker
-            return CastVote(member=self.member.to_domain() if self.member else None,
-                            nomination=self.nomination.to_domain(),
-                            score=self.score)
+            return CastVote(
+                member=self.member.to_domain() if self.member else None,
+                nomination=self.nomination.to_domain(),
+                score=self.score,
+            )
 
     def to_orm(self) -> "CastVote.ORM":
-        return CastVote.ORM(member=self.member.to_orm() if self.member else None,
-                            nomination=self.nomination.to_orm(),
-                            score=self.score)
+        return CastVote.ORM(
+            member=self.member.to_orm() if self.member else None, nomination=self.nomination.to_orm(), score=self.score
+        )
 
 
 @dataclass
@@ -394,11 +410,17 @@ class NominationStats(DomainModel):
 
         def to_domain(self) -> "NominationStats":
             # noinspection PyTypeChecker
-            return NominationStats(nomination=self.nomination.to_domain(), avg_score=self.avg_score,
-                                   ranking_place=self.ranking_place,
-                                   ranking_sequence=self.ranking_sequence)
+            return NominationStats(
+                nomination=self.nomination.to_domain(),
+                avg_score=self.avg_score,
+                ranking_place=self.ranking_place,
+                ranking_sequence=self.ranking_sequence,
+            )
 
     def to_orm(self) -> "NominationStats.ORM":
-        return NominationStats.ORM(nomination=self.nomination.to_orm(), avg_score=self.avg_score,
-                                   ranking_place=self.ranking_place,
-                                   ranking_sequence=self.ranking_sequence)
+        return NominationStats.ORM(
+            nomination=self.nomination.to_orm(),
+            avg_score=self.avg_score,
+            ranking_place=self.ranking_place,
+            ranking_sequence=self.ranking_sequence,
+        )

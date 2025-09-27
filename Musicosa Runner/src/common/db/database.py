@@ -1,6 +1,6 @@
-from os import path, getenv
+from os import getenv, path
 
-from peewee import SqliteDatabase, OperationalError
+from peewee import OperationalError, SqliteDatabase
 
 db_path = getenv("DB_PATH", "")
 

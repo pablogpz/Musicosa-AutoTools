@@ -1,17 +1,30 @@
 from dataclasses import dataclass
 from typing import ClassVar, cast
 
-from common.config.defaults import DEFAULT_ARTIFACTS_FOLDER, DEFAULT_START_FROM_STAGE, \
-    DEFAULT_STITCH_FINAL_VIDEO_FLAG, DEFAULT_TEMPLATES_API_URL, \
-    DEFAULT_PRESENTATIONS_API_URL, DEFAULT_GENERATION_RETRY_ATTEMPTS, DEFAULT_OVERWRITE_TEMPLATES, \
-    DEFAULT_OVERWRITE_PRESENTATIONS, DEFAULT_STAGE_5_QUIET_FFMPEG, DEFAULT_VIDEO_BITS_FOLDER, \
-    DEFAULT_OVERWRITE_VIDEO_BITS, DEFAULT_PRESENTATION_DURATION, DEFAULT_TRANSITION_DURATION, \
-    DEFAULT_TRANSITION_TYPE, DEFAULT_STAGE_6_QUIET_FFMPEG, DEFAULT_QUIET_FFMPEG_FINAL_VIDEO, DEFAULT_AWARD_FORMS_FOLDER, \
-    DEFAULT_USE_COOKIES
+from common.config.defaults import (
+    DEFAULT_ARTIFACTS_FOLDER,
+    DEFAULT_AWARD_FORMS_FOLDER,
+    DEFAULT_GENERATION_RETRY_ATTEMPTS,
+    DEFAULT_OVERWRITE_PRESENTATIONS,
+    DEFAULT_OVERWRITE_TEMPLATES,
+    DEFAULT_OVERWRITE_VIDEO_BITS,
+    DEFAULT_PRESENTATION_DURATION,
+    DEFAULT_PRESENTATIONS_API_URL,
+    DEFAULT_QUIET_FFMPEG_FINAL_VIDEO,
+    DEFAULT_STAGE_5_QUIET_FFMPEG,
+    DEFAULT_STAGE_6_QUIET_FFMPEG,
+    DEFAULT_START_FROM_STAGE,
+    DEFAULT_STITCH_FINAL_VIDEO_FLAG,
+    DEFAULT_TEMPLATES_API_URL,
+    DEFAULT_TRANSITION_DURATION,
+    DEFAULT_TRANSITION_TYPE,
+    DEFAULT_USE_COOKIES,
+    DEFAULT_VIDEO_BITS_FOLDER,
+)
 from common.custom_types import Stage
 
-
 # NOTE: Keep dataclasses in sync with TOML keys
+
 
 @dataclass
 class StageOneConfig:
@@ -20,8 +33,9 @@ class StageOneConfig:
     def __init__(self, award_forms_folder: str = DEFAULT_AWARD_FORMS_FOLDER):
         award_forms_folder = award_forms_folder.strip()
 
-        self.award_forms_folder = award_forms_folder.removesuffix("/") if award_forms_folder.endswith("/") \
-            else award_forms_folder
+        self.award_forms_folder = (
+            award_forms_folder.removesuffix("/") if award_forms_folder.endswith("/") else award_forms_folder
+        )
 
 
 @dataclass
@@ -32,20 +46,25 @@ class StageFourConfig:
     overwrite_templates: bool
     overwrite_presentations: bool
 
-    def __init__(self, templates_api_url: str = DEFAULT_TEMPLATES_API_URL,
-                 presentations_api_url: str = DEFAULT_PRESENTATIONS_API_URL,
-                 gen_retry_attempts: int = DEFAULT_GENERATION_RETRY_ATTEMPTS,
-                 overwrite_templates: bool = DEFAULT_OVERWRITE_TEMPLATES,
-                 overwrite_presentations: bool = DEFAULT_OVERWRITE_PRESENTATIONS):
+    def __init__(
+        self,
+        templates_api_url: str = DEFAULT_TEMPLATES_API_URL,
+        presentations_api_url: str = DEFAULT_PRESENTATIONS_API_URL,
+        gen_retry_attempts: int = DEFAULT_GENERATION_RETRY_ATTEMPTS,
+        overwrite_templates: bool = DEFAULT_OVERWRITE_TEMPLATES,
+        overwrite_presentations: bool = DEFAULT_OVERWRITE_PRESENTATIONS,
+    ):
         templates_api_url = templates_api_url.strip()
 
-        self.templates_api_url = templates_api_url.removesuffix("/") if templates_api_url.endswith("/") \
-            else templates_api_url
+        self.templates_api_url = (
+            templates_api_url.removesuffix("/") if templates_api_url.endswith("/") else templates_api_url
+        )
 
         presentations_api_url = presentations_api_url.strip()
 
-        self.presentations_api_url = presentations_api_url.removesuffix("/") if presentations_api_url.endswith("/") \
-            else presentations_api_url
+        self.presentations_api_url = (
+            presentations_api_url.removesuffix("/") if presentations_api_url.endswith("/") else presentations_api_url
+        )
 
         self.gen_retry_attempts = gen_retry_attempts
         self.overwrite_templates = overwrite_templates
@@ -72,17 +91,21 @@ class StageSixConfig:
     quiet_ffmpeg: bool
     quiet_ffmpeg_final_video: bool
 
-    def __init__(self, video_bits_folder: str = DEFAULT_VIDEO_BITS_FOLDER,
-                 overwrite_video_bits: bool = DEFAULT_OVERWRITE_VIDEO_BITS,
-                 presentation_duration: int = DEFAULT_PRESENTATION_DURATION,
-                 transition_duration: int = DEFAULT_TRANSITION_DURATION,
-                 transition_type: str = DEFAULT_TRANSITION_TYPE,
-                 quiet_ffmpeg: bool = DEFAULT_STAGE_6_QUIET_FFMPEG,
-                 quiet_ffmpeg_final_video: bool = DEFAULT_QUIET_FFMPEG_FINAL_VIDEO):
+    def __init__(
+        self,
+        video_bits_folder: str = DEFAULT_VIDEO_BITS_FOLDER,
+        overwrite_video_bits: bool = DEFAULT_OVERWRITE_VIDEO_BITS,
+        presentation_duration: int = DEFAULT_PRESENTATION_DURATION,
+        transition_duration: int = DEFAULT_TRANSITION_DURATION,
+        transition_type: str = DEFAULT_TRANSITION_TYPE,
+        quiet_ffmpeg: bool = DEFAULT_STAGE_6_QUIET_FFMPEG,
+        quiet_ffmpeg_final_video: bool = DEFAULT_QUIET_FFMPEG_FINAL_VIDEO,
+    ):
         video_bits_folder = video_bits_folder.strip()
 
-        self.video_bits_folder = video_bits_folder.removesuffix("/") if video_bits_folder.endswith("/") \
-            else video_bits_folder
+        self.video_bits_folder = (
+            video_bits_folder.removesuffix("/") if video_bits_folder.endswith("/") else video_bits_folder
+        )
         self.overwrite_video_bits = overwrite_video_bits
         self.presentation_duration = presentation_duration
         self.transition_duration = transition_duration
@@ -103,13 +126,16 @@ class Config:
     stage_5: StageFiveConfig
     stage_6: StageSixConfig
 
-    def __init__(self, start_from: Stage = DEFAULT_START_FROM_STAGE,
-                 artifacts_folder: str = DEFAULT_ARTIFACTS_FOLDER,
-                 stitch_final_video: bool = DEFAULT_STITCH_FINAL_VIDEO_FLAG,
-                 stage_1: StageOneConfig = StageOneConfig(),
-                 stage_4: StageFourConfig = StageFourConfig(),
-                 stage_5: StageFiveConfig = StageFiveConfig(),
-                 stage_6: StageSixConfig = StageSixConfig()):
+    def __init__(
+        self,
+        start_from: Stage = DEFAULT_START_FROM_STAGE,
+        artifacts_folder: str = DEFAULT_ARTIFACTS_FOLDER,
+        stitch_final_video: bool = DEFAULT_STITCH_FINAL_VIDEO_FLAG,
+        stage_1: StageOneConfig = StageOneConfig(),
+        stage_4: StageFourConfig = StageFourConfig(),
+        stage_5: StageFiveConfig = StageFiveConfig(),
+        stage_6: StageSixConfig = StageSixConfig(),
+    ):
         self.start_from = start_from
         self.artifacts_folder = artifacts_folder.strip()
         self.stitch_final_video = stitch_final_video

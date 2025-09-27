@@ -1,14 +1,15 @@
 import os
 from os import path
 
-from validators import url as validate_url, ValidationError
+from validators import ValidationError
+from validators import url as validate_url
 
 from common.config.config import Config
 from common.custom_types import StageException
 from common.model.models import SettingKeys
 from common.model.settings import is_setting_set
 from stage_4_templates_gen.constants import MAX_GEN_RETRY_ATTEMPTS
-from stage_4_templates_gen.custom_types import StageFourOutput, StageFourInput
+from stage_4_templates_gen.custom_types import StageFourInput, StageFourOutput
 from stage_4_templates_gen.logic.generate_templates import generate_templates
 
 
@@ -41,17 +42,20 @@ def execute(config: Config, stage_input: StageFourInput) -> StageFourOutput:
 
     if not (0 < retry_attempts <= MAX_GEN_RETRY_ATTEMPTS):
         raise StageException(
-            f"Invalid retry attempts value '{retry_attempts}' (Should be between 1 and {MAX_GEN_RETRY_ATTEMPTS})")
+            f"Invalid retry attempts value '{retry_attempts}' (Should be between 1 and {MAX_GEN_RETRY_ATTEMPTS})"
+        )
 
     if not path.isdir(artifacts_folder):
         os.makedirs(artifacts_folder)
 
-    nomination_templates, presentation_templates = generate_templates(templates_api_url,
-                                                                      presentations_api_url,
-                                                                      templates,
-                                                                      artifacts_folder,
-                                                                      retry_attempts,
-                                                                      overwrite_templates,
-                                                                      overwrite_presentations)
+    nomination_templates, presentation_templates = generate_templates(
+        templates_api_url,
+        presentations_api_url,
+        templates,
+        artifacts_folder,
+        retry_attempts,
+        overwrite_templates,
+        overwrite_presentations,
+    )
 
     return StageFourOutput(nomination_templates, presentation_templates)

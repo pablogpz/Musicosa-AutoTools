@@ -4,22 +4,24 @@ from os.path import basename
 import playwright.sync_api
 from playwright.sync_api import ViewportSize, sync_playwright
 
-from common.constants import TEMPLATE_IMG_FORMAT, PRESENTATION_IMG_FILE_SUFFIX
+from common.constants import PRESENTATION_IMG_FILE_SUFFIX, TEMPLATE_IMG_FORMAT
 from common.custom_types import TemplateType
 from common.formatting.tabulate import tab
 from common.model.models import SettingKeys
 from common.model.settings import get_setting_by_key
 from common.naming.slugify import slugify
-from stage_4_templates_gen.custom_types import TemplateGenerationResult, Template
+from stage_4_templates_gen.custom_types import Template, TemplateGenerationResult
 
 
-def generate_templates(templates_api_url: str,
-                       presentations_api_url: str,
-                       templates: list[Template],
-                       artifacts_folder: str,
-                       retry_attempts: int,
-                       overwrite_templates: bool,
-                       overwrite_presentations: bool) -> tuple[TemplateGenerationResult, TemplateGenerationResult]:
+def generate_templates(
+    templates_api_url: str,
+    presentations_api_url: str,
+    templates: list[Template],
+    artifacts_folder: str,
+    retry_attempts: int,
+    overwrite_templates: bool,
+    overwrite_presentations: bool,
+) -> tuple[TemplateGenerationResult, TemplateGenerationResult]:
     generated_nomination_template_titles: list[str] = []
     generated_presentation_template_titles: list[str] = []
     skipped_nomination_template_titles: list[str] = []
@@ -56,8 +58,10 @@ def generate_templates(templates_api_url: str,
             print(f"[FAILED #{idx + 1}] {template_type.name.upper()} Not found: {template.friendly_name}")  # pyright: ignore [reportOptionalMemberAccess]
             return False
         else:
-            print(f"[FAILED #{idx + 1}] {template_type.name.upper()} "  # pyright: ignore [reportOptionalMemberAccess]
-                  f"{template.friendly_name} (HTTP status code: {response})")
+            print(
+                f"[FAILED #{idx + 1}] {template_type.name.upper()} "  # pyright: ignore [reportOptionalMemberAccess]
+                f"{template.friendly_name} (HTTP status code: {response})"
+            )
             print(tab(1, f"Re-attempting to generate up to {retry_attempts} times"))
 
             for attempt in range(1, retry_attempts + 1):
@@ -82,34 +86,41 @@ def generate_templates(templates_api_url: str,
                 template_path = f"{artifacts_folder}/{slugify(template.friendly_name)}.{TEMPLATE_IMG_FORMAT}"
                 template_url = f"{templates_api_url}/{template.id}"
 
-                generation = generate_template(template_path, template_url, TemplateType.NOMINATION,
-                                               overwrite_templates)
+                generation = generate_template(
+                    template_path, template_url, TemplateType.NOMINATION, overwrite_templates
+                )
 
                 if generation:
                     generated_nomination_template_titles.append(template.friendly_name)
-                elif generation == False:
+                elif not generation and generation is not None:
                     failed_nomination_template_ids.append(template.id)
                 elif generation is None:
                     skipped_nomination_template_titles.append(template.friendly_name)
 
             if TemplateType.PRESENTATION in template.types:
-                template_path = \
-                    f"{artifacts_folder}/{slugify(template.friendly_name)}-{PRESENTATION_IMG_FILE_SUFFIX}.{TEMPLATE_IMG_FORMAT}"
+                template_path = f"{artifacts_folder}/{slugify(template.friendly_name)}-{PRESENTATION_IMG_FILE_SUFFIX}.{TEMPLATE_IMG_FORMAT}"
                 template_url = f"{presentations_api_url}/{template.id}"
 
-                generation = generate_template(template_path, template_url, TemplateType.PRESENTATION,
-                                               overwrite_presentations)
+                generation = generate_template(
+                    template_path, template_url, TemplateType.PRESENTATION, overwrite_presentations
+                )
 
                 if generation:
                     generated_presentation_template_titles.append(template.friendly_name)
-                elif generation == False:
+                elif not generation and generation is not None:
                     failed_presentation_template_ids.append(template.id)
                 elif generation is None:
                     skipped_presentation_template_titles.append(template.friendly_name)
 
         browser.close()
 
-    return (TemplateGenerationResult(generated_nomination_template_titles, skipped_nomination_template_titles,
-                                     failed_nomination_template_ids),
-            TemplateGenerationResult(generated_presentation_template_titles, skipped_presentation_template_titles,
-                                     failed_presentation_template_ids))
+    return (
+        TemplateGenerationResult(
+            generated_nomination_template_titles, skipped_nomination_template_titles, failed_nomination_template_ids
+        ),
+        TemplateGenerationResult(
+            generated_presentation_template_titles,
+            skipped_presentation_template_titles,
+            failed_presentation_template_ids,
+        ),
+    )

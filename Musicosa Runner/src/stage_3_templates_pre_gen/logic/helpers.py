@@ -40,9 +40,9 @@ def validate_sequence_selection(selection: str, kv_store: dict[int, Any]) -> boo
         return False
 
 
-def parse_sequence_selection_of_kvstore(selection: str,
-                                        kv_store: dict[int, Any],
-                                        missing_numbers_in_kvstore: list[int]) -> list[int] | None:
+def parse_sequence_selection_of_kvstore(
+    selection: str, kv_store: dict[int, Any], missing_numbers_in_kvstore: list[int]
+) -> list[int] | None:
     if not validate_sequence_selection(selection, kv_store):
         return None
 

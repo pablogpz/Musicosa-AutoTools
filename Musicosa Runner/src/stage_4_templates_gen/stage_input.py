@@ -8,10 +8,17 @@ def load_templates_from_db(generate_presentations: bool) -> list[S4_Template]:
     templates: list[Template] = [r.to_domain() for r in Template.ORM.select()]
 
     # noinspection PyTypeChecker
-    return [S4_Template(template.nomination.id,
-                        slugify(f"{template.nomination.award.slug}"
-                                f"-{template.nomination.game_title}"
-                                f"{f"-{template.nomination.nominee}" if template.nomination.nominee else ''}"),
-                        TemplateType.NOMINATION if not generate_presentations else (
-                                TemplateType.NOMINATION | TemplateType.PRESENTATION))
-            for template in templates]
+    return [
+        S4_Template(
+            template.nomination.id,
+            slugify(
+                f"{template.nomination.award.slug}"
+                f"-{template.nomination.game_title}"
+                f"{f'-{template.nomination.nominee}' if template.nomination.nominee else ''}"
+            ),
+            TemplateType.NOMINATION
+            if not generate_presentations
+            else (TemplateType.NOMINATION | TemplateType.PRESENTATION),
+        )
+        for template in templates
+    ]

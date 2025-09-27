@@ -10,7 +10,6 @@ from stage_4_templates_gen.stage_input import load_templates_from_db
 from stage_4_templates_gen.summary import stage_summary
 
 if __name__ == "__main__":
-
     # Configuration
 
     parser = argparse.ArgumentParser()

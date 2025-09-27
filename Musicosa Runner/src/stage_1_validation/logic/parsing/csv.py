@@ -2,8 +2,8 @@ import os
 from os.path import basename
 
 from common.custom_types import StageException
-from stage_1_validation.constants import CSV_SEPARATOR, CSV_MEMBER_NAME_HEADER, CSV_UNUSED_HEADERS
-from stage_1_validation.custom_types import AwardForm, MemberSubmission, CastVote
+from stage_1_validation.constants import CSV_MEMBER_NAME_HEADER, CSV_SEPARATOR, CSV_UNUSED_HEADERS
+from stage_1_validation.custom_types import AwardForm, CastVote, MemberSubmission
 from stage_1_validation.logic.parsing.utils import parse_score_str, unquote
 
 
@@ -26,12 +26,14 @@ def parse_award_form_csv(form_file: str) -> AwardForm:
             header_line = lines[0]
             submission_lines = lines[1:]
 
-            headers = [header.replace('"', "").strip() for header in header_line.split(f"\"{CSV_SEPARATOR}\"")]
+            headers = [header.replace('"', "").strip() for header in header_line.split(f'"{CSV_SEPARATOR}"')]
 
             for line in submission_lines:
-                submission_values = {k: v for (k, v)
-                                     in zip(headers, [unquote(v) for v in line.split(CSV_SEPARATOR)])
-                                     if k not in CSV_UNUSED_HEADERS}
+                submission_values = {
+                    k: v
+                    for (k, v) in zip(headers, [unquote(v) for v in line.split(CSV_SEPARATOR)])
+                    if k not in CSV_UNUSED_HEADERS
+                }
                 try:
                     submissions.append(parse_member_submission(submission_values))
                 except StageException as err:

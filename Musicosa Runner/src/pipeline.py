@@ -2,19 +2,19 @@ import argparse
 import functools
 import inspect
 from collections.abc import Callable
-from typing import Literal, Never, Protocol, Any
+from typing import Any, Literal, Never, Protocol
 
 from peewee import PeeweeException
 
 from common.config.config import Config
 from common.config.loader import load_config
 from common.custom_types import (
-    STAGE_ONE,
-    STAGE_TWO,
-    STAGE_THREE,
-    STAGE_FOUR,
     STAGE_FIVE,
+    STAGE_FOUR,
+    STAGE_ONE,
     STAGE_SIX,
+    STAGE_THREE,
+    STAGE_TWO,
 )
 from common.db.database import db
 from common.db.peewee_helpers import bulk_pack
@@ -22,55 +22,52 @@ from common.formatting.tabulate import tab
 from common.input.better_input import better_input
 from common.model.metadata import get_metadata_by_field
 from common.model.models import (
-    Template,
-    Setting,
-    NominationStats,
     CastVote,
-    MetadataFields,
     Member,
+    MetadataFields,
     Nomination,
+    NominationStats,
+    Setting,
+    Template,
 )
 from common.naming.identifiers import generate_nomination_uuid5_from_nomination_str
-from stage_1_validation.custom_types import AwardForm, StageOneOutput, StageOneInput
+from stage_1_validation.custom_types import AwardForm, StageOneInput, StageOneOutput
 from stage_1_validation.execute import execute as execute_stage_1
 from stage_1_validation.stage_input import (
-    parse_award_forms_folder,
     get_award_count,
     get_member_count,
     get_valid_award_slugs,
+    parse_award_forms_folder,
 )
 from stage_1_validation.summary import stage_summary as stage_1_summary
-from stage_2_ranking.custom_types import StageTwoOutput, StageTwoInput
+from stage_2_ranking.custom_types import StageTwoInput, StageTwoOutput
 from stage_2_ranking.execute import execute as execute_stage_2
 from stage_2_ranking.stage_input import load_tfa_from_db as load_s2_tfa_from_db
 from stage_2_ranking.summary import stage_summary as stage_2_summary
-from stage_3_templates_pre_gen.custom_types import StageThreeOutput, StageThreeInput
+from stage_3_templates_pre_gen.custom_types import StageThreeInput, StageThreeOutput
 from stage_3_templates_pre_gen.execute import execute as execute_stage_3
 from stage_3_templates_pre_gen.stage_input import (
     load_tfa_from_db as load_s3_tfa_from_db,
 )
 from stage_3_templates_pre_gen.summary import stage_summary as stage_3_summary
-from stage_4_templates_gen.custom_types import StageFourOutput, StageFourInput
+from stage_4_templates_gen.custom_types import StageFourInput, StageFourOutput
 from stage_4_templates_gen.execute import execute as execute_stage_4
 from stage_4_templates_gen.stage_input import load_templates_from_db
 from stage_4_templates_gen.summary import stage_summary as stage_4_summary
-from stage_5_videoclips_acquisition.custom_types import StageFiveOutput, StageFiveInput
+from stage_5_videoclips_acquisition.custom_types import StageFiveInput, StageFiveOutput
 from stage_5_videoclips_acquisition.execute import execute as execute_stage_5
 from stage_5_videoclips_acquisition.stage_input import load_videoclips_from_db
 from stage_5_videoclips_acquisition.summary import stage_summary as stage_5_summary
-from stage_6_video_gen.custom_types import StageSixOutput, StageSixInput
+from stage_6_video_gen.custom_types import StageSixInput, StageSixOutput
 from stage_6_video_gen.execute import execute as execute_stage_6
 from stage_6_video_gen.stage_input import load_video_options_from_db
 from stage_6_video_gen.summary import stage_summary as stage_6_summary
-
 
 # PIPELINE STEP EXECUTOR Types
 
 
 class PipelineStep[D, O](Protocol):
-    def __call__(
-        self, config: Config, reloadable_data: D, /, *args: Any, **kwargs: Any
-    ) -> O: ...
+    def __call__(self, config: Config, reloadable_data: D, /, *args: Any, **kwargs: Any) -> O: ...
 
 
 type ConfigLoader = Callable[[], Config]
@@ -143,9 +140,7 @@ class StepExecutor:
         # Runtime checks
 
         if len(inspect.getfullargspec(step).args) < 2:
-            raise RuntimeError(
-                f"Step function '{step}' is missing mandatory positional arguments"
-            )
+            raise RuntimeError(f"Step function '{step}' is missing mandatory positional arguments")
 
         if not controls.isdisjoint({RELOAD_CONFIG, RELOAD_CONFIG_AND_DATA}):
             if config_loader is None:
@@ -182,9 +177,7 @@ class StepExecutor:
             f"\n"
         )
 
-        error_controls = {
-            ctrl for ctrl in controls if ctrl in ALLOWED_CONTROLS_ON_ERROR
-        }
+        error_controls = {ctrl for ctrl in controls if ctrl in ALLOWED_CONTROLS_ON_ERROR}
         on_error_msg = (
             f"< (!) Action required >\n"
             f"{'\n'.join([tab(1, f'[{k}] {v}') for k, v in CONTROL_MESSAGES.items() if k in error_controls])}"
@@ -195,13 +188,9 @@ class StepExecutor:
             choice = CONTINUE
 
             try:
-                step_result = step(
-                    config_arg, reloadable_data_arg, *other_args, **step_kwargs
-                )
+                step_result = step(config_arg, reloadable_data_arg, *other_args, **step_kwargs)
 
-                ask_to_continue_on_success = (
-                    CONTINUE in controls if not self._skip_continuation else False
-                )
+                ask_to_continue_on_success = CONTINUE in controls if not self._skip_continuation else False
                 if ask_to_continue_on_success:
                     choice = better_input(
                         on_success_msg,
@@ -277,9 +266,8 @@ def retry[O](
     decorator = step_executor_decorator(controls={RETRY, ABORT}, err_header=err_header)
 
     def generator(func: RetryPipelineStep[O]) -> RetryPipelineStep[O]:
-        adapted_step_func: PipelineStep[None, O] = lambda _c, _d, *args, **kwargs: func(
-            *args, **kwargs
-        )
+        def adapted_step_func(_c, _d, *args, **kwargs):
+            return func(*args, **kwargs)
 
         @functools.wraps(func)
         def wrap(*args: Any, **kwargs: Any) -> O:
@@ -304,9 +292,8 @@ def retry_or_reconfig[O](
     )
 
     def generator(func: RetryReconfigPipelineStep[O]) -> RetryReconfigPipelineStep[O]:
-        adapted_step_func: PipelineStep[None, O] = (
-            lambda config, _d, *args, **kwargs: func(config, *args, **kwargs)
-        )
+        def adapted_step_func(config, _d, *args, **kwargs):
+            return func(config, *args, **kwargs)
 
         @functools.wraps(func)
         def wrap(config: Config, *args: Any, **kwargs: Any) -> O:
@@ -333,15 +320,12 @@ def configless_stage[D, O](
     def generator(
         func: ConfiglessStagePipelineStep[D, O],
     ) -> ConfiglessStagePipelineStep[D, O]:
-        adapted_step_func: PipelineStep[D, O] = lambda _c, data, *args, **kwargs: func(
-            data, *args, **kwargs
-        )
+        def adapted_step_func(_c, data, *args, **kwargs):
+            return func(data, *args, **kwargs)
 
         @functools.wraps(func)
         def wrap(reloadable_data: D, *args: Any, **kwargs: Any) -> O:
-            return decorator(adapted_step_func)(
-                Config.NULL, reloadable_data, *args, **kwargs
-            )
+            return decorator(adapted_step_func)(Config.NULL, reloadable_data, *args, **kwargs)
 
         return wrap
 
@@ -396,9 +380,7 @@ class PipelineStateManager:
         self.members_by_name = dict([(member.name, member) for member in members])
 
         nominations = [nomination.to_domain() for nomination in Nomination.ORM.select()]
-        self.nominations_by_id = dict(
-            [(nomination.id, nomination) for nomination in nominations]
-        )
+        self.nominations_by_id = dict([(nomination.id, nomination) for nomination in nominations])
 
     def register_award_forms(self, award_forms: list[AwardForm]) -> None:
         for award in award_forms:
@@ -422,9 +404,7 @@ class PipelineStateManager:
                     CastVote.ORM.replace_many(bulk_pack(self.cast_votes)).execute()
             except PeeweeException as error:
                 tx.rollback()
-                raise RuntimeError(
-                    f"DB transaction was rolled back due to an error: {error}"
-                ) from error
+                raise RuntimeError(f"DB transaction was rolled back due to an error: {error}") from error
 
     def register_stage_2_output(self, stage_output: StageTwoOutput) -> None:
         for stat in stage_output.nomination_stats:
@@ -441,14 +421,10 @@ class PipelineStateManager:
         with db.atomic() as tx:
             try:
                 if len(self.nomination_stats_collection) > 0:
-                    NominationStats.ORM.replace_many(
-                        bulk_pack(self.nomination_stats_collection)
-                    ).execute()
+                    NominationStats.ORM.replace_many(bulk_pack(self.nomination_stats_collection)).execute()
             except PeeweeException as error:
                 tx.rollback()
-                raise RuntimeError(
-                    f"DB transaction was rolled back due to an error: {error}"
-                ) from error
+                raise RuntimeError(f"DB transaction was rolled back due to an error: {error}") from error
 
     def register_stage_3_output(self, stage_output: StageThreeOutput) -> None:
         if stage_output.frame_settings:
@@ -467,9 +443,7 @@ class PipelineStateManager:
                     Template.ORM.replace_many(bulk_pack(self.templates)).execute()
             except PeeweeException as error:
                 tx.rollback()
-                raise RuntimeError(
-                    f"DB transaction was rolled back due to an error: {error}"
-                ) from error
+                raise RuntimeError(f"DB transaction was rolled back due to an error: {error}") from error
 
 
 if __name__ == "__main__":
@@ -479,10 +453,10 @@ if __name__ == "__main__":
     parser.add_argument("--config_file")
     arguments = parser.parse_args()
 
-    configuration_file = (
-        arguments.config_file.strip() if arguments.config_file else None
-    )
-    configuration_loader: ConfigLoader = lambda: load_config(configuration_file)
+    configuration_file = arguments.config_file.strip() if arguments.config_file else None
+
+    def configuration_loader():
+        return load_config(configuration_file)
 
     try:
         configuration = configuration_loader()
@@ -496,11 +470,7 @@ if __name__ == "__main__":
 
     # PIPELINE EXECUTION
 
-    tfa_edition = (
-        edition.value
-        if (edition := get_metadata_by_field(MetadataFields.EDITION))
-        else ""
-    )
+    tfa_edition = edition.value if (edition := get_metadata_by_field(MetadataFields.EDITION)) else ""
 
     print(f"[TFA {tfa_edition}º EDITION]")
     print(f"  Edition: {tfa_edition}")
@@ -517,18 +487,14 @@ if __name__ == "__main__":
         awards_count = get_award_count()
         members_count = get_member_count()
 
-        return StageOneInput(
-            award_forms, valid_award_slugs, awards_count, members_count
-        )
+        return StageOneInput(award_forms, valid_award_slugs, awards_count, members_count)
 
     @stage(
         err_header="[Stage 1 | Execution ERROR]",
         config_loader=configuration_loader,
         data_collector=stage_1_collect_input,
     )
-    def stage_1_do_execute(
-        config: Config, stage_input: StageOneInput
-    ) -> StageOneOutput:
+    def stage_1_do_execute(config: Config, stage_input: StageOneInput) -> StageOneOutput:
         result = execute_stage_1(stage_input)
 
         if result.validation_errors:
@@ -568,9 +534,7 @@ if __name__ == "__main__":
     def stage_2_collect_input() -> StageTwoInput:
         return StageTwoInput(load_s2_tfa_from_db())
 
-    @configless_stage(
-        err_header="[Stage 2 | Execution ERROR]", data_collector=stage_2_collect_input
-    )
+    @configless_stage(err_header="[Stage 2 | Execution ERROR]", data_collector=stage_2_collect_input)
     def stage_2_do_execute(stage_input: StageTwoInput) -> StageTwoOutput:
         result = execute_stage_2(stage_input)
 
@@ -607,9 +571,7 @@ if __name__ == "__main__":
     def stage_3_collect_input() -> StageThreeInput:
         return StageThreeInput(load_s3_tfa_from_db())
 
-    @configless_stage(
-        err_header="[Stage 3 | Execution ERROR]", data_collector=stage_3_collect_input
-    )
+    @configless_stage(err_header="[Stage 3 | Execution ERROR]", data_collector=stage_3_collect_input)
     def stage_3_do_execute(stage_input: StageThreeInput) -> StageThreeOutput:
         result = execute_stage_3(stage_input)
 
@@ -647,18 +609,14 @@ if __name__ == "__main__":
         config_loader=configuration_loader,
     )
     def stage_4_collect_input(config: Config) -> StageFourInput:
-        return StageFourInput(
-            load_templates_from_db(generate_presentations=config.stitch_final_video)
-        )
+        return StageFourInput(load_templates_from_db(generate_presentations=config.stitch_final_video))
 
     @stage(
         err_header="[Stage 4 | Execution ERROR]",
         config_loader=configuration_loader,
         data_collector=stage_4_collect_input,
     )
-    def stage_4_do_execute(
-        config: Config, stage_input: StageFourInput
-    ) -> StageFourOutput:
+    def stage_4_do_execute(config: Config, stage_input: StageFourInput) -> StageFourOutput:
         result = execute_stage_4(config, stage_input)
 
         print(stage_4_summary(config, stage_input, result))
@@ -683,9 +641,7 @@ if __name__ == "__main__":
         config_loader=configuration_loader,
         data_collector=stage_5_collect_input,
     )
-    def stage_5_do_execute(
-        config: Config, stage_input: StageFiveInput
-    ) -> StageFiveOutput:
+    def stage_5_do_execute(config: Config, stage_input: StageFiveInput) -> StageFiveOutput:
         result = execute_stage_5(config, stage_input)
 
         print(stage_5_summary(stage_input, result))
@@ -710,9 +666,7 @@ if __name__ == "__main__":
         config_loader=configuration_loader,
         data_collector=stage_6_collect_input,
     )
-    def stage_6_do_execute(
-        config: Config, stage_input: StageSixInput
-    ) -> StageSixOutput:
+    def stage_6_do_execute(config: Config, stage_input: StageSixInput) -> StageSixOutput:
         result = execute_stage_6(config, stage_input)
 
         print(stage_6_summary(config, stage_input, result))

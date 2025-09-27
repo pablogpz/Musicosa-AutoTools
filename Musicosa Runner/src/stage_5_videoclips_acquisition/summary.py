@@ -21,8 +21,10 @@ def stage_summary(stage_input: StageFiveInput, stage_output: StageFiveOutput) ->
     if len(skipped) > 0:
         f(f"# Skipped videoclips: {len(skipped)}")
     if len(failed) > 0:
-        f(f"# Failed to download videoclips: {len(failed)}\n"
-          f"{"\n".join([tab(1, f"* {videoclip}") for videoclip in failed])}")
+        f(
+            f"# Failed to download videoclips: {len(failed)}\n"
+            f"{'\n'.join([tab(1, f'* {videoclip}') for videoclip in failed])}"
+        )
     f("")
 
     return "\n".join(log_lines)
