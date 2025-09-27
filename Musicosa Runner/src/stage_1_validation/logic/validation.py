@@ -131,12 +131,12 @@ def validate_entry(entry: ContestantSubmissionEntry, entry_topics: list[EntryTop
     if not is_author and topic:
         validation_errors.append("Topic is only allowed for authors")
 
-    min_score = get_setting_by_key(SettingKeys.VALIDATION_SCORE_MIN_VALUE).value  # pyright: ignore
-    max_score = get_setting_by_key(SettingKeys.VALIDATION_SCORE_MAX_VALUE).value  # pyright: ignore
+    min_score: int = get_setting_by_key(SettingKeys.VALIDATION_SCORE_MIN_VALUE).value  # pyright: ignore [reportAssignmentType, reportOptionalMemberAccess]
+    max_score: int = get_setting_by_key(SettingKeys.VALIDATION_SCORE_MAX_VALUE).value  # pyright: ignore [reportAssignmentType, reportOptionalMemberAccess]
 
     if errors := validate_title(title):
         validation_errors.append(errors)
-    if errors := validate_score(score, min_score, max_score):  # pyright: ignore [reportArgumentType]
+    if errors := validate_score(score, min_score, max_score):
         validation_errors.append(errors)
 
     if is_author and video_url:
