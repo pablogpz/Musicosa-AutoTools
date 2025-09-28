@@ -1,30 +1,37 @@
+from math import ceil
 from os import path
 
 import ffmpeg
 from ffmpeg.exceptions import FFMpegError
 from ffmpeg_normalize import FFmpegNormalize
-from math import ceil
 
-from common.constants import VIDEOCLIPS_OVERRIDE_DURATION_LIMIT, TEMPLATE_IMG_FORMAT, VIDEO_FORMAT
+from common.constants import TEMPLATE_IMG_FORMAT, VIDEO_FORMAT, VIDEOCLIPS_OVERRIDE_DURATION_LIMIT
 from common.custom_types import StageException
 from common.formatting.tabulate import tab
 from common.model.models import SettingKeys
 from common.model.settings import get_setting_by_key
 from common.naming.slugify import slugify
 from common.time.utils import parse_time, time_to_seconds
-from stage_6_video_gen.constants import VIDEO_FPS, VIDEO_CODEC, VIDEO_BITRATE, NORMALIZATION_TYPE, \
-    NORMALIZATION_TARGET_LEVEL, NORMALIZATION_LOUDNESS_RANGE_TARGET, NORMALIZATION_AUDIO_CODEC, \
-    NORMALIZATION_AUDIO_SAMPLE_RATE
-from stage_6_video_gen.custom_types import VideoGenerationResult, EntryVideoOptions
+from stage_6_video_gen.constants import (
+    NORMALIZATION_AUDIO_CODEC,
+    NORMALIZATION_AUDIO_SAMPLE_RATE,
+    NORMALIZATION_LOUDNESS_RANGE_TARGET,
+    NORMALIZATION_TARGET_LEVEL,
+    NORMALIZATION_TYPE,
+    VIDEO_BITRATE,
+    VIDEO_CODEC,
+    VIDEO_FPS,
+)
+from stage_6_video_gen.custom_types import EntryVideoOptions, VideoGenerationResult
 from stage_6_video_gen.logic.helpers import get_video_duration_seconds
 
 
 def generate_video_bit_collection(
-        artifacts_folder: str,
-        video_bits_folder: str,
-        overwrite: bool,
-        quiet_ffmpeg: bool,
-        entry_video_options: list[EntryVideoOptions]
+    artifacts_folder: str,
+    video_bits_folder: str,
+    overwrite: bool,
+    quiet_ffmpeg: bool,
+    entry_video_options: list[EntryVideoOptions],
 ) -> tuple[list[str], list[str], VideoGenerationResult]:
     missing_templates: list[str] = []
     missing_videoclips: list[str] = []
@@ -33,7 +40,6 @@ def generate_video_bit_collection(
     failed_video_bit_titles: list[str] = []
 
     for idx, vid_opts in enumerate(entry_video_options):
-
         video_bit_path = f"{video_bits_folder}/{vid_opts.sequence_number}.{VIDEO_FORMAT}"
         if not overwrite and path.isfile(video_bit_path):
             print(f"[SKIPPING #{idx + 1}] {vid_opts.entry_title}")
@@ -64,22 +70,21 @@ def generate_video_bit_collection(
             print(f"[FAILED #{idx + 1}] {vid_opts.entry_title}. Cause: {err}")
             failed_video_bit_titles.append(vid_opts.entry_title)
 
-    return missing_templates, missing_videoclips, VideoGenerationResult(generated_video_bit_files,
-                                                                        skipped_video_bit_titles,
-                                                                        failed_video_bit_titles)
+    return (
+        missing_templates,
+        missing_videoclips,
+        VideoGenerationResult(generated_video_bit_files, skipped_video_bit_titles, failed_video_bit_titles),
+    )
 
 
 def generate_video_bit(
-        videoclip_path: str,
-        vid_opts: EntryVideoOptions,
-        template_path: str,
-        video_bit_path: str,
-        quiet_ffmpeg: bool
+    videoclip_path: str, vid_opts: EntryVideoOptions, template_path: str, video_bit_path: str, quiet_ffmpeg: bool
 ) -> str:
     default_duration: int = get_setting_by_key(SettingKeys.VALIDATION_ENTRY_VIDEO_DURATION_SECONDS).value  # pyright: ignore [reportOptionalMemberAccess, reportAssignmentType]
     override_top_n: int = get_setting_by_key(SettingKeys.GENERATION_VIDEOCLIPS_OVERRIDE_TOP_N_DURATION).value  # pyright: ignore [reportOptionalMemberAccess, reportAssignmentType]
     override_duration_value: int = get_setting_by_key(  # pyright: ignore [reportAssignmentType]
-        SettingKeys.GENERATION_VIDEOCLIPS_OVERRIDE_DURATION_UP_TO_X_SECONDS).value  # pyright: ignore [reportOptionalMemberAccess]
+        SettingKeys.GENERATION_VIDEOCLIPS_OVERRIDE_DURATION_UP_TO_X_SECONDS
+    ).value  # pyright: ignore [reportOptionalMemberAccess]
 
     videoclip_duration_seconds = get_video_duration_seconds(videoclip_path)
 
@@ -89,8 +94,13 @@ def generate_video_bit(
         if override_duration_value == VIDEOCLIPS_OVERRIDE_DURATION_LIMIT:
             ffmpeg_time_code_args = {}
         elif videoclip_duration_seconds < override_duration_value:
-            print(tab(1, "[WARNING] Top videoclip duration is less than the override duration value. "
-                         "End video will be rendered to its original duration"))
+            print(
+                tab(
+                    1,
+                    "[WARNING] Top videoclip duration is less than the override duration value. "
+                    "End video will be rendered to its original duration",
+                )
+            )
             ffmpeg_time_code_args = {}
         else:
             ffmpeg_time_code_args = {"ss": 0, "t": override_duration_value}
@@ -107,12 +117,16 @@ def generate_video_bit(
         ffmpeg_time_code_args = {"ss": vid_opts.timestamp.start, "to": vid_opts.timestamp.end}
 
         if timestamp_start_seconds < videoclip_duration_seconds < timestamp_end_seconds:
-            print(tab(1, "[WARNING] End timestamp exceeds videoclip duration. "
-                         "End video will be trimmed at the end of the videoclip"))
+            print(
+                tab(
+                    1,
+                    "[WARNING] End timestamp exceeds videoclip duration. "
+                    "End video will be trimmed at the end of the videoclip",
+                )
+            )
 
         if videoclip_duration_seconds <= timestamp_start_seconds:
-            print(tab(1, "[WARNING] Start timestamp exceeds videoclip duration. "
-                         "Defaulting to trimming from the start"))
+            print(tab(1, "[WARNING] Start timestamp exceeds videoclip duration. Defaulting to trimming from the start"))
             ffmpeg_time_code_args = {"ss": 0, "t": default_duration}
 
     # Generate video bit
@@ -123,31 +137,41 @@ def generate_video_bit(
 
         template_stream = ffmpeg.input(filename=template_path)
 
-        scaled_videoclip_stream = (videoclip_stream
-                                   .scale(w=vid_opts.width, h=vid_opts.height,
-                                          force_original_aspect_ratio="decrease")
-                                   .pad(width=ceil(vid_opts.width / 2) * 2, height=ceil(vid_opts.height / 2) * 2,
-                                        x="(ow-iw)/2", y="(oh-ih)/2",
-                                        color="black")
-                                   .setsar(sar=1))
+        scaled_videoclip_stream = (
+            videoclip_stream.scale(w=vid_opts.width, h=vid_opts.height, force_original_aspect_ratio="decrease")
+            .pad(
+                width=ceil(vid_opts.width / 2) * 2,
+                height=ceil(vid_opts.height / 2) * 2,
+                x="(ow-iw)/2",
+                y="(oh-ih)/2",
+                color="black",
+            )
+            .setsar(sar=1)
+        )
 
-        output_video_bit_stream = (template_stream
-                                   .overlay(scaled_videoclip_stream, x=vid_opts.position_left, y=vid_opts.position_top))
+        output_video_bit_stream = template_stream.overlay(
+            scaled_videoclip_stream, x=vid_opts.position_left, y=vid_opts.position_top
+        )
 
-        (ffmpeg
-         .output(output_video_bit_stream, videoclip_audio_stream,
-                 filename=video_bit_path,
-                 r=VIDEO_FPS,
-                 vcodec=VIDEO_CODEC,
-                 b=VIDEO_BITRATE)
-         .run(overwrite_output=True, quiet=quiet_ffmpeg))
+        (
+            ffmpeg.output(
+                output_video_bit_stream,
+                videoclip_audio_stream,
+                filename=video_bit_path,
+                r=VIDEO_FPS,
+                vcodec=VIDEO_CODEC,
+                b=VIDEO_BITRATE,
+            ).run(overwrite_output=True, quiet=quiet_ffmpeg)
+        )
 
-        normalizer = FFmpegNormalize(normalization_type=NORMALIZATION_TYPE,
-                                     target_level=NORMALIZATION_TARGET_LEVEL,
-                                     loudness_range_target=NORMALIZATION_LOUDNESS_RANGE_TARGET,
-                                     audio_codec=NORMALIZATION_AUDIO_CODEC,
-                                     sample_rate=NORMALIZATION_AUDIO_SAMPLE_RATE,
-                                     video_codec="copy")
+        normalizer = FFmpegNormalize(
+            normalization_type=NORMALIZATION_TYPE,
+            target_level=NORMALIZATION_TARGET_LEVEL,
+            loudness_range_target=NORMALIZATION_LOUDNESS_RANGE_TARGET,
+            audio_codec=NORMALIZATION_AUDIO_CODEC,
+            sample_rate=NORMALIZATION_AUDIO_SAMPLE_RATE,
+            video_codec="copy",
+        )
         normalizer.add_media_file(video_bit_path, video_bit_path)
         try:
             normalizer.run_normalization()

@@ -1,12 +1,12 @@
 import os
 from os import path
-from typing import get_args, cast
+from typing import cast, get_args
 
 from common.config.config import Config
 from common.custom_types import StageException
 from common.model.models import SettingKeys
 from common.model.settings import is_setting_set
-from stage_6_video_gen.custom_types import TransitionOptions, StageSixInput, StageSixOutput, TransitionType
+from stage_6_video_gen.custom_types import StageSixInput, StageSixOutput, TransitionOptions, TransitionType
 from stage_6_video_gen.logic.generate_final_video import generate_final_video
 from stage_6_video_gen.logic.generate_video_bits import generate_video_bit_collection
 
@@ -17,9 +17,11 @@ def execute(config: Config, stage_input: StageSixInput) -> StageSixOutput:
     overwrite = config.stage_6.overwrite_video_bits
     stitch_final_video = config.stitch_final_video
     final_video_name = config.stage_6.final_video_name
-    transition_options = TransitionOptions(config.stage_6.presentation_duration,
-                                           config.stage_6.transition_duration,
-                                           cast(TransitionType, config.stage_6.transition_type))
+    transition_options = TransitionOptions(
+        config.stage_6.presentation_duration,
+        config.stage_6.transition_duration,
+        cast(TransitionType, config.stage_6.transition_type),
+    )
     quiet_ffmpeg = config.stage_6.quiet_ffmpeg
     quiet_ffmpeg_final_video = config.stage_6.quiet_ffmpeg_final_video
     entries_video_options = stage_input.entries_video_options
@@ -52,11 +54,13 @@ def execute(config: Config, stage_input: StageSixInput) -> StageSixOutput:
 
     if transition_options.presentation_duration <= 0:
         raise StageException(
-            f"Presentation duration ({transition_options.presentation_duration}) must be a positive integer")
+            f"Presentation duration ({transition_options.presentation_duration}) must be a positive integer"
+        )
 
     if transition_options.transition_duration <= 0:
         raise StageException(
-            f"Transition duration ({transition_options.transition_duration}) must be a positive integer")
+            f"Transition duration ({transition_options.transition_duration}) must be a positive integer"
+        )
 
     if transition_options.type not in get_args(TransitionType):
         raise StageException(f"Transition type ({transition_options.type}) must be one of [{get_args(TransitionType)}]")
@@ -64,9 +68,9 @@ def execute(config: Config, stage_input: StageSixInput) -> StageSixOutput:
     if not path.isdir(video_bits_folder):
         os.makedirs(video_bits_folder)
 
-    missing_templates, missing_videoclips, generation_result = (
-        generate_video_bit_collection(artifacts_folder, video_bits_folder, overwrite, quiet_ffmpeg,
-                                      entries_video_options))
+    missing_templates, missing_videoclips, generation_result = generate_video_bit_collection(
+        artifacts_folder, video_bits_folder, overwrite, quiet_ffmpeg, entries_video_options
+    )
     generated, skipped, failed = generation_result
 
     if stitch_final_video:
@@ -75,16 +79,20 @@ def execute(config: Config, stage_input: StageSixInput) -> StageSixOutput:
         if len(failed) != 0:
             print(f"[SKIPPING FINAL VIDEO] {len(failed)} video bits failed to generate properly")
         elif len(entries_video_options) != existing_video_bit_count:
-            print(f"[SKIPPING FINAL VIDEO] There are "
-                  f"{len(entries_video_options) - existing_video_bit_count}"
-                  f" missing video bits")
+            print(
+                f"[SKIPPING FINAL VIDEO] There are "
+                f"{len(entries_video_options) - existing_video_bit_count}"
+                f" missing video bits"
+            )
         else:
-            final_video_path = generate_final_video(artifacts_folder,
-                                                    video_bits_folder,
-                                                    video_bits_folder,
-                                                    final_video_name,
-                                                    quiet_ffmpeg_final_video,
-                                                    entries_video_options,
-                                                    transition_options)
+            final_video_path = generate_final_video(
+                artifacts_folder,
+                video_bits_folder,
+                video_bits_folder,
+                final_video_name,
+                quiet_ffmpeg_final_video,
+                entries_video_options,
+                transition_options,
+            )
 
     return StageSixOutput(missing_templates, missing_videoclips, generation_result, final_video_path)

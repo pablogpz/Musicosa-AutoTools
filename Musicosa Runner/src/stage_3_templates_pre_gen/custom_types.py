@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from common.model.models import Contestant, Avatar, Template, Setting, Entry, VideoOptions
+from common.model.models import Avatar, Contestant, Entry, Setting, Template, VideoOptions
 
 
 @dataclass

@@ -6,7 +6,7 @@ from common.constants import VIDEO_TIMESTAMP_SEPARATOR
 def validate_time_str(time_str: str) -> bool:
     timestamp_bits = time_str.split(":")
 
-    if not len(timestamp_bits) in [2, 3]:
+    if len(timestamp_bits) not in [2, 3]:
         return False
 
     try:
@@ -48,7 +48,7 @@ def parse_time(time_str: str) -> time | None:
 def time_str_zfill(time_str: str) -> str:
     time_bits = time_str.split(":")
 
-    if not len(time_bits) in [2, 3]:
+    if len(time_bits) not in [2, 3]:
         return ""
 
     if len(time_bits) == 2:

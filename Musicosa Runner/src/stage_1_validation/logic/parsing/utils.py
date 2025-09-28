@@ -1,5 +1,5 @@
 from common.constants import VIDEO_TIMESTAMP_SEPARATOR
-from common.time.utils import validate_time_str, time_str_zfill
+from common.time.utils import time_str_zfill, validate_time_str
 from stage_1_validation.constants import ALLOWED_DECIMAL_SEPARATOR_CHARS, NORMALIZED_DECIMAL_SEPARATOR_CHAR
 
 

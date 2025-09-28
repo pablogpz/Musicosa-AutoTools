@@ -7,17 +7,15 @@ from common.constants import VIDEO_TIMESTAMP_SEPARATOR
 from common.custom_types import StageException
 from common.db.database import db
 from common.db.peewee_helpers import bulk_pack
-from common.model.models import Entry, Scoring, VideoOptions, Contestant, EntryTopic
+from common.model.models import Contestant, Entry, EntryTopic, Scoring, VideoOptions
 from common.naming.identifiers import generate_contestant_uuid5, generate_entry_uuid5
 from common.time.utils import parse_time
 from stage_1_validation.custom_types import StageOneInput
 from stage_1_validation.execute import execute
-from stage_1_validation.stage_input import get_submissions_from_forms_folder, get_valid_titles, \
-    get_entry_topics_from_db
+from stage_1_validation.stage_input import get_entry_topics_from_db, get_submissions_from_forms_folder, get_valid_titles
 from stage_1_validation.summary import stage_summary
 
 if __name__ == "__main__":
-
     # Configuration
 
     parser = argparse.ArgumentParser()
@@ -63,9 +61,9 @@ if __name__ == "__main__":
 
     contestants_by_name: dict[str, Contestant] = {}
     for sub in submissions:
-        contestants_by_name[sub.name] = Contestant(id=generate_contestant_uuid5(sub.name).hex,
-                                                   name=sub.name,
-                                                   avatar=None)
+        contestants_by_name[sub.name] = Contestant(
+            id=generate_contestant_uuid5(sub.name).hex, name=sub.name, avatar=None
+        )
 
     entries_by_title: dict[str, Entry] = {}
     for sub in submissions:
@@ -73,28 +71,38 @@ if __name__ == "__main__":
             if entry.is_author:
                 # noinspection PyTypeChecker
                 topic = EntryTopic(designation=entry.topic) if entry.topic else None
-                entries_by_title[entry.title] = Entry(id=generate_entry_uuid5(entry.title).hex,
-                                                      title=entry.title,
-                                                      author=contestants_by_name[sub.name],
-                                                      video_url=entry.video_url,  # pyright: ignore [reportArgumentType]
-                                                      topic=topic)
+                entries_by_title[entry.title] = Entry(
+                    id=generate_entry_uuid5(entry.title).hex,
+                    title=entry.title,
+                    author=contestants_by_name[sub.name],
+                    video_url=entry.video_url,  # pyright: ignore [reportArgumentType]
+                    topic=topic,
+                )
 
     scoring_entries: list[Scoring] = []
     for sub in submissions:
         for entry in sub.entries:
-            scoring_entries.append(Scoring(contestant=contestants_by_name[sub.name],
-                                           entry=entries_by_title[entry.title],
-                                           score=entry.score,
-                                           estrelli=entry.estrelli))
+            scoring_entries.append(
+                Scoring(
+                    contestant=contestants_by_name[sub.name],
+                    entry=entries_by_title[entry.title],
+                    score=entry.score,
+                    estrelli=entry.estrelli,
+                )
+            )
 
     video_options: list[VideoOptions] = []
     for sub in submissions:
         for entry in sub.entries:
             if entry.video_timestamp:
                 start, end = entry.video_timestamp.split(VIDEO_TIMESTAMP_SEPARATOR)
-                video_options.append(VideoOptions(entry=entries_by_title[entry.title],
-                                                  timestamp_start=parse_time(start),
-                                                  timestamp_end=parse_time(end)))
+                video_options.append(
+                    VideoOptions(
+                        entry=entries_by_title[entry.title],
+                        timestamp_start=parse_time(start),
+                        timestamp_end=parse_time(end),
+                    )
+                )
 
     with db.atomic() as tx:
         try:

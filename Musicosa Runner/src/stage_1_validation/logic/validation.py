@@ -1,23 +1,23 @@
-from validators import url as validate_url, ValidationError
+from validators import ValidationError
+from validators import url as validate_url
 
 from common.constants import VIDEO_TIMESTAMP_SEPARATOR
 from common.formatting.tabulate import tab
 from common.model.models import EntryTopic, SettingKeys
 from common.model.settings import get_setting_by_key
-from common.time.utils import validate_time_str, parse_time, seconds_between
-from stage_1_validation.custom_types import ContestantSubmissionEntry, ContestantSubmission
+from common.time.utils import parse_time, seconds_between, validate_time_str
+from stage_1_validation.custom_types import ContestantSubmission, ContestantSubmissionEntry
 from stage_1_validation.logic.helpers import find_duplicates
 
 
-def validate_contestant_submission_collection(submissions: list[ContestantSubmission],
-                                              valid_titles: list[str],
-                                              entry_topics: list[EntryTopic] | None) -> list[str] | None:
+def validate_contestant_submission_collection(
+    submissions: list[ContestantSubmission], valid_titles: list[str], entry_topics: list[EntryTopic] | None
+) -> list[str] | None:
     contestant_count = len(submissions)
     validation_errors: list[str] = []
 
     if len(submissions) != contestant_count:
-        validation_errors.append(
-            f"Submission form count mismatch ({len(submissions)}) (Should be {contestant_count})")
+        validation_errors.append(f"Submission form count mismatch ({len(submissions)}) (Should be {contestant_count})")
 
     # Validate that each entry has exactly one author across all submissions
 
@@ -35,28 +35,33 @@ def validate_contestant_submission_collection(submissions: list[ContestantSubmis
                 author_registry[title] = set()
 
     if entries_no_author := [entry for entry, authors in author_registry.items() if len(authors) == 0]:
-        validation_errors.append(f"Entries with no author ({len(entries_no_author)}):\n"
-                                 f"{"\n".join([tab(1, f"* {title}") for title in entries_no_author])}")
+        validation_errors.append(
+            f"Entries with no author ({len(entries_no_author)}):\n"
+            f"{'\n'.join([tab(1, f'* {title}') for title in entries_no_author])}"
+        )
 
     if entries_multiple_authors := [entry for entry, authors in author_registry.items() if len(authors) > 1]:
         for title, authors in entries_multiple_authors:
-            validation_errors.append(f"Entry '{title}' has multiple authors ({len(authors)}):"
-                                     f" {", ".join([f"{author}" for author in authors])}")
+            validation_errors.append(
+                f"Entry '{title}' has multiple authors ({len(authors)}):"
+                f" {', '.join([f'{author}' for author in authors])}"
+            )
 
     # Validate each contestant submission
 
     for sub in submissions:
-        if submission_errors := validate_contestant_submission(sub, contestant_count, valid_titles,
-                                                               entry_topics):
+        if submission_errors := validate_contestant_submission(sub, contestant_count, valid_titles, entry_topics):
             validation_errors.extend(submission_errors)
 
     return [err_msg for err_msg in validation_errors] or None
 
 
-def validate_contestant_submission(submission: ContestantSubmission,
-                                   contestants_count: int,
-                                   valid_titles: list[str],
-                                   entry_topics: list[EntryTopic] | None) -> list[str] | None:
+def validate_contestant_submission(
+    submission: ContestantSubmission,
+    contestants_count: int,
+    valid_titles: list[str],
+    entry_topics: list[EntryTopic] | None,
+) -> list[str] | None:
     round_count: int = get_setting_by_key(SettingKeys.GLOBAL_ROUND_COUNT).value  # pyright: ignore [reportOptionalMemberAccess, reportAssignmentType]
     estrelli_count: int = get_setting_by_key(SettingKeys.ESTRELLI_COUNT).value  # pyright: ignore [reportAssignmentType, reportOptionalMemberAccess]
 
@@ -76,19 +81,19 @@ def validate_contestant_submission(submission: ContestantSubmission,
 
     if duplicates := find_duplicates([entry.title for entry in entries]):
         for title, count in duplicates:
-            validation_errors.append(f"Entry '{title}' is duplicated {count} time{"s" if count > 1 else ""}")
+            validation_errors.append(f"Entry '{title}' is duplicated {count} time{'s' if count > 1 else ''}")
 
     titles = set([entry.title for entry in entries])
 
     if invalid_titles := titles - set(valid_titles):
         validation_errors.append(
-            f"Invalid entries ({len(invalid_titles)}):\n"
-            f"{"\n".join([tab(2, f"* {title}") for title in invalid_titles])}")
+            f"Invalid entries ({len(invalid_titles)}):\n{'\n'.join([tab(2, f'* {title}') for title in invalid_titles])}"
+        )
 
     if missing_titles := set(valid_titles) - titles:
         validation_errors.append(
-            f"Missing entries ({len(missing_titles)}):\n"
-            f"{"\n".join([tab(2, f"* {title}") for title in missing_titles])}")
+            f"Missing entries ({len(missing_titles)}):\n{'\n'.join([tab(2, f'* {title}') for title in missing_titles])}"
+        )
 
     for entry in entries:
         if entry_errors := validate_entry(entry, entry_topics):
@@ -105,7 +110,8 @@ def validate_contestant_submission(submission: ContestantSubmission,
             if len(occurrences) > 1:
                 validation_errors.append(
                     f"There are multiple entries ({len(occurrences)}) of topic '{topic.designation.upper()}':\n"
-                    f"{"\n".join([tab(1, f"* {entry.title}") for entry in occurrences])}")
+                    f"{'\n'.join([tab(1, f'* {entry.title}') for entry in occurrences])}"
+                )
 
     return [f"[{submission.name}] {err_msg}" for err_msg in validation_errors] or None
 
@@ -150,8 +156,7 @@ def validate_entry(entry: ContestantSubmissionEntry, entry_topics: list[EntryTop
 
     if is_author and topic:
         if not entry_topics:
-            validation_errors.append(
-                f"Topic designation '{topic}' specified, but no entry topics are expected")
+            validation_errors.append(f"Topic designation '{topic}' specified, but no entry topics are expected")
         else:
             if errors := validate_topic(topic, entry_topics):
                 validation_errors.append(errors)

@@ -1,5 +1,5 @@
 from common.formatting.tabulate import tab
-from stage_2_ranking.custom_types import StageTwoOutput, StageTwoInput
+from stage_2_ranking.custom_types import StageTwoInput, StageTwoOutput
 
 
 def stage_summary(stage_input: StageTwoInput, stage_output: StageTwoOutput) -> str:
@@ -18,10 +18,13 @@ def stage_summary(stage_input: StageTwoInput, stage_output: StageTwoOutput) -> s
     f(f"# Entries loaded: {len(musicosa.entries)}")
     f(f"# Entries ranked: {len(entries_stats)}")
     f("")
-    stats_display = [(stat.contestant.name, stat.avg_given_score, stat.avg_received_score)
-                     for stat in contestants_stats]
-    f(f"Contestant stats (avg_given_score, avg_received_score):\n"
-      f"{"\n".join([tab(1, f"* {name} (AGS: {ags}, ARS: {ars})") for name, ags, ars in stats_display])}")
+    stats_display = [
+        (stat.contestant.name, stat.avg_given_score, stat.avg_received_score) for stat in contestants_stats
+    ]
+    f(
+        f"Contestant stats (avg_given_score, avg_received_score):\n"
+        f"{'\n'.join([tab(1, f'* {name} (AGS: {ags}, ARS: {ars})') for name, ags, ars in stats_display])}"
+    )
     f("")
 
     return "\n".join(log_lines)

@@ -23,22 +23,25 @@ def stage_summary(config: Config, stage_input: StageSixInput, stage_output: Stag
     f(f"# Total generated or skipped video bits: {len(generated) + len(skipped)}")
     f("")
     if missing_templates:
-        f(f"Missing ENTRY TEMPLATE source files:\n"
-          f"{"\n".join([tab(1, f"* {missing}") for missing in missing_templates])}")
+        f(
+            f"Missing ENTRY TEMPLATE source files:\n"
+            f"{'\n'.join([tab(1, f'* {missing}') for missing in missing_templates])}"
+        )
         f("")
     if missing_videoclips:
-        f(f"Missing VIDEOCLIP source files:\n"
-          f"{"\n".join([tab(1, f"* {missing}") for missing in missing_videoclips])}")
+        f(f"Missing VIDEOCLIP source files:\n{'\n'.join([tab(1, f'* {missing}') for missing in missing_videoclips])}")
         f("")
     f(f"# Successfully generated video bits: {len(generated)}")
     if len(skipped) > 0:
         f(f"# Skipped video bits: {len(skipped)}")
     if len(failed) > 0:
-        f(f"# Failed to generate video bits: {len(failed)}\n"
-          f"{"\n".join([tab(1, f"* {entry_title}") for entry_title in failed])}")
+        f(
+            f"# Failed to generate video bits: {len(failed)}\n"
+            f"{'\n'.join([tab(1, f'* {entry_title}') for entry_title in failed])}"
+        )
     if stitch_final_video:
         f("")
-        f(f"Final video file: '{final_video_file if final_video_file is not None else "MISSING SOURCES"}'")
+        f(f"Final video file: '{final_video_file if final_video_file is not None else 'MISSING SOURCES'}'")
     f("")
 
     return "\n".join(log_lines)

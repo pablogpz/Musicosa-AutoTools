@@ -18,8 +18,10 @@ def stage_summary(config: Config, stage_input: StageOneInput) -> str:
     f(f"Submission forms folder: '{forms_folder}'")
     f(f"Valid titles file: '{valid_titles_file}'")
     f("")
-    f(f"Contestants ({len(submissions)}):\n"
-      f"{"\n".join([tab(1, f"* {sub.name} ({len(sub.entries)} entries)") for sub in submissions])}")
+    f(
+        f"Contestants ({len(submissions)}):\n"
+        f"{'\n'.join([tab(1, f'* {sub.name} ({len(sub.entries)} entries)') for sub in submissions])}"
+    )
     f("")
 
     return "\n".join(log_lines)
