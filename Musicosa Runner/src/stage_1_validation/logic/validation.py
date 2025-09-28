@@ -58,7 +58,7 @@ def validate_contestant_submission(submission: ContestantSubmission,
                                    valid_titles: list[str],
                                    entry_topics: list[EntryTopic] | None) -> list[str] | None:
     round_count = get_setting_by_key(SettingKeys.GLOBAL_ROUND_COUNT).value
-    estrelli_count = get_setting_by_key(SettingKeys.ESTRELLI_COUNT).value
+    estrelli_count: int = get_setting_by_key(SettingKeys.ESTRELLI_COUNT).value  # pyright: ignore [reportAssignmentType, reportOptionalMemberAccess]
 
     entries = submission.entries
     entry_count = contestants_count * round_count
@@ -134,8 +134,8 @@ def validate_entry(entry: ContestantSubmissionEntry, entry_topics: list[EntryTop
     if not is_author and topic:
         validation_errors.append("Topic is only allowed for authors")
 
-    min_score = get_setting_by_key(SettingKeys.VALIDATION_SCORE_MIN_VALUE).value
-    max_score = get_setting_by_key(SettingKeys.VALIDATION_SCORE_MAX_VALUE).value
+    min_score: int = get_setting_by_key(SettingKeys.VALIDATION_SCORE_MIN_VALUE).value  # pyright: ignore [reportAssignmentType, reportOptionalMemberAccess]
+    max_score: int = get_setting_by_key(SettingKeys.VALIDATION_SCORE_MAX_VALUE).value  # pyright: ignore [reportAssignmentType, reportOptionalMemberAccess]
 
     validation_errors.append(validate_title(title))
     validation_errors.append(validate_score(score, min_score, max_score))
