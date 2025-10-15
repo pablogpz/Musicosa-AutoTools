@@ -54,12 +54,6 @@ def parse_contestant_form_xlsx(
 
         is_author = raw_is_author.strip() != "" if raw_is_author else False
 
-        if not is_author:
-            submission_entries.append(
-                ContestantSubmissionEntry(title, score, is_author, video_url=None, video_timestamp=None, topic=None)
-            )
-            continue
-
         video_url = raw_video_url.strip() if raw_video_url else None
 
         if raw_video_timestamp and raw_video_timestamp.strip():
