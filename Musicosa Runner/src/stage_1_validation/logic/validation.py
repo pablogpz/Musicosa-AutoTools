@@ -146,6 +146,9 @@ def validate_entry(entry: ContestantSubmissionEntry, entry_topics: list[EntryTop
     if errors := validate_score(score, min_score, max_score):  # pyright: ignore [reportArgumentType]
         validation_errors.append(errors)
 
+    if is_author and not video_url:
+        validation_errors.append("Author did not provide video URL")
+
     if is_author and video_url:
         if errors := validate_video_url(video_url):
             validation_errors.append(errors)
