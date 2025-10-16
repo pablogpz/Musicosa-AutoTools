@@ -84,7 +84,7 @@ def generate_templates(
         for idx, template in enumerate(templates):
             if TemplateType.NOMINATION in template.types:
                 template_path = f"{artifacts_folder}/{slugify(template.friendly_name)}.{TEMPLATE_IMG_FORMAT}"
-                template_url = f"{templates_api_url}/{template.id}"
+                template_url = f"{templates_api_url}/{template.id}?disableVideoPlaceholder=true"
 
                 generation = generate_template(
                     template_path, template_url, TemplateType.NOMINATION, overwrite_templates

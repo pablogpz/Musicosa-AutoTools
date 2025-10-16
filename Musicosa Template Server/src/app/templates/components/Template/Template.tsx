@@ -4,7 +4,11 @@ import { ResolvedTemplateProps, TemplateSettingsProps } from '@/app/templates/co
 import Avatar from '@/app/templates/components/Avatar'
 import VideoPlaceholder from '@/app/templates/components/VideoPlaceholder'
 
-export type TemplateProps = TemplateSettingsProps & ResolvedTemplateProps
+export interface TemplateOuterProps {
+    disableVideoPlaceholder?: boolean
+}
+
+export type TemplateProps = ResolvedTemplateProps & TemplateSettingsProps & TemplateOuterProps
 
 const open_sans = Open_Sans({
     subsets: ['latin'],
@@ -26,6 +30,7 @@ export default function Template({
     members,
     scoreMinValue,
     scoreMaxValue,
+    disableVideoPlaceholder = false,
 }: TemplateProps) {
     const headerComponent = (
         <div className='flex flex-row items-center justify-center mt-9'>
@@ -66,10 +71,12 @@ export default function Template({
                 </div>
             </div>
             <div className='row-start-1 row-end-2 col-start-2 col-end-3 place-self-center'>
-                <VideoPlaceholder
-                    widthPx={videoBoxWidthPx}
-                    heightPx={videoBoxHeightPx}
-                />
+                {!disableVideoPlaceholder && (
+                    <VideoPlaceholder
+                        widthPx={videoBoxWidthPx}
+                        heightPx={videoBoxHeightPx}
+                    />
+                )}
             </div>
             <div className='row-start-2 row-end-3 col-start-1 col-end-3'>
                 <div className='flex flex-row content-center justify-evenly items-center h-full'>

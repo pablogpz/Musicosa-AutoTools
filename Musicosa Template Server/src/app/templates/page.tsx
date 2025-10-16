@@ -6,15 +6,13 @@ import { templateFactory } from '@/app/templates/components/Template'
 import db from '@/db/database'
 import { nominationStats, nominations } from '@/db/schema'
 
-export default async function Page({
-    searchParams,
-}: {
-    searchParams: Promise<{ [key: string]: string | string[] | undefined }>
-}) {
+type SearchParams = { award: string, q: string }
+
+export default async function Page({ searchParams }: { searchParams: Promise<SearchParams> }) {
     const { award, q } = await searchParams
 
-    if (!award || typeof award !== 'string') notFound()
-    if (!q || typeof q !== 'string' || isNaN(Number(q))) notFound()
+    if (!award) notFound()
+    if (!q || isNaN(Number(q))) notFound()
 
     const requestedSequenceNumber = parseInt(q)
 

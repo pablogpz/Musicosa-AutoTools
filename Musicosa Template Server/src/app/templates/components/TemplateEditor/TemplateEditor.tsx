@@ -27,7 +27,7 @@ function inputFactory(
     title: string,
     value: string | number,
     inputType: HTMLInputTypeAttribute,
-    placeholder: string | number,
+    placeholder: string | number | undefined,
     onChange: ChangeEventHandler<HTMLInputElement>
 ): React.JSX.Element {
     return (
@@ -77,6 +77,7 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
     const [videoBoxHeightPx, setVideoBoxHeightPx] = useState<number>(defaultTemplate.videoBoxHeightPx)
     const [awardSlug, setAwardSlug] = useState<string>(defaultAward.slug)
     const [awardDesignation, setAwardDesignation] = useState<string>(defaultAward.designation)
+    const [disableVideoPlaceholder, setDisableVideoPlaceholder] = useState<boolean>(false)
 
     const resolvedScoreForMember = (member: string): ResolvedCastVote => {
         const score = scores[member] ?? defaultScore
@@ -101,6 +102,7 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
         })),
         scoreMinValue: defaultTemplateSettingsProps.scoreMinValue,
         scoreMaxValue: defaultTemplateSettingsProps.scoreMaxValue,
+        disableVideoPlaceholder,
     }
 
     const templateParamInputs = [
@@ -222,6 +224,17 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
             'text',
             'Award designation ...',
             onChangeFactory((v) => setAwardDesignation(v))
+        ),
+        inputFactory(
+            'disable-video-placeholder',
+            'Disable video placeholder',
+            disableVideoPlaceholder.toString(),
+            'checkbox',
+            undefined,
+            (e) => {
+                setDisableVideoPlaceholder(e.target.checked)
+                e.stopPropagation()
+            }
         ),
     ]
 
