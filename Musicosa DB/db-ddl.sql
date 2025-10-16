@@ -10,13 +10,13 @@ CREATE TABLE metadata
 );
 
 INSERT INTO metadata (field, value)
-VALUES ('edition', ''); -- FIXME: Fill edition number (Ex: 4)
+VALUES ('edition', '8');
 INSERT INTO metadata (field, value)
-VALUES ('topic', ''); --FIXME: Fill edition topic (Ex: Canciones)
+VALUES ('topic', 'Canciones y BSO de Videojuegos');
 INSERT INTO metadata (field, value)
-VALUES ('organiser', ''); --FIXME: Fill organiser(s) name(s)
+VALUES ('organiser', 'Ana');
 INSERT INTO metadata (field, value)
-VALUES ('start_date', ''); --FIXME: Fill start date (Ex: 14/09/2024)
+VALUES ('start_date', '09/09/2025');
 
 CREATE TABLE settings
 (
@@ -30,9 +30,9 @@ CREATE TABLE settings
 );
 
 INSERT INTO settings (group_key, setting, value, type)
-VALUES ('global', 'round_count', '', 'integer'); --FIXME: To be filled
+VALUES ('global', 'round_count', '10', 'integer');
 INSERT INTO settings (group_key, setting, value, type)
-VALUES ('validation', 'estrelli_count', '', 'integer'); --FIXME: To be filled
+VALUES ('validation', 'estrelli_count', '10', 'integer');
 INSERT INTO settings (group_key, setting, value, type)
 VALUES ('validation', 'score_min_value', '0.0', 'real');
 INSERT INTO settings (group_key, setting, value, type)
@@ -40,20 +40,17 @@ VALUES ('validation', 'score_max_value', '10.0', 'real');
 INSERT INTO settings (group_key, setting, value, type)
 VALUES ('validation', 'entry_video_duration_seconds', '30', 'integer');
 INSERT INTO settings (group_key, setting, value, type)
-VALUES ('ranking', 'significant_decimal_digits', '', 'integer'); --FIXME: To be filled
+VALUES ('ranking', 'significant_decimal_digits', '10', 'integer');
 INSERT INTO settings (group_key, setting, value, type)
 VALUES ('frame', 'width_px', '1920', 'integer');
 INSERT INTO settings (group_key, setting, value, type)
 VALUES ('frame', 'height_px', '1080', 'integer');
---FIXME: To be filled
 INSERT INTO settings (group_key, setting, value, type)
-VALUES ('templates', 'display_decimal_digits', '', 'integer');
---FIXME: To be filled (Ex: 10)
+VALUES ('templates', 'display_decimal_digits', '2', 'integer');
 INSERT INTO settings (group_key, setting, value, type)
-VALUES ('generation', 'videoclips_override_top_n_duration', '', 'integer');
---FIXME: To be filled (Hint: -1 -> Disabled)
+VALUES ('generation', 'videoclips_override_top_n_duration', '10', 'integer');
 INSERT INTO settings (group_key, setting, value, type)
-VALUES ('generation', 'videoclips_override_duration_up_to_x_seconds', '', 'integer');
+VALUES ('generation', 'videoclips_override_duration_up_to_x_seconds', '-1', 'integer');
 
 CREATE TABLE avatars
 (
@@ -84,10 +81,6 @@ CREATE TABLE entry_topics
     designation TEXT NOT NULL
         CONSTRAINT entry_topics_pk PRIMARY KEY
 );
-
---FIXME: Register all topics
--- INSERT INTO entry_topics (designation)
--- VALUES ('');
 
 CREATE TABLE entries
 (

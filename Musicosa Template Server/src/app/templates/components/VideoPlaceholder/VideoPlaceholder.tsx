@@ -38,7 +38,10 @@ const withPositionMeasurement = <P extends FlexibleContainer>(
         }, [props.widthPx, props.heightPx])
 
         return (
-            <div ref={measurementElementRef}>
+            <div
+                ref={measurementElementRef}
+                className='size-fit'
+            >
                 <Component
                     positionTopPx={position.top}
                     positionLeftPx={position.left}
@@ -54,7 +57,7 @@ type VideoPlaceholderProps = PositionMeasurementProps & FlexibleContainer
 function BaseVideoPlaceholder({ widthPx, heightPx, positionTopPx, positionLeftPx }: VideoPlaceholderProps) {
     return (
         <div
-            className='w-full h-full flex items-center justify-center
+            className='w-full h-full flex items-center justify-center relative z-50
              bg-[repeating-linear-gradient(45deg,_black_0px,_black_10px,_yellow_10px,_yellow_20px)]'
             style={{ width: `${widthPx}px`, height: `${heightPx}px` }}
         >
