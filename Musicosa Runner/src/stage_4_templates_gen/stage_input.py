@@ -1,3 +1,5 @@
+import random
+
 from common.custom_types import TemplateType
 from common.model.models import Template
 from common.naming.slugify import slugify
@@ -8,7 +10,7 @@ def load_templates_from_db(generate_presentations: bool) -> list[S4_Template]:
     templates: list[Template] = [r.to_domain() for r in Template.ORM.select()]
 
     # noinspection PyTypeChecker
-    return [
+    s4_templates = [
         S4_Template(
             template.nomination.id,
             slugify(
@@ -22,3 +24,7 @@ def load_templates_from_db(generate_presentations: bool) -> list[S4_Template]:
         )
         for template in templates
     ]
+
+    random.shuffle(s4_templates)  # Randomize order to avoid spoilers
+
+    return s4_templates

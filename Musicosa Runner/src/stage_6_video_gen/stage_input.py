@@ -1,3 +1,5 @@
+import random
+
 from peewee import JOIN
 
 from common.model.models import Nomination, NominationStats, Template, Videoclip, VideoOptions
@@ -5,7 +7,7 @@ from stage_6_video_gen.custom_types import NominationVideoOptions, Timestamp
 
 
 def load_video_options_from_db() -> list[NominationVideoOptions]:
-    return [
+    video_options = [
         NominationVideoOptions(
             award=row.award,
             template_friendly_name=f"{row.award}-{row.game_title}{f'-{row.nominee}' if row.nominee else ''}",
@@ -36,3 +38,7 @@ def load_video_options_from_db() -> list[NominationVideoOptions]:
         .join(Videoclip.ORM, join_type=JOIN.INNER, on=(VideoOptions.ORM.videoclip == Videoclip.ORM.id))
         .objects()
     ]
+
+    random.shuffle(video_options)  # Randomize order to avoid spoilers
+
+    return video_options
