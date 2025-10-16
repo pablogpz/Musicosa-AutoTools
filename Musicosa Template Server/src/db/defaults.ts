@@ -22,7 +22,7 @@ export const defaultContestant: Contestant = {
 
 export const defaultAuthor: Contestant = {
     id: defaultContestantId,
-    name: 'Tipo de Incógnito',
+    name: 'Autor',
     avatar: defaultAvatarId,
 }
 
@@ -33,28 +33,29 @@ export const defaultEntry: Entry = {
     author: defaultAuthor.id,
     title: 'Título de la entrada - Obra',
     videoUrl: 'https://www.youtube.com/watch?v=CVyPO_tR540',
-    topic: 'INFANCIA',
+    topic: '',
 }
 
 export const defaultScoring: Scoring = {
     contestant: defaultContestantId,
     entry: defaultEntryId,
     score: 9.99,
+    estrelli: 0,
 }
 
 export const defaultEntryStats: EntryStats = {
     entry: defaultEntryId,
     avgScore: 9.99,
-    rankingPlace: 132,
-    rankingSequence: 132,
+    rankingPlace: 70,
+    rankingSequence: 70,
 }
 
 export const defaultTemplate: Template = {
     entry: defaultEntryId,
-    avatarScale: 0.45,
-    authorAvatarScale: 0.6,
-    videoBoxWidthPx: 1200,
-    videoBoxHeightPx: 676,
-    videoBoxPositionTopPx: 28,
-    videoBoxPositionLeftPx: 692,
+    avatarScale: 0.35,
+    authorAvatarScale: 0,
+    videoBoxWidthPx: 1150,
+    videoBoxHeightPx: 648,
+    videoBoxPositionTopPx: 45,
+    videoBoxPositionLeftPx: 702,
 }

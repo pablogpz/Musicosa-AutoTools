@@ -1,0 +1,30 @@
+start_from = 1
+artifacts_folder = "artifacts"
+stitch_final_video = false
+
+[stage_1]
+forms_folder = "contestant_forms"
+valid_titles_file = "titles.txt"
+contestant_name_coords = "G2"
+entries_data_coords = "C6:I75"
+
+[stage_4]
+templates_api_url = "http://localhost:3000/templates"
+presentations_api_url = "http://localhost:3000/presentations"
+gen_retry_attempts = 3
+overwrite_templates = true
+overwrite_presentations = true
+
+[stage_5]
+use_cookies = false
+quiet_ffmpeg = true
+
+[stage_6]
+video_bits_folder = "artifacts/video_bits"
+overwrite_video_bits = false
+final_video_name = ""
+presentation_duration = 5
+transition_duration = 3
+transition_type = "fade"
+quiet_ffmpeg = true
+quiet_ffmpeg_final_video = true

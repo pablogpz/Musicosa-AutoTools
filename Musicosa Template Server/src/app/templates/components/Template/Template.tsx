@@ -1,4 +1,4 @@
-import { Open_Sans } from 'next/font/google'
+import { Caveat, Open_Sans } from 'next/font/google'
 
 import { ResolvedTemplateProps, TemplateSettingsProps } from '@/app/templates/common/withTemplateProps'
 import Avatar from '@/app/templates/components/Avatar'
@@ -13,21 +13,25 @@ const open_sans = Open_Sans({
     variable: '--font-open-sans',
 })
 
-// SAMPLE TEMPLATE
+const caveat = Caveat({
+    subsets: ['latin'],
+    display: 'swap',
+    weight: '600',
+    variable: '--font-caveat',
+})
+
+// Musicosa 8th Edition template
 
 export default function Template({
     title,
-    topic,
     rankingPlace,
     formattedAvgScore,
     avgScoreDelta,
     avatarScale,
-    authorAvatarScale,
     videoBoxWidthPx,
     videoBoxHeightPx,
     author,
     sequenceNumberInAuthorEntries,
-    sequenceNumberInTopic,
     contestants,
     scoreMinValue,
     scoreMaxValue,
@@ -41,20 +45,6 @@ export default function Template({
         </p>
     )
 
-    const [topicSequence, topicSequenceOutOf] = sequenceNumberInTopic || [undefined, undefined]
-
-    const topicPillComponent = topic && (
-        <p className={`text-2xl ${open_sans.className} font-thin p-2 mt-4 mr-7 bg-white rounded`}>
-            {topic.toUpperCase()}{' '}
-            <span className={`${open_sans.className} text-lg font-normal relative bottom-0.5 mr-1`}>
-                {topicSequence} de {topicSequenceOutOf}{' '}
-            </span>
-            <span className='px-1 text-2xl font-semibold border-black border-2 rounded'>
-                {topicSequenceOutOf! - topicSequence! + 1}º
-            </span>
-        </p>
-    )
-
     const [sequence, sequenceOutOf] = sequenceNumberInAuthorEntries
 
     function innerLinearInterpolateScoreColor(score: number): string {
@@ -62,13 +52,18 @@ export default function Template({
     }
 
     const authorDetailsComponent = (
-        <div>
-            <Avatar
-                avatar={author.avatar}
-                avatarScale={authorAvatarScale}
-                formattedScore={author.scoring.formattedScore}
-                scoreColor={innerLinearInterpolateScoreColor(author.scoring.score)}
-            />
+        <div className='flex flex-col justify-center items-center'>
+            <div className='w-20 h-20 bg-white border-2 border-gray-500 flex justify-center items-center'>
+                <p
+                    className='text-[2.6em] mr-3'
+                    style={{
+                        ...caveat.style,
+                        color: innerLinearInterpolateScoreColor(author.scoring.score),
+                    }}
+                >
+                    {author.scoring.formattedScore}
+                </p>
+            </div>
             <p className={`text-2xl ${open_sans.className} font-semibold text-white text-center mt-3 mb-0.5`}>
                 {author.name}
             </p>
@@ -84,7 +79,7 @@ export default function Template({
     const formattedAvgScoreDelta = formatNumberToDecimalPrecision(avgScoreDelta, 4)
 
     const avgScorePillComponent = (
-        <div className='flex flex-col justify-center items-center p-5 bg-white rounded-[2em]'>
+        <div className='flex flex-col justify-center items-center p-3 bg-white rounded-[2em] mt-3'>
             <p className={`text-7xl text-center ${open_sans.className} font-bold`}>{formattedAvgScore}</p>
             <p className={`text-2xl text-center ${open_sans.className} font-thin`}>(+{formattedAvgScoreDelta})</p>
         </div>
@@ -112,7 +107,13 @@ export default function Template({
         sortedContestantsByScore.length - highestScoreGroup.length
     )
 
-    const tieBadge = <p className='size-fit mt-0.5 text-xl font-semibold py-0.5 px-1 bg-white rounded'>EMPATE</p>
+    const tieBadge = (contestantName: string) => (
+        <p
+            className={`size-fit mt-1 ${contestantName === 'Cáster' ? 'mt-[-8px] z-10' : ''} text-xl font-semibold py-0.5 px-1 bg-white rounded`}
+        >
+            EMPATE
+        </p>
+    )
 
     const contestantsDisplayComponent = (
         <>
@@ -128,7 +129,7 @@ export default function Template({
                         formattedScore={contestant.scoring.formattedScore}
                         scoreColor={innerLinearInterpolateScoreColor(contestant.scoring.score)}
                     />
-                    {lowestScoreGroup.length > 1 && tieBadge}
+                    {lowestScoreGroup.length > 1 && tieBadge(contestant.name)}
                 </div>
             ))}
             {middleScoreGroup.map((contestant, i) => (
@@ -152,7 +153,7 @@ export default function Template({
                         formattedScore={contestant.scoring.formattedScore}
                         scoreColor={innerLinearInterpolateScoreColor(contestant.scoring.score)}
                     />
-                    {highestScoreGroup.length > 1 && tieBadge}
+                    {highestScoreGroup.length > 1 && tieBadge(contestant.name)}
                 </div>
             ))}
         </>
@@ -193,22 +194,35 @@ export default function Template({
                                 </p>
                             </div>
                         </div>
-                        {topicPillComponent}
                     </div>
-                    <div className='flex h-full justify-around items-center'>
-                        {authorDetailsComponent}
+                    <div className='flex flex-col h-full justify-between items-end'>
                         {avgScorePillComponent}
+                        {authorDetailsComponent}
                     </div>
                 </div>
             </div>
-            <div className='row-start-1 row-end-2 col-start-2 col-end-3 justify-self-end self-start'>
-                <VideoPlaceholder
-                    widthPx={videoBoxWidthPx}
-                    heightPx={videoBoxHeightPx}
-                />
+            <div className='row-start-1 row-end-2 col-start-2 col-end-3'>
+                <div className='h-full flex justify-center items-center relative ml-3'>
+                    <img
+                        src='/Recuadro%20Video.png'
+                        style={{
+                            position: 'absolute',
+                            width: videoBoxWidthPx * 1.065,
+                            height: videoBoxHeightPx * 1.06,
+                            top: -3,
+                            left: 1,
+                        }}
+                    />
+                    <VideoPlaceholder
+                        widthPx={videoBoxWidthPx}
+                        heightPx={videoBoxHeightPx}
+                    />
+                </div>
             </div>
             <div className='row-start-2 row-end-3 col-start-1 col-end-3'>
-                <div className='h-full flex flex-row justify-evenly items-center'>{contestantsDisplayComponent}</div>
+                <div className='h-full flex flex-row justify-evenly items-start relative top-4'>
+                    {contestantsDisplayComponent}
+                </div>
             </div>
         </div>
     )

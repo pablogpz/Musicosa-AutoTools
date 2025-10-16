@@ -16,6 +16,14 @@ WHERE e.author <> cge.contestant
 GROUP BY e.author, e.id
 ORDER BY data;
 
+-- 'ESTRELLIS' RANKING
+SELECT entries.title, sum(cge.estrelli) AS estrelli_count
+FROM entries
+         JOIN contestant_grades_entries as cge on entries.id = cge.entry
+GROUP BY entries.id
+HAVING estrelli_count > 0
+ORDER BY estrelli_count DESC;
+
 -- Check for ties
 SELECT stats_entries.ranking_place as '#', count(ranking_place) AS '# of Entries'
 FROM stats_entries

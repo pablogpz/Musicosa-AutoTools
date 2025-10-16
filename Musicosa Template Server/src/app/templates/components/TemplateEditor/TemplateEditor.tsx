@@ -7,7 +7,6 @@ import { ResolvedScoring } from '@/app/templates/common/withTemplateProps'
 import {
     defaultAvgScoreDelta,
     defaultResolvedAuthor,
-    defaultResolvedContestant,
     defaultSequenceNumberInAuthorEntries,
     defaultSequenceNumberInTopic,
     defaultTemplateSettingsProps,
@@ -63,7 +62,7 @@ export interface TemplateEditorProps {
 }
 
 export default function TemplateEditor({ templateWidth, templateHeight, displayDecimalDigits }: TemplateEditorProps) {
-    const INITIAL_CONTESTANT_COUNT = 5
+    const INITIAL_CONTESTANT_COUNT = 7
 
     const [contestantCount, setContestantCount] = useState<number>(INITIAL_CONTESTANT_COUNT)
     const [title, setTitle] = useState<string>(defaultEntry.title)
@@ -92,6 +91,93 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
         }
     }
 
+    const avatarDefaults = {
+        scoreBoxPositionTop: 14,
+        scoreBoxPositionLeft: 45,
+        scoreBoxFontScale: 0.15,
+        scoreBoxFontColor: 'black',
+    }
+
+    const contestants = [
+        {
+            id: 'Ana',
+            name: 'Ana',
+            avatar: {
+                ...avatarDefaults,
+                id: 1,
+                resolvedImageFilename: 'ANA MINI.png',
+                imageHeight: 836,
+            },
+            scoring: resolvedScoreForContestant('Ana'),
+        },
+        {
+            id: 'Carmen',
+            name: 'Carmen',
+            avatar: {
+                ...avatarDefaults,
+                id: 2,
+                resolvedImageFilename: 'CARMEN MINI.png',
+                imageHeight: 845,
+            },
+            scoring: resolvedScoreForContestant('Carmen'),
+        },
+        {
+            id: 'Caster',
+            name: 'Cáster',
+            avatar: {
+                ...avatarDefaults,
+                id: 3,
+                resolvedImageFilename: 'CASTER MINI.png',
+                imageHeight: 874,
+            },
+            scoring: resolvedScoreForContestant('Caster'),
+        },
+        {
+            id: 'Jorge',
+            name: 'Jorge',
+            avatar: {
+                ...avatarDefaults,
+                id: 4,
+                resolvedImageFilename: 'JORGE MINI.png',
+                imageHeight: 841,
+            },
+            scoring: resolvedScoreForContestant('Jorge'),
+        },
+        {
+            id: 'Jose',
+            name: 'José',
+            avatar: {
+                ...avatarDefaults,
+                id: 5,
+                resolvedImageFilename: 'JOSE MINI.png',
+                imageHeight: 832,
+            },
+            scoring: resolvedScoreForContestant('Jose'),
+        },
+        {
+            id: 'Pablo',
+            name: 'Pablo',
+            avatar: {
+                ...avatarDefaults,
+                id: 6,
+                resolvedImageFilename: 'PABLO MINI.png',
+                imageHeight: 836,
+            },
+            scoring: resolvedScoreForContestant('Pablo'),
+        },
+        {
+            id: 'Sergio',
+            name: 'Pichoncito',
+            avatar: {
+                ...avatarDefaults,
+                id: 7,
+                resolvedImageFilename: 'SERGIO MINI.png',
+                imageHeight: 837,
+            },
+            scoring: resolvedScoreForContestant('Sergio'),
+        },
+    ]
+
     const templateProps: TemplateProps = {
         title,
         topic,
@@ -102,16 +188,10 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
         authorAvatarScale,
         videoBoxWidthPx,
         videoBoxHeightPx,
-        author: {
-            ...defaultResolvedAuthor,
-            scoring: resolvedScoreForContestant(authorName),
-        },
+        author: contestants.find((c) => c.name === authorName) ?? defaultResolvedAuthor,
         sequenceNumberInAuthorEntries: [SNAEntries, SNAEntriesOutOf],
         sequenceNumberInTopic: SNTEntries && SNTEntriesOutOf ? [SNTEntries, SNTEntriesOutOf] : undefined,
-        contestants: Array.from({ length: contestantCount - 1 }, () => ({
-            ...defaultResolvedContestant,
-            scoring: resolvedScoreForContestant(defaultResolvedContestant.name),
-        })),
+        contestants: contestants.filter((c) => c.name !== authorName),
         scoreMinValue: defaultTemplateSettingsProps.scoreMinValue,
         scoreMaxValue: defaultTemplateSettingsProps.scoreMaxValue,
     }
