@@ -1,6 +1,7 @@
 import argparse
 import functools
 import inspect
+import random
 from collections.abc import Callable
 from time import sleep
 from typing import Any, Literal, Never, Protocol
@@ -537,21 +538,21 @@ class PipelineStateManager:
 
     def produce_stage_4_input(self, generate_presentations: bool) -> StageFourInput:
         # noinspection PyTypeChecker
-        return StageFourInput(
-            [
-                S4_Template(
-                    template.entry.id,
-                    template.entry.title,
-                    TemplateType.ENTRY
-                    if not generate_presentations
-                    else (TemplateType.ENTRY | TemplateType.PRESENTATION),
-                )
-                for template in self.templates
-            ]
-        )
+        templates = [
+            S4_Template(
+                template.entry.id,
+                template.entry.title,
+                TemplateType.ENTRY if not generate_presentations else (TemplateType.ENTRY | TemplateType.PRESENTATION),
+            )
+            for template in self.templates
+        ]
+
+        random.shuffle(templates)  # Randomize order to avoid spoilers
+
+        return StageFourInput(templates)
 
     def produce_stage_5_input(self) -> StageFiveInput:
-        return StageFiveInput(self.entries)
+        return StageFiveInput(random.sample(self.entries, k=len(self.entries)))  # Randomize order to avoid spoilers
 
     def produce_stage_6_input(self) -> StageSixInput:
         entries_video_options: list[EntryVideoOptions] = []
@@ -577,6 +578,8 @@ class PipelineStateManager:
                     position_left=template.video_box_position_left_px,
                 )
             )
+
+        random.shuffle(entries_video_options)  # Randomize order to avoid spoilers
 
         return StageSixInput(entries_video_options)
 

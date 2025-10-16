@@ -1,3 +1,5 @@
+import random
+
 from peewee import JOIN
 
 from common.model.models import Entry, EntryStats, Template, VideoOptions
@@ -5,7 +7,7 @@ from stage_6_video_gen.custom_types import EntryVideoOptions, Timestamp
 
 
 def load_entries_video_options_from_db() -> list[EntryVideoOptions]:
-    return [
+    video_options = [
         EntryVideoOptions(
             entry_id=row.id,
             entry_title=row.title,
@@ -34,3 +36,7 @@ def load_entries_video_options_from_db() -> list[EntryVideoOptions]:
         .join(Template.ORM, join_type=JOIN.INNER, on=(Entry.ORM.id == Template.ORM.entry))
         .objects()
     ]
+
+    random.shuffle(video_options)  # Randomize order to avoid spoilers
+
+    return video_options
