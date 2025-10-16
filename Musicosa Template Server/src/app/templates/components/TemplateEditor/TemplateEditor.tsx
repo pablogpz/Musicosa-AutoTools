@@ -28,7 +28,7 @@ function inputFactory(
     title: string,
     value: string | number,
     inputType: HTMLInputTypeAttribute,
-    placeholder: string | number,
+    placeholder: string | number | undefined,
     onChange: ChangeEventHandler<HTMLInputElement>
 ): React.JSX.Element {
     return (
@@ -83,6 +83,7 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
     const [SNTEntries, setSNTEntries] = useState<number>(defaultSequenceNumberInTopic![0])
     const [SNTEntriesOutOf, setSNTEntriesOutOf] = useState<number>(defaultSequenceNumberInTopic![1])
     const [avgScoreDelta, setAvgScoreDelta] = useState<number>(defaultAvgScoreDelta)
+    const [disableVideoPlaceholder, setDisableVideoPlaceholder] = useState<boolean>(false)
 
     const resolvedScoreForContestant = (contestant: string): ResolvedScoring => {
         const score = scores[contestant] ?? defaultScore
@@ -114,6 +115,7 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
         })),
         scoreMinValue: defaultTemplateSettingsProps.scoreMinValue,
         scoreMaxValue: defaultTemplateSettingsProps.scoreMaxValue,
+        disableVideoPlaceholder,
     }
 
     const templateParamInputs = [
@@ -275,6 +277,17 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
             'number',
             'Video box height (px) ...',
             onChangeFactory((v) => setVideoBoxHeightPx(v ? parseInt(v) : 0))
+        ),
+        inputFactory(
+            'disable-video-placeholder',
+            'Disable video placeholder',
+            disableVideoPlaceholder.toString(),
+            'checkbox',
+            undefined,
+            (e) => {
+                setDisableVideoPlaceholder(e.target.checked)
+                e.stopPropagation()
+            }
         ),
     ]
 

@@ -6,14 +6,12 @@ import { templateFactory } from '@/app/templates/components/Template'
 import db from '@/db/database'
 import { entries, entriesStats } from '@/db/schema'
 
-export default async function Page({
-    searchParams,
-}: {
-    searchParams: Promise<{ [key: string]: string | string[] | undefined }>
-}) {
+type SearchParams = { q: string }
+
+export default async function Page({ searchParams }: { searchParams: Promise<SearchParams> }) {
     const { q } = await searchParams
 
-    if (!q || typeof q !== 'string' || isNaN(Number(q))) notFound()
+    if (!q || isNaN(Number(q))) notFound()
 
     const requestedSequenceNumber = parseInt(q)
 

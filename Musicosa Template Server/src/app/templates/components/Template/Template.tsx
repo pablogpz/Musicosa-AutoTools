@@ -5,7 +5,11 @@ import Avatar from '@/app/templates/components/Avatar'
 import VideoPlaceholder from '@/app/templates/components/VideoPlaceholder'
 import formatNumberToDecimalPrecision from '@/formatters/formatNumberToDecimalPrecision'
 
-export type TemplateProps = ResolvedTemplateProps & TemplateSettingsProps
+export interface TemplateOuterProps {
+    disableVideoPlaceholder?: boolean
+}
+
+export type TemplateProps = ResolvedTemplateProps & TemplateSettingsProps & TemplateOuterProps
 
 const open_sans = Open_Sans({
     subsets: ['latin'],
@@ -31,6 +35,7 @@ export default function Template({
     contestants,
     scoreMinValue,
     scoreMaxValue,
+    disableVideoPlaceholder = false,
 }: TemplateProps) {
     const rankingPlaceComponent = (
         <p
@@ -202,10 +207,12 @@ export default function Template({
                 </div>
             </div>
             <div className='row-start-1 row-end-2 col-start-2 col-end-3 justify-self-end self-start'>
-                <VideoPlaceholder
-                    widthPx={videoBoxWidthPx}
-                    heightPx={videoBoxHeightPx}
-                />
+                {!disableVideoPlaceholder && (
+                    <VideoPlaceholder
+                        widthPx={videoBoxWidthPx}
+                        heightPx={videoBoxHeightPx}
+                    />
+                )}
             </div>
             <div className='row-start-2 row-end-3 col-start-1 col-end-3'>
                 <div className='h-full flex flex-row justify-evenly items-center'>{contestantsDisplayComponent}</div>
