@@ -34,17 +34,17 @@ def execute(config: Config, stage_input: StageSixInput) -> StageSixOutput:
     if not video_bits_folder:
         raise StageException("No video bits folder provided")
 
-    if transition_options.presentation_duration <= 0:
+    if stitch_final_video and transition_options.presentation_duration <= 0:
         raise StageException(
             f"Presentation duration ({transition_options.presentation_duration}) must be a positive integer"
         )
 
-    if transition_options.transition_duration <= 0:
+    if stitch_final_video and transition_options.transition_duration <= 0:
         raise StageException(
             f"Transition duration ({transition_options.transition_duration}) must be a positive integer"
         )
 
-    if transition_options.type not in get_args(TransitionType):
+    if stitch_final_video and transition_options.type not in get_args(TransitionType):
         raise StageException(f"Transition type ({transition_options.type}) must be one of [{get_args(TransitionType)}]")
 
     if nominations_video_options is None:
