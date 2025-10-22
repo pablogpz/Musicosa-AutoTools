@@ -80,6 +80,7 @@ SELECT c.name, count(c.name) AS data
 FROM (SELECT e.id as entryID, max(cge.score) AS maxScore, min(cge.score) AS minScore
       FROM entries e
                JOIN contestant_grades_entries cge ON e.id = cge.entry
+      WHERE e.author <> cge.contestant
       GROUP BY e.id) sq
          JOIN entries e ON sq.entryID = e.id
          JOIN contestant_grades_entries cge ON e.id = cge.entry
@@ -93,6 +94,7 @@ SELECT c.name, count(c.name) AS data
 FROM (SELECT e.id as entryID, max(cge.score) AS maxScore, min(cge.score) AS minScore
       FROM entries e
                JOIN contestant_grades_entries cge ON e.id = cge.entry
+      WHERE e.author <> cge.contestant
       GROUP BY e.id) sq
          JOIN entries e ON sq.entryID = e.id
          JOIN contestant_grades_entries cge ON e.id = cge.entry
