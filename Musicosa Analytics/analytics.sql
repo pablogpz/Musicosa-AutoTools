@@ -33,6 +33,25 @@ ORDER BY ranking_place DESC;
 
 -- **STATISTICS**
 
+-- ESTRELLLIS.A) Contestant's given 'estrellis'
+SELECT c.name, a.name, count(estrelli) AS data
+FROM contestant_grades_entries cge
+         JOIN contestants c ON cge.contestant = c.id
+         JOIN entries e ON cge.entry = e.id
+         JOIN contestants a ON e.author = a.id
+WHERE estrelli = 1
+GROUP BY cge.contestant, e.author, c.name, a.name
+ORDER BY cge.contestant, data DESC;
+
+-- ESTRELLIS.B) Contestant's received 'estrellis'
+SELECT a.name, count(estrelli) AS data
+FROM contestant_grades_entries cge
+         JOIN contestants c ON cge.contestant = c.id
+         JOIN entries e ON cge.entry = e.id
+         JOIN contestants a ON e.author = a.id
+WHERE estrelli = 1
+GROUP BY e.author ORDER BY data DESC;
+
 -- A) Contestant's average given scores
 SELECT c.name, avg(cge.score) AS data
 FROM contestants c
