@@ -1,10 +1,10 @@
-peewee==3.18.2
+peewee==3.19.0
 validators==0.35.0
-playwright==1.55.0
-yt-dlp==2025.10.14
-ffmpeg-normalize==1.33.1
+playwright==1.57.0
+yt-dlp==2025.12.8
+ffmpeg-normalize==1.36.1
 openpyxl==3.1.5
 # Dev Dependencies
-pyright==1.1.405
-ruff==0.13.2
-typed-ffmpeg==3.6
+pyright==1.1.408
+ruff==0.14.14
+typed-ffmpeg==3.11

@@ -4,6 +4,8 @@ from os.path import basename
 import ffmpeg
 import yt_dlp
 from ffmpeg.exceptions import FFMpegError
+from yt_dlp.postprocessor.common import PostProcessor
+from yt_dlp.utils import DownloadError
 
 from common.constants import VIDEO_FORMAT
 from common.formatting.tabulate import tab
@@ -57,7 +59,7 @@ def download_videoclip_collection(
 
             try:
                 error_code = ytdl.download([entry.video_url])
-            except yt_dlp.DownloadError as err:
+            except DownloadError as err:
                 print(f"[FAILED #{idx + 1}] {entry.title}. Cause: {err}")
                 failed_videoclip_titles.append(entry.title)
                 continue
@@ -74,19 +76,19 @@ def download_videoclip_collection(
     return VideoclipsDownloadResult(downloaded_videoclip_titles, skipped_videoclip_titles, failed_videoclip_titles)
 
 
-class MP4RemuxPostProcessor(yt_dlp.postprocessor.PostProcessor):
+class MP4RemuxPostProcessor(PostProcessor):
     quiet_ffmpeg: bool
 
     def __init__(self, quiet_ffmpeg: bool):
-        super().__init__(self)
+        super().__init__()
         self.quiet_ffmpeg = quiet_ffmpeg
 
-    def run(self, info):
-        downloaded_videoclip_path = info["filepath"]
+    def run(self, information):  # pyright: ignore [reportIncompatibleMethodOverride]
+        downloaded_videoclip_path = information["filepath"]  # pyright: ignore [reportGeneralTypeIssues]
 
         if downloaded_videoclip_path.endswith(".mp4"):
             print(tab(1, f"[SKIPPING REMUX] Skipping '{basename(downloaded_videoclip_path)}'"))
-            return [], info
+            return [], information
 
         remuxed_videoclip_path = f"{downloaded_videoclip_path.rsplit('.', 1)[0]}.mp4"
 
@@ -107,6 +109,6 @@ class MP4RemuxPostProcessor(yt_dlp.postprocessor.PostProcessor):
             raise
 
         safe_to_delete_files = [downloaded_videoclip_path]
-        new_info = {**info, "filepath": remuxed_videoclip_path}
+        new_info = {**information, "filepath": remuxed_videoclip_path}
 
         return safe_to_delete_files, new_info
