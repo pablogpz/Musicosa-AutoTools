@@ -39,10 +39,10 @@ export const defaultNomination: Nomination = {
 
 export const defaultTemplate: Template = {
     nomination: defaultNominationId,
-    avatarScale: 0.45,
+    avatarScale: 0.2,
     videoBoxWidthPx: 1200,
     videoBoxHeightPx: 676,
-    videoBoxPositionTopPx: 59,
+    videoBoxPositionTopPx: 31,
     videoBoxPositionLeftPx: 658,
 }
 

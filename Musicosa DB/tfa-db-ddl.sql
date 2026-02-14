@@ -1,6 +1,6 @@
 PRAGMA foreign_keys = ON;
 
--- BASE "TFA" DATABASE SCHEMA AND INITIAL VALUES
+-- TFA 3º EDITION (2026) DATABASE SCHEMA AND INITIAL VALUES
 
 CREATE TABLE metadata
 (
@@ -10,7 +10,7 @@ CREATE TABLE metadata
 );
 
 INSERT INTO metadata (field, value)
-VALUES ('edition', ''); -- FIXME: TO BE FILLED
+VALUES ('edition', '3');
 
 CREATE TABLE settings
 (

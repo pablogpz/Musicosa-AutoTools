@@ -3,8 +3,7 @@
 import React, { ChangeEvent, ChangeEventHandler, HTMLInputTypeAttribute, useState } from 'react'
 
 import { BaseFrameContainer } from '@/app/components/FrameContainer/BaseFrameContainer'
-import { ResolvedCastVote } from '@/app/templates/common/withTemplateProps'
-import { defaultResolvedMember, defaultTemplateSettingsProps } from '@/app/templates/common/withTemplateProps/defaults'
+import { ResolvedCastVote, ResolvedMember } from '@/app/templates/common/withTemplateProps'
 import Template, { TemplateProps } from '@/app/templates/components/Template/Template'
 import {
     defaultAward,
@@ -87,6 +86,51 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
         }
     }
 
+    const members: ResolvedMember[] = [
+        {
+            id: 'Cáster',
+            name: 'Cáster',
+            avatar: {
+                id: 1,
+                resolvedImageFilename: 'Caster.png',
+                imageHeight: 1644,
+                scoreBoxPositionTop: 16,
+                scoreBoxPositionLeft: 79,
+                scoreBoxFontScale: 0.175,
+                scoreBoxFontColor: 'black',
+            },
+            vote: resolvedScoreForMember('Cáster'),
+        },
+        {
+            id: 'Ana',
+            name: 'Ana',
+            avatar: {
+                id: 2,
+                resolvedImageFilename: 'Ana.png',
+                imageHeight: 1607,
+                scoreBoxPositionTop: 16,
+                scoreBoxPositionLeft: 79.5,
+                scoreBoxFontScale: 0.175,
+                scoreBoxFontColor: 'black',
+            },
+            vote: resolvedScoreForMember('Ana'),
+        },
+        {
+            id: 'Pablo',
+            name: 'Pablo',
+            avatar: {
+                id: 3,
+                resolvedImageFilename: 'Pablo.png',
+                imageHeight: 1646,
+                scoreBoxPositionTop: 16,
+                scoreBoxPositionLeft: 78,
+                scoreBoxFontScale: 0.175,
+                scoreBoxFontColor: 'black',
+            },
+            vote: resolvedScoreForMember('Pablo'),
+        },
+    ]
+
     const templateProps: TemplateProps = {
         gameTitle: gameTitle,
         nominee: nominee,
@@ -96,12 +140,7 @@ export default function TemplateEditor({ templateWidth, templateHeight, displayD
         videoBoxWidthPx,
         videoBoxHeightPx,
         award: { slug: awardSlug, designation: awardDesignation },
-        members: Array.from({ length: membersCount }, () => ({
-            ...defaultResolvedMember,
-            vote: resolvedScoreForMember(defaultResolvedMember.name),
-        })),
-        scoreMinValue: defaultTemplateSettingsProps.scoreMinValue,
-        scoreMaxValue: defaultTemplateSettingsProps.scoreMaxValue,
+        members,
         disableVideoPlaceholder,
     }
 
