@@ -22,13 +22,13 @@ def generate_nomination_uuid5(game_title: str, nominee: str, award_slug: str) ->
 
 
 def generate_nomination_uuid5_from_nomination_str(full_nomination_str: str, award_slug: str) -> UUID:
-    nomination_bits = full_nomination_str.rsplit(sep="(", maxsplit=1)
+    nomination_bits = full_nomination_str.split(sep="|", maxsplit=1)
 
     if len(nomination_bits) == 1:
         game_title = nomination_bits[0].strip()
         nominee = ""
     else:
-        game_title = nomination_bits[1].removesuffix(")").strip()
-        nominee = nomination_bits[0].removesuffix(")").strip()
+        game_title = nomination_bits[1].strip()
+        nominee = nomination_bits[0].strip()
 
     return generate_nomination_uuid5(game_title, nominee, award_slug)
